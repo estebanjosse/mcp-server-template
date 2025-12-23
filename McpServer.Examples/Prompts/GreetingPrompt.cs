@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using McpServer.Abstractions;
 
-namespace McpServer.Interfaces.Prompts;
+namespace McpServer.Examples.Prompts;
 
 /// <summary>
 /// A simple greeting prompt that generates a personalized greeting message.

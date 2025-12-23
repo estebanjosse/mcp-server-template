@@ -1,10 +1,10 @@
 using McpServer.Abstractions;
-using McpServer.Interfaces.Prompts;
-using McpServer.Interfaces.Resources;
-using McpServer.Interfaces.Tools;
+using McpServer.Examples.Prompts;
+using McpServer.Examples.Resources;
+using McpServer.Examples.Tools;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace McpServer.Interfaces;
+namespace McpServer.Examples;
 
 /// <summary>
 /// Extension methods for registering tools, prompts, and resources.

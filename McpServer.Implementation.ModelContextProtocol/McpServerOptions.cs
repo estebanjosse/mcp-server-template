@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace McpServer.Server;
+namespace McpServer.Implementation.ModelContextProtocol;
 
 /// <summary>
 /// Configuration options for the MCP server.

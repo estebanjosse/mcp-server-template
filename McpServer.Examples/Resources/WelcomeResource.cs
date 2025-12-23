@@ -2,7 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using McpServer.Abstractions;
 
-namespace McpServer.Interfaces.Resources;
+namespace McpServer.Examples.Resources;
 
 /// <summary>
 /// A simple text resource that provides static information.

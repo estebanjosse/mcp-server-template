@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using McpServer.Abstractions;
 
-namespace McpServer.Interfaces.Tools;
+namespace McpServer.Examples.Tools;
 
 /// <summary>
 /// A simple echo tool that returns the input message.

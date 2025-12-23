@@ -1,48 +1,55 @@
 # MCP Server Template - .NET 8
 
-A minimal, production-ready implementation of a Model Context Protocol (MCP) server using the official C# SDK with clean architecture.
+A production-ready Model Context Protocol (MCP) server in .NET 8 with clean architecture, demonstrating proper SDK integration patterns.
 
 ## Architecture
 
-This project follows clean architecture principles with clear separation of concerns:
+This project follows strict clean architecture principles with clear separation of concerns:
 
 ```
-McpServer.Abstractions/    # Stable API - No SDK dependencies
-├── ITool.cs              # Tool abstraction
-├── IPrompt.cs            # Prompt abstraction
-├── IResource.cs          # Resource abstraction
-└── IMcpServer.cs         # Server abstraction
+McpServer.Abstractions/              # Stable Public API (No Dependencies)
+├── ITool.cs                        # Tool abstraction
+├── IPrompt.cs                      # Prompt abstraction
+├── IResource.cs                    # Resource abstraction
+└── IMcpServer.cs                   # Server abstraction
 
-McpServer.Server/         # SDK Adapters
-├── McpServerAdapter.cs   # SDK implementation
-├── McpServerOptions.cs   # Configuration options
-└── ServiceCollectionExtensions.cs
+McpServer.Implementation.ModelContextProtocol/  # MCP SDK Adapter (Hidden)
+├── ModelContextProtocolServerAdapter.cs        # Wraps mcpdotnet SDK
+├── McpServerOptions.cs                         # Configuration
+└── ServiceCollectionExtensions.cs              # DI registration
 
-McpServer.Interfaces/     # Example Implementations
-├── Tools/                # Tool examples
+McpServer.Examples/                  # Example Implementations
+├── Tools/                          # Tool examples
 │   ├── EchoTool.cs
 │   └── CalculatorTool.cs
-├── Prompts/              # Prompt examples
+├── Prompts/                        # Prompt examples
 │   ├── GreetingPrompt.cs
 │   └── CodeReviewPrompt.cs
-└── Resources/            # Resource examples
+└── Resources/                      # Resource examples
     ├── WelcomeResource.cs
     └── ServerStatusResource.cs
 
-McpServer.Host/           # Entry Point
-└── Program.cs            # Application host
+McpServer.Host/                     # Application Entry Point
+└── Program.cs                      # DI setup and host configuration
 ```
+
+### Key Architecture Principles
+
+1. **Dependency Inversion**: SDK (mcpdotnet) is wrapped and not exposed in public API
+2. **Stable Abstractions**: `McpServer.Abstractions` has zero external dependencies
+3. **Adapter Pattern**: Implementation layer translates between abstractions and SDK
+4. **SDK Replaceability**: Any MCP SDK can be used without changing application code
+5. **Clear Responsibilities**: Each layer has a single, well-defined purpose
 
 ## Features
 
-- **Clean Architecture**: Stable abstractions layer, SDK adapter layer, and implementation layer
-- **SDK Abstraction**: MCP SDK is hidden behind stable interfaces, making it easily replaceable
-- **Dependency Injection**: Full DI support with Microsoft.Extensions.DependencyInjection
-- **Configuration**: Options pattern with validation using DataAnnotations
+- **Clean Architecture**: SDK completely isolated behind stable interfaces
+- **Dependency Injection**: Full Microsoft.Extensions.DependencyInjection support
+- **Options Pattern**: Configuration with DataAnnotations validation
 - **Multiple Transports**: 
-  - `stdio` - Standard input/output (default)
+  - `stdio` - JSON-RPC over standard input/output
   - `http` - Server-Sent Events (SSE) over HTTP
-- **Easy Extensibility**: Simple to add new tools, prompts, and resources
+- **Easy Extensibility**: Just implement interfaces and register in DI
 
 ## Getting Started
 
@@ -102,7 +109,7 @@ Configuration can be provided via:
 
 ### Adding a New Tool
 
-1. Create a class implementing `ITool`:
+1. Create a class implementing `ITool` in `McpServer.Examples/Tools`:
 
 ```csharp
 public class MyTool : ITool
@@ -130,7 +137,7 @@ public class MyTool : ITool
 }
 ```
 
-2. Register it in DI:
+2. Register it in DI (in `ServiceCollectionExtensions.cs`):
 
 ```csharp
 services.AddSingleton<ITool, MyTool>();
@@ -203,15 +210,25 @@ The server comes with several working examples:
 
 ### Tools
 - **echo**: Echoes back a message
-- **calculator**: Performs basic arithmetic operations
+- **calculator**: Performs basic arithmetic operations (add, subtract, multiply, divide)
 
 ### Prompts
-- **greeting**: Generates personalized greetings in multiple languages
-- **code-review**: Creates code review prompt templates
+- **greeting**: Generates personalized greetings in multiple languages (en, fr, es, de)
+- **code-review**: Creates structured code review prompt templates
 
 ### Resources
-- **resource://welcome**: Static welcome message
-- **resource://server-status**: Dynamic server status information
+- **resource://welcome**: Static welcome message with server information
+- **resource://server-status**: Dynamic server status information (JSON)
+
+## Architecture Benefits
+
+1. **SDK Isolation**: mcpdotnet SDK is completely hidden in `Implementation.ModelContextProtocol` layer
+2. **Stable API**: `Abstractions` layer provides compile-time guarantees
+3. **Testability**: All abstractions can be mocked for unit testing
+4. **SDK Replaceability**: Swap SDK by creating new implementation layer
+5. **Type Safety**: All contracts are strongly typed
+6. **Validation**: Options validated on startup using DataAnnotations
+7. **Clear Boundaries**: Each project has single responsibility
 
 ## License
 

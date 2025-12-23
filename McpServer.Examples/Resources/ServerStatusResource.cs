@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using McpServer.Abstractions;
 
-namespace McpServer.Interfaces.Resources;
+namespace McpServer.Examples.Resources;
 
 /// <summary>
 /// A dynamic resource that provides server status information.

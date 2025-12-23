@@ -5,11 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpServer.Abstractions", "McpServer.Abstractions\McpServer.Abstractions.csproj", "{E0455150-3848-42C2-BF55-9E4F196D9C03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpServer.Server", "McpServer.Server\McpServer.Server.csproj", "{3876DDF1-23CD-41A9-8D8A-5D2F2EAECB2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpServer.Implementation.ModelContextProtocol", "McpServer.Implementation.ModelContextProtocol\McpServer.Implementation.ModelContextProtocol.csproj", "{3876DDF1-23CD-41A9-8D8A-5D2F2EAECB2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpServer.Host", "McpServer.Host\McpServer.Host.csproj", "{EB8EDF57-FAB7-4C1A-BED1-3FEE90149A7B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpServer.Interfaces", "McpServer.Interfaces\McpServer.Interfaces.csproj", "{45DAC6BE-10B0-4084-BD6B-27DA9374F3DB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "McpServer.Examples", "McpServer.Examples\McpServer.Examples.csproj", "{45DAC6BE-10B0-4084-BD6B-27DA9374F3DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

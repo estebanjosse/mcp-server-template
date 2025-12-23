@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace McpServer.Server;
+namespace McpServer.Implementation.ModelContextProtocol;
 
 /// <summary>
 /// Extension methods for registering the MCP server in the DI container.
@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Adds the MCP server and its configuration to the service collection.
+    /// Registers ModelContextProtocolServerAdapter which wraps the mcpdotnet SDK.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configuration">The configuration.</param>
@@ -25,14 +26,16 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // Register the server implementation
-        services.AddSingleton<IMcpServer, McpServerAdapter>();
+        // Register the Model Context Protocol server implementation
+        // This adapter wraps the mcpdotnet SDK without exposing SDK types
+        services.AddSingleton<IMcpServer, ModelContextProtocolServerAdapter>();
 
         return services;
     }
 
     /// <summary>
     /// Adds the MCP server with custom options to the service collection.
+    /// Registers ModelContextProtocolServerAdapter which wraps the mcpdotnet SDK.
     /// </summary>
     /// <param name="services">The service collection.</param>
     /// <param name="configureOptions">Action to configure options.</param>
@@ -45,8 +48,9 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        // Register the server implementation
-        services.AddSingleton<IMcpServer, McpServerAdapter>();
+        // Register the Model Context Protocol server implementation
+        // This adapter wraps the mcpdotnet SDK without exposing SDK types
+        services.AddSingleton<IMcpServer, ModelContextProtocolServerAdapter>();
 
         return services;
     }

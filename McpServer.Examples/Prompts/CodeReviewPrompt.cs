@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using McpServer.Abstractions;
 
-namespace McpServer.Interfaces.Prompts;
+namespace McpServer.Examples.Prompts;
 
 /// <summary>
 /// A code review prompt that generates a code review template.

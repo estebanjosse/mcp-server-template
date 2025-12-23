@@ -1,6 +1,6 @@
 ﻿using McpServer.Abstractions;
-using McpServer.Interfaces;
-using McpServer.Server;
+using McpServer.Examples;
+using McpServer.Implementation.ModelContextProtocol;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
