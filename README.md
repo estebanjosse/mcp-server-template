@@ -2,6 +2,8 @@
 
 A production-ready Model Context Protocol (MCP) server in .NET 8 with clean architecture, demonstrating proper SDK integration patterns.
 
+Uses the official **ModelContextProtocol SDK v0.5.0-preview.1** with a custom abstraction layer for maximum flexibility and testability.
+
 ## Architecture
 
 This project follows strict clean architecture principles with clear separation of concerns:
@@ -9,12 +11,13 @@ This project follows strict clean architecture principles with clear separation 
 ```
 McpServer.Abstractions/              # Stable Public API (No Dependencies)
 ├── ITool.cs                        # Tool abstraction
+├── SimpleToolBase.cs               # Easy tool base class (auto-generates schema)
 ├── IPrompt.cs                      # Prompt abstraction
 ├── IResource.cs                    # Resource abstraction
 └── IMcpServer.cs                   # Server abstraction
 
 McpServer.Implementation.ModelContextProtocol/  # MCP SDK Adapter (Hidden)
-├── ModelContextProtocolServerAdapter.cs        # Wraps mcpdotnet SDK
+├── ModelContextProtocolServerAdapter.cs        # Wraps ModelContextProtocol SDK v0.5.0-preview.1
 ├── McpServerOptions.cs                         # Configuration
 └── ServiceCollectionExtensions.cs              # DI registration
 
@@ -35,11 +38,12 @@ McpServer.Host/                     # Application Entry Point
 
 ### Key Architecture Principles
 
-1. **Dependency Inversion**: SDK (mcpdotnet) is wrapped and not exposed in public API
+1. **Dependency Inversion**: SDK (ModelContextProtocol v0.5.0-preview.1) is wrapped and not exposed in public API
 2. **Stable Abstractions**: `McpServer.Abstractions` has zero external dependencies
 3. **Adapter Pattern**: Implementation layer translates between abstractions and SDK
 4. **SDK Replaceability**: Any MCP SDK can be used without changing application code
 5. **Clear Responsibilities**: Each layer has a single, well-defined purpose
+6. **Simple Tool Creation**: `SimpleToolBase` auto-generates JSON schemas from method parameters
 
 ## Features
 
@@ -107,15 +111,44 @@ Configuration can be provided via:
 
 ## Adding New Functionality
 
-### Adding a New Tool
+### Adding a New Tool (Simple Way)
 
-1. Create a class implementing `ITool` in `McpServer.Examples/Tools`:
+For most tools, use `SimpleToolBase` which auto-generates the JSON schema:
 
 ```csharp
-public class MyTool : ITool
+using System.ComponentModel;
+using McpServer.Abstractions;
+
+public class MyTool : SimpleToolBase
 {
-    public string Name => "my-tool";
-    public string Description => "My custom tool";
+    public override string Name => "my-tool";
+    public override string Description => "My custom tool";
+    
+    protected string Execute(
+        [Description("Input parameter")] string input,
+        [Description("Optional flag")] bool verbose = false)
+    {
+        return $"Result: {input}";
+    }
+}
+```
+
+**Benefits of SimpleToolBase**:
+- Automatic JSON schema generation from method parameters
+- Type conversion handled automatically
+- Support for optional parameters (with defaults)
+- [Description] attributes for parameter documentation
+- Less boilerplate code
+
+### Adding a New Tool (Advanced Way)
+
+For complex tools with custom validation, implement `ITool` directly:
+
+```csharp
+public class MyComplexTool : ITool
+{
+    public string Name => "my-complex-tool";
+    public string Description => "Tool with custom logic";
     
     public object InputSchema => new
     {
@@ -127,20 +160,22 @@ public class MyTool : ITool
         required = new[] { "input" }
     };
 
-    public Task<ToolResult> ExecuteAsync(
+    public async Task<ToolResult> ExecuteAsync(
         IDictionary<string, object?>? arguments,
         CancellationToken cancellationToken = default)
     {
-        // Your implementation
-        return Task.FromResult(new ToolResult("Result"));
+        // Your custom implementation with validation
+        return new ToolResult("Result");
     }
 }
 ```
 
-2. Register it in DI (in `ServiceCollectionExtensions.cs`):
+### Register Your Tool
+
+In `McpServer.Examples/ServiceCollectionExtensions.cs`:
 
 ```csharp
-services.AddSingleton<ITool, MyTool>();
+services.AddTransient<ITool, MyTool>();
 ```
 
 ### Adding a New Prompt
@@ -222,13 +257,14 @@ The server comes with several working examples:
 
 ## Architecture Benefits
 
-1. **SDK Isolation**: mcpdotnet SDK is completely hidden in `Implementation.ModelContextProtocol` layer
+1. **SDK Isolation**: ModelContextProtocol SDK v0.5.0-preview.1 is completely hidden in `Implementation.ModelContextProtocol` layer
 2. **Stable API**: `Abstractions` layer provides compile-time guarantees
 3. **Testability**: All abstractions can be mocked for unit testing
 4. **SDK Replaceability**: Swap SDK by creating new implementation layer
 5. **Type Safety**: All contracts are strongly typed
 6. **Validation**: Options validated on startup using DataAnnotations
 7. **Clear Boundaries**: Each project has single responsibility
+8. **Simple Tool Creation**: `SimpleToolBase` eliminates boilerplate for common tools
 
 ## License
 

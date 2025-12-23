@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
@@ -8,6 +7,9 @@ using System.Threading.Tasks;
 using McpServer.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ModelContextProtocol;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace McpServer.Implementation.ModelContextProtocol;
 
@@ -15,7 +17,7 @@ namespace McpServer.Implementation.ModelContextProtocol;
 /// MCP server implementation that adapts our stable abstractions to the Model Context Protocol.
 /// 
 /// ARCHITECTURE NOTES:
-/// - This layer wraps the mcpdotnet SDK (or any MCP SDK) without exposing SDK types
+/// - This layer wraps the official ModelContextProtocol SDK without exposing SDK types
 /// - All SDK-specific code is contained in this assembly
 /// - The SDK can be replaced without affecting consumers of McpServer.Abstractions
 /// - Transports (stdio/http) are handled by the SDK
@@ -51,28 +53,23 @@ public class ModelContextProtocolServerAdapter : IMcpServer
     public async Task RunAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("=== MCP Server Initialization ===");
-        _logger.LogInformation("Implementation: ModelContextProtocol (mcpdotnet SDK wrapper)");
+        _logger.LogInformation("Implementation: ModelContextProtocol SDK v0.6.0");
         _logger.LogInformation("Server: {ServerName} v{ServerVersion}", _options.ServerName, _options.ServerVersion);
         _logger.LogInformation("Transport: {Transport}", _options.Transport);
 
         LogRegisteredCapabilities();
 
-        // SDK Integration Point: Initialize MCP server with our adapted handlers
-        // In production, this would use mcpdotnet SDK's builder pattern:
-        // var mcpServer = MCPServer.CreateBuilder()
-        //     .WithServerInfo(_options.ServerName, _options.ServerVersion)
-        //     .WithTools(AdaptToolsForSdk())
-        //     .WithPrompts(AdaptPromptsForSdk())
-        //     .WithResources(AdaptResourcesForSdk())
-        //     .Build();
+        // Create MCP server options with handlers
+        var serverOptions = CreateServerOptions();
 
+        // Create server with appropriate transport
         if (_options.Transport.ToLowerInvariant() == "stdio")
         {
-            await RunStdioServerAsync(cancellationToken);
+            await RunStdioServerAsync(serverOptions, cancellationToken);
         }
         else if (_options.Transport.ToLowerInvariant() == "http")
         {
-            await RunHttpServerAsync(cancellationToken);
+            await RunHttpServerAsync(serverOptions, cancellationToken);
         }
         else
         {
@@ -106,275 +103,229 @@ public class ModelContextProtocolServerAdapter : IMcpServer
     }
 
     /// <summary>
-    /// Runs MCP server over stdio transport using JSON-RPC 2.0.
-    /// This demonstrates the MCP protocol flow while maintaining clean architecture.
+    /// Creates MCP server options with manual handler registration.
+    /// This adapts our ITool/IPrompt/IResource abstractions to MCP SDK format.
     /// </summary>
-    private async Task RunStdioServerAsync(CancellationToken cancellationToken)
+    private global::ModelContextProtocol.Server.McpServerOptions CreateServerOptions()
+    {
+        var options = new global::ModelContextProtocol.Server.McpServerOptions
+        {
+            ServerInfo = new global::ModelContextProtocol.Protocol.Implementation 
+            { 
+                Name = _options.ServerName, 
+                Version = _options.ServerVersion 
+            },
+            ProtocolVersion = "2024-11-05",
+            Capabilities = new ServerCapabilities
+            {
+                Tools = new ToolsCapability { ListChanged = true },
+                Resources = new ResourcesCapability { Subscribe = false, ListChanged = true },
+                Prompts = new PromptsCapability { ListChanged = true }
+            },
+            Handlers = new McpServerHandlers
+            {
+                // Adapt Tools
+                ListToolsHandler = (request, ct) =>
+                {
+                    var tools = _tools.Select(tool => new Tool
+                    {
+                        Name = tool.Name,
+                        Description = tool.Description,
+                        InputSchema = JsonSerializer.SerializeToElement(tool.InputSchema)
+                    }).ToList();
+
+                    return ValueTask.FromResult(new ListToolsResult { Tools = tools });
+                },
+
+                CallToolHandler = async (request, ct) =>
+                {
+                    var toolName = request.Params?.Name;
+                    var tool = _tools.FirstOrDefault(t => t.Name == toolName);
+
+                    if (tool == null)
+                    {
+                        throw new McpProtocolException(
+                            $"Tool not found: {toolName}",
+                            McpErrorCode.InvalidRequest);
+                    }
+
+                    // Convert SDK arguments to our format
+                    var arguments = new Dictionary<string, object?>();
+                    if (request.Params?.Arguments != null)
+                    {
+                        foreach (var prop in request.Params.Arguments)
+                        {
+                            arguments[prop.Key] = ConvertJsonElement(prop.Value);
+                        }
+                    }
+
+                    // Execute tool
+                    var result = await tool.ExecuteAsync(arguments, ct);
+
+                    return new CallToolResult
+                    {
+                        Content = 
+                        [
+                            new global::ModelContextProtocol.Protocol.TextContentBlock
+                            {
+                                Text = result.Content
+                            }
+                        ],
+                        IsError = result.IsError
+                    };
+                },
+
+                // Adapt Prompts
+                ListPromptsHandler = (request, ct) =>
+                {
+                    var prompts = _prompts.Select(prompt => new Prompt
+                    {
+                        Name = prompt.Name,
+                        Description = prompt.Description,
+                        Arguments = prompt.Arguments.Select(a => new global::ModelContextProtocol.Protocol.PromptArgument
+                        {
+                            Name = a.Name,
+                            Description = a.Description,
+                            Required = a.Required
+                        }).ToList()
+                    }).ToList();
+
+                    return ValueTask.FromResult(new ListPromptsResult { Prompts = prompts });
+                },
+
+                GetPromptHandler = async (request, ct) =>
+                {
+                    var promptName = request.Params?.Name;
+                    var prompt = _prompts.FirstOrDefault(p => p.Name == promptName);
+
+                    if (prompt == null)
+                    {
+                        throw new McpProtocolException(
+                            $"Prompt not found: {promptName}",
+                            McpErrorCode.InvalidRequest);
+                    }
+
+                    // Convert SDK arguments to our format
+                    var arguments = new Dictionary<string, string>();
+                    if (request.Params?.Arguments != null)
+                    {
+                        foreach (var prop in request.Params.Arguments)
+                        {
+                            arguments[prop.Key] = prop.Value.ToString() ?? "";
+                        }
+                    }
+
+                    // Execute prompt
+                    var messages = await prompt.GetMessagesAsync(arguments, ct);
+
+                    return new GetPromptResult
+                    {
+                        Messages = messages.Select(m => new global::ModelContextProtocol.Protocol.PromptMessage
+                        {
+                            Role = m.Role == "user" ? Role.User : Role.Assistant,
+                            Content = new global::ModelContextProtocol.Protocol.TextContentBlock
+                            {
+                                Text = m.Content
+                            }
+                        }).ToList()
+                    };
+                },
+
+                // Adapt Resources
+                ListResourcesHandler = (request, ct) =>
+                {
+                    var resources = _resources.Select(resource => new Resource
+                    {
+                        Uri = resource.Uri,
+                        Name = resource.Name,
+                        Description = resource.Description,
+                        MimeType = resource.MimeType
+                    }).ToList();
+
+                    return ValueTask.FromResult(new ListResourcesResult { Resources = resources });
+                },
+
+                ReadResourceHandler = async (request, ct) =>
+                {
+                    var uri = request.Params?.Uri;
+                    var resource = _resources.FirstOrDefault(r => r.Uri == uri);
+
+                    if (resource == null)
+                    {
+                        throw new McpProtocolException(
+                            $"Resource not found: {uri}",
+                            McpErrorCode.InvalidRequest);
+                    }
+
+                    // Read resource content
+                    var content = await resource.ReadAsync(ct);
+
+                    return new ReadResourceResult
+                    {
+                        Contents =
+                        [
+                            new global::ModelContextProtocol.Protocol.TextResourceContents
+                            {
+                                Uri = resource.Uri,
+                                Text = content,
+                                MimeType = resource.MimeType
+                            }
+                        ]
+                    };
+                }
+            }
+        };
+
+        return options;
+    }
+
+    /// <summary>
+    /// Converts JsonElement to appropriate .NET type for our tool arguments.
+    /// </summary>
+    private static object? ConvertJsonElement(JsonElement element)
+    {
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString(),
+            JsonValueKind.Number => element.TryGetInt32(out var i) ? i : element.GetDouble(),
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => element // Return as-is for complex types
+        };
+    }
+
+    /// <summary>
+    /// Runs MCP server over stdio transport using the official SDK.
+    /// </summary>
+    private async Task RunStdioServerAsync(global::ModelContextProtocol.Server.McpServerOptions options, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting STDIO transport (JSON-RPC over stdin/stdout)");
         
-        // In production: await mcpServer.RunStdioAsync(cancellationToken);
-        // For now, implementing MCP protocol directly to demonstrate the architecture
-        
-        using var reader = new StreamReader(Console.OpenStandardInput());
-        using var writer = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+        // Create server with stdio transport using the SDK
+        var transport = new StdioServerTransport(_options.ServerName);
+        await using var server = global::ModelContextProtocol.Server.McpServer.Create(transport, options);
 
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                var line = await reader.ReadLineAsync(cancellationToken);
-                if (line == null) break;
-
-                _logger.LogDebug("Received request: {Request}", line);
-                var response = await ProcessMcpRequestAsync(line, cancellationToken);
-                _logger.LogDebug("Sending response: {Response}", response);
-                
-                await writer.WriteLineAsync(response);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing MCP request");
-            }
-        }
+        // Run server (blocks until client disconnects)
+        await server.RunAsync(cancellationToken);
         
         _logger.LogInformation("STDIO transport stopped");
     }
 
     /// <summary>
     /// Runs MCP server over HTTP transport using Server-Sent Events (SSE).
-    /// This would use the SDK's HTTP server implementation.
+    /// Note: HTTP transport requires ASP.NET Core integration.
     /// </summary>
-    private async Task RunHttpServerAsync(CancellationToken cancellationToken)
+    private Task RunHttpServerAsync(global::ModelContextProtocol.Server.McpServerOptions options, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting HTTP/SSE transport on port {Port}", _options.HttpPort);
-        _logger.LogInformation("MCP endpoint would be: http://localhost:{Port}/mcp", _options.HttpPort);
+        _logger.LogWarning("HTTP/SSE transport requires ASP.NET Core integration - not supported in console apps");
+        _logger.LogInformation("For HTTP support, use ASP.NET Core with builder.Services.AddMcpServer().WithHttpTransport()");
         
-        // In production with SDK:
-        // await mcpServer.RunHttpAsync(_options.HttpPort, cancellationToken);
-        
-        // Placeholder: Keep server alive
-        _logger.LogWarning("HTTP/SSE transport requires AspNetCore integration with mcpdotnet SDK");
-        _logger.LogInformation("For full HTTP support, the SDK handles SSE streaming of MCP protocol messages");
-        
-        await Task.Delay(Timeout.Infinite, cancellationToken);
+        // HTTP transport requires ASP.NET Core, which is not available in console apps
+        // Users should use the WithHttpTransport() extension in an ASP.NET Core app
+        throw new NotSupportedException(
+            "HTTP transport requires ASP.NET Core. Use stdio transport for console apps, " +
+            "or create an ASP.NET Core app with AddMcpServer().WithHttpTransport()");
     }
-
-    /// <summary>
-    /// Processes MCP protocol requests (JSON-RPC 2.0).
-    /// This method adapts our abstractions to MCP protocol format.
-    /// </summary>
-    private async Task<string> ProcessMcpRequestAsync(string requestJson, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using var doc = JsonDocument.Parse(requestJson);
-            var root = doc.RootElement;
-            
-            var method = root.GetProperty("method").GetString();
-            var id = root.TryGetProperty("id", out var idProp) ? idProp.GetInt32() : 0;
-            
-            object? result = method switch
-            {
-                // MCP Protocol: Initialization
-                "initialize" => new
-                {
-                    protocolVersion = "2024-11-05",
-                    serverInfo = new
-                    {
-                        name = _options.ServerName,
-                        version = _options.ServerVersion
-                    },
-                    capabilities = new
-                    {
-                        tools = new { },      // Server supports tools
-                        prompts = new { },    // Server supports prompts
-                        resources = new { }   // Server supports resources
-                    }
-                },
-                
-                // MCP Protocol: Tools
-                "tools/list" => AdaptToolsList(),
-                "tools/call" => await AdaptToolCallAsync(root, cancellationToken),
-                
-                // MCP Protocol: Prompts
-                "prompts/list" => AdaptPromptsList(),
-                "prompts/get" => await AdaptPromptGetAsync(root, cancellationToken),
-                
-                // MCP Protocol: Resources
-                "resources/list" => AdaptResourcesList(),
-                "resources/read" => await AdaptResourceReadAsync(root, cancellationToken),
-                
-                _ => throw new InvalidOperationException($"Unknown MCP method: {method}")
-            };
-
-            return JsonSerializer.Serialize(new
-            {
-                jsonrpc = "2.0",
-                id,
-                result
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing MCP request");
-            return JsonSerializer.Serialize(new
-            {
-                jsonrpc = "2.0",
-                error = new
-                {
-                    code = -32603,
-                    message = ex.Message
-                }
-            });
-        }
-    }
-
-    #region MCP Protocol Adapters
-    
-    // These methods translate between our stable abstractions and MCP protocol format
-    // They demonstrate the Dependency Inversion Principle: SDK details don't leak out
-
-    private object AdaptToolsList()
-    {
-        return new
-        {
-            tools = _tools.Select(t => new
-            {
-                name = t.Name,
-                description = t.Description,
-                inputSchema = t.InputSchema
-            }).ToArray()
-        };
-    }
-
-    private async Task<object> AdaptToolCallAsync(JsonElement root, CancellationToken cancellationToken)
-    {
-        var @params = root.GetProperty("params");
-        var toolName = @params.GetProperty("name").GetString();
-        var tool = _tools.FirstOrDefault(t => t.Name == toolName);
-        
-        if (tool == null)
-        {
-            return new { content = new[] { new { type = "text", text = $"Tool not found: {toolName}" } }, isError = true };
-        }
-
-        var arguments = new Dictionary<string, object?>();
-        if (@params.TryGetProperty("arguments", out var argsElement))
-        {
-            foreach (var prop in argsElement.EnumerateObject())
-            {
-                arguments[prop.Name] = prop.Value.ValueKind switch
-                {
-                    JsonValueKind.String => prop.Value.GetString(),
-                    JsonValueKind.Number => prop.Value.GetDouble(),
-                    JsonValueKind.True => true,
-                    JsonValueKind.False => false,
-                    _ => prop.Value.GetRawText()
-                };
-            }
-        }
-
-        var result = await tool.ExecuteAsync(arguments, cancellationToken);
-        return new
-        {
-            content = new[] { new { type = "text", text = result.Content } },
-            isError = result.IsError
-        };
-    }
-
-    private object AdaptPromptsList()
-    {
-        return new
-        {
-            prompts = _prompts.Select(p => new
-            {
-                name = p.Name,
-                description = p.Description,
-                arguments = p.Arguments.Select(a => new
-                {
-                    name = a.Name,
-                    description = a.Description,
-                    required = a.Required
-                }).ToArray()
-            }).ToArray()
-        };
-    }
-
-    private async Task<object> AdaptPromptGetAsync(JsonElement root, CancellationToken cancellationToken)
-    {
-        var @params = root.GetProperty("params");
-        var promptName = @params.GetProperty("name").GetString();
-        var prompt = _prompts.FirstOrDefault(p => p.Name == promptName);
-        
-        if (prompt == null)
-        {
-            return new { messages = new[] { new { role = "user", content = new { type = "text", text = $"Prompt not found: {promptName}" } } } };
-        }
-
-        var arguments = new Dictionary<string, string>();
-        if (@params.TryGetProperty("arguments", out var argsElement))
-        {
-            foreach (var prop in argsElement.EnumerateObject())
-            {
-                arguments[prop.Name] = prop.Value.GetString() ?? "";
-            }
-        }
-
-        var messages = await prompt.GetMessagesAsync(arguments, cancellationToken);
-        return new
-        {
-            messages = messages.Select(m => new
-            {
-                role = m.Role,
-                content = new { type = "text", text = m.Content }
-            }).ToArray()
-        };
-    }
-
-    private object AdaptResourcesList()
-    {
-        return new
-        {
-            resources = _resources.Select(r => new
-            {
-                uri = r.Uri,
-                name = r.Name,
-                description = r.Description,
-                mimeType = r.MimeType
-            }).ToArray()
-        };
-    }
-
-    private async Task<object> AdaptResourceReadAsync(JsonElement root, CancellationToken cancellationToken)
-    {
-        var @params = root.GetProperty("params");
-        var resourceUri = @params.GetProperty("uri").GetString();
-        var resource = _resources.FirstOrDefault(r => r.Uri == resourceUri);
-        
-        if (resource == null)
-        {
-            return new { contents = new[] { new { uri = resourceUri, mimeType = "text/plain", text = $"Resource not found: {resourceUri}" } } };
-        }
-
-        var content = await resource.ReadAsync(cancellationToken);
-        return new
-        {
-            contents = new[]
-            {
-                new
-                {
-                    uri = resource.Uri,
-                    mimeType = resource.MimeType,
-                    text = content
-                }
-            }
-        };
-    }
-
-    #endregion
 }

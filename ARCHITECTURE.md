@@ -11,6 +11,7 @@ This MCP server demonstrates clean architecture principles with strict separatio
 **Dependencies**: None (zero external dependencies)  
 **Contents**:
 - `ITool` - Tool definition and execution contract
+- `SimpleToolBase` - Base class for easy tool creation with auto-generated schemas
 - `IPrompt` - Prompt template contract
 - `IResource` - Resource access contract
 - `IMcpServer` - Server lifecycle contract
@@ -19,9 +20,9 @@ This MCP server demonstrates clean architecture principles with strict separatio
 
 ### 2. McpServer.Implementation.ModelContextProtocol (SDK Adapter - Hidden)
 **Purpose**: Wrap the MCP SDK without exposing its types  
-**Dependencies**: McpServer.Abstractions, mcpdotnet SDK  
+**Dependencies**: McpServer.Abstractions, ModelContextProtocol SDK v0.5.0-preview.1  
 **Contents**:
-- `ModelContextProtocolServerAdapter` - Implements `IMcpServer` by wrapping SDK
+- `ModelContextProtocolServerAdapter` - Implements `IMcpServer` by wrapping official SDK
 - `McpServerOptions` - Configuration with validation
 - `ServiceCollectionExtensions` - DI registration
 
@@ -29,7 +30,7 @@ This MCP server demonstrates clean architecture principles with strict separatio
 
 **Adapter Pattern**:
 ```
-Application Code → ITool → ModelContextProtocolServerAdapter → mcpdotnet SDK → MCP Protocol
+Application Code → ITool → ModelContextProtocolServerAdapter → ModelContextProtocol SDK v0.5.0-preview.1 → MCP Protocol
 ```
 
 ### 3. McpServer.Examples (Concrete Implementations)
@@ -73,10 +74,10 @@ Application Code → ITool → ModelContextProtocolServerAdapter → mcpdotnet S
        └────────────────┬───────────────────┘
                         │
                         ▼
-                ┌──────────────┐
-                │ mcpdotnet SDK│
-                │ (Hidden)     │
-                └──────────────┘
+                ┌──────────────────────────────────┐
+                │   ModelContextProtocol SDK       │
+                │ v0.5.0-preview.1 (Hidden)        │
+                └──────────────────────────────────┘
 ```
 
 ## SDK Replaceability
@@ -131,6 +132,35 @@ Transport is configured via `McpServerOptions` and handled entirely by the SDK a
 4. **Type Safety**: Compile-time guarantees via interfaces
 5. **Documentation**: Code structure documents architecture
 6. **Future-proof**: SDK evolution doesn't affect abstractions
+7. **Developer Experience**: `SimpleToolBase` reduces boilerplate for common tools
+
+## SimpleToolBase: Simplified Tool Creation
+
+For most tools, the `SimpleToolBase` class eliminates boilerplate:
+
+```csharp
+// Instead of implementing ITool manually:
+public class MyTool : SimpleToolBase
+{
+    public override string Name => "my_tool";
+    public override string Description => "Does something";
+    
+    // JSON schema auto-generated from this method!
+    protected string Execute(
+        [Description("Input text")] string input,
+        [Description("Optional flag")] bool verbose = false)
+    {
+        return $"Result: {input}";
+    }
+}
+```
+
+**Benefits**:
+- Automatic JSON schema generation from method parameters
+- Type conversion handled automatically (JsonElement → .NET types)
+- Support for optional parameters
+- [Description] attributes for documentation
+- Async methods supported (Task<string>, Task<ToolResult>)
 
 ## Anti-Patterns Avoided
 
