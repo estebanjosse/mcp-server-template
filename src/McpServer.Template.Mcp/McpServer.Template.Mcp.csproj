@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="$(ModelContextProtocolVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\McpServer.Template.Application\McpServer.Template.Application.csproj" />
+    <ProjectReference Include="..\McpServer.Template.Infrastructure\McpServer.Template.Infrastructure.csproj" />
+    <ProjectReference Include="..\McpServer.Template.Contracts\McpServer.Template.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>

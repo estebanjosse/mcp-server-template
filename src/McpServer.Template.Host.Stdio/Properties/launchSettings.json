@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "McpServer.Template.Host.Stdio": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
