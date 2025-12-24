@@ -1,3 +1,5 @@
+using McpServer.Template.Application.Ports;
+
 namespace McpServer.Template.Application.Services;
 
 public sealed class GreetingService : IGreetingService

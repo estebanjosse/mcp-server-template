@@ -1,4 +1,4 @@
-using McpServer.Template.Application.Services;
+using McpServer.Template.Application.Ports;
 using McpServer.Template.Contracts.DTOs;
 using McpServer.Template.Mcp.Tools;
 using ModelContextProtocol;

@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using McpServer.Template.Application.Services;
+using McpServer.Template.Application.Ports;
 using ModelContextProtocol.Server;
 
 namespace McpServer.Template.Mcp.Prompts;

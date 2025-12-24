@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using McpServer.Template.Application.Services;
+using McpServer.Template.Application.Ports;
 using McpServer.Template.Contracts.DTOs;
 using ModelContextProtocol.Server;
 

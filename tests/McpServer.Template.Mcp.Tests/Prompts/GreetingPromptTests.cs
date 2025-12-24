@@ -1,4 +1,4 @@
-using McpServer.Template.Application.Services;
+using McpServer.Template.Application.Ports;
 using McpServer.Template.Mcp.Prompts;
 
 namespace McpServer.Template.Mcp.Tests.Prompts;

@@ -1,4 +1,4 @@
-namespace McpServer.Template.Application.Services;
+namespace McpServer.Template.Application.Ports;
 
 public interface IGreetingService
 {

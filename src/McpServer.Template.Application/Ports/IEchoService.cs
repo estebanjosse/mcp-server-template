@@ -1,6 +1,6 @@
 using McpServer.Template.Contracts.DTOs;
 
-namespace McpServer.Template.Application.Services;
+namespace McpServer.Template.Application.Ports;
 
 public interface IEchoService
 {
