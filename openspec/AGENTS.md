@@ -51,10 +51,12 @@ Track these steps as TODOs and complete them one by one.
 1. **Read proposal.md** - Understand what's being built
 2. **Read design.md** (if exists) - Review technical decisions
 3. **Read tasks.md** - Get implementation checklist
-4. **Implement tasks sequentially** - Complete in order
-5. **Confirm completion** - Ensure every item in `tasks.md` is finished before updating statuses
-6. **Update checklist** - After all work is done, set every task to `- [x]` so the list reflects reality
-7. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
+4. **Request confirmation per task** - Before starting any checklist item, ask the user for approval and wait for explicit confirmation
+5. **Implement tasks sequentially** - Complete the approved task in order and avoid parallel work
+6. **Run tests** - Whenever code changes are made, execute the applicable automated test suites and resolve failures before continuing
+7. **Report and check off** - Right after finishing a task, explain the changes to the user and update the corresponding checkbox to `- [x]`
+8. **Confirm completion** - Ensure every item in `tasks.md` is finished and visibly checked off before moving forward
+9. **Approval gate** - Do not start implementation until the proposal is reviewed and approved
 
 ### Stage 3: Archiving Changes
 After deployment, create separate PR to:
@@ -76,7 +78,7 @@ After deployment, create separate PR to:
 - Always check if capability already exists
 - Prefer modifying existing specs over creating duplicates
 - Use `openspec show [spec]` to review current state
-- If request is ambiguous, ask 1–2 clarifying questions before scaffolding
+- Ask 1–2 clarifying questions before scaffolding
 
 ### Search Guidance
 - Enumerate specs: `openspec spec list --long` (or `--json` for scripts)
