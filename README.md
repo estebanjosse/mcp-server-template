@@ -1,2 +1,317 @@
-# mcp-server-template
-A minimal, production-ready implementation of a Model Context Protocol (MCP) using the official C# SDK.
+# McpServer.Template
+
+A clean, scalable, production-ready implementation of a Model Context Protocol (MCP) server using the official C# SDK (.NET 8).
+
+## 🎯 Architecture Overview
+
+This template demonstrates a **strict separation of concerns** with a layered architecture that keeps MCP SDK dependencies isolated while maintaining a shared business logic foundation:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Presentation Layer                        │
+│  ┌─────────────────────┐      ┌─────────────────────┐      │
+│  │  Host.Stdio         │      │  Host.Http          │      │
+│  │  (Console)          │      │  (ASP.NET Core)     │      │
+│  │  stdio transport    │      │  HTTP/SSE transport │      │
+│  └──────────┬──────────┘      └──────────┬──────────┘      │
+└─────────────┼─────────────────────────────┼─────────────────┘
+              │                             │
+              └──────────┬──────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│                    MCP Adapter Layer                         │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  McpServer.Template.Mcp                              │  │
+│  │  - Tools (EchoTool, CalcDivideTool)                  │  │
+│  │  - Prompts (GreetingPrompt)                          │  │
+│  │  - Resources (WelcomeResource, StatusResource)       │  │
+│  │  - MCP SDK Integration Only                          │  │
+│  └─────────────────────┬────────────────────────────────┘  │
+└────────────────────────┼────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│                   Business Logic Layer                       │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  McpServer.Template.Application                      │  │
+│  │  - IEchoService / ICalculatorService                 │  │
+│  │  - IStatusService / IGreetingService                 │  │
+│  │  - Pure business logic (no MCP SDK)                  │  │
+│  └─────────────────────┬────────────────────────────────┘  │
+└────────────────────────┼────────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────────┐
+│              Infrastructure & Contracts Layer                │
+│  ┌──────────────────────┐  ┌───────────────────────────┐  │
+│  │  Infrastructure      │  │  Contracts                │  │
+│  │  - ISystemClock      │  │  - DTOs                   │  │
+│  │  - IAppInfoProvider  │  │  - Constants              │  │
+│  └──────────────────────┘  └───────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Design Principles
+
+✅ **SDK Isolation**: Only `McpServer.Template.Mcp` project references MCP SDK packages  
+✅ **Shared Business Logic**: Same services used by both stdio and HTTP transports  
+✅ **Testability**: All layers fully unit testable with xUnit, FluentAssertions, and NSubstitute  
+✅ **Scalability**: Easy to add new tools, prompts, and resources  
+✅ **Idiomatic .NET**: Dependency Injection, Options pattern, async/await throughout
+
+## 📁 Project Structure
+
+```
+McpServer.Template/
+├── src/
+│   ├── McpServer.Template.Contracts          # DTOs and constants (no dependencies)
+│   ├── McpServer.Template.Application        # Business services (testable, MCP-agnostic)
+│   ├── McpServer.Template.Infrastructure     # Technical providers (ISystemClock, IAppInfoProvider)
+│   ├── McpServer.Template.Mcp                # MCP adapter (Tools, Prompts, Resources)
+│   ├── McpServer.Template.Host.Stdio         # Console host with stdio transport
+│   └── McpServer.Template.Host.Http          # ASP.NET Core host with HTTP/SSE transport
+├── tests/
+│   ├── McpServer.Template.Application.Tests  # Service unit tests
+│   ├── McpServer.Template.Infrastructure.Tests # Infrastructure unit tests
+│   └── McpServer.Template.Mcp.Tests          # MCP adapter unit tests
+├── Directory.Build.props                      # Centralized package versions and properties
+├── Directory.Build.targets                    # Custom MSBuild targets
+└── McpServer.Template.sln                     # Solution file
+```
+
+## 🚀 Features
+
+### Tools
+- **`echo`**: Echoes back a message with a UTC timestamp
+- **`calc_divide`**: Divides two numbers (with division-by-zero validation)
+
+### Prompts
+- **`greeting`**: Generates a multilingual greeting message (en, fr, es, de)
+
+### Resources
+- **`resource://welcome`**: Static welcome message with feature overview
+- **`resource://status`**: Dynamic server status (uptime, version, timestamp)
+
+## 🛠️ Getting Started
+
+### Prerequisites
+
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
+- (Optional) [MCP Inspector](https://github.com/modelcontextprotocol/inspector) for stdio testing
+
+### Build the Solution
+
+```powershell
+# Restore dependencies and build all projects
+dotnet build
+
+# Run tests
+dotnet test
+
+# Get test coverage (if using coverlet)
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+## 🎮 Running the Server
+
+### Option 1: Stdio Transport (Console)
+
+The stdio transport is ideal for MCP Inspector or command-line integration:
+
+```powershell
+# Run the stdio host
+dotnet run --project src/McpServer.Template.Host.Stdio
+
+# Or with MCP Inspector
+npx @modelcontextprotocol/inspector dotnet run --project src/McpServer.Template.Host.Stdio
+```
+
+**Testing with MCP Inspector:**
+```powershell
+# Install MCP Inspector globally (Node.js required)
+npm install -g @modelcontextprotocol/inspector
+
+# Launch inspector with stdio server
+mcp-inspector dotnet run --project src/McpServer.Template.Host.Stdio
+```
+
+### Option 2: HTTP Transport (ASP.NET Core)
+
+The HTTP transport exposes MCP over HTTP with Server-Sent Events (SSE):
+
+```powershell
+# Run the HTTP host
+dotnet run --project src/McpServer.Template.Host.Http
+
+# Server starts at http://localhost:5000
+# MCP endpoint: http://localhost:5000/mcp
+```
+
+**Testing with HTTP:**
+
+```powershell
+# Get server capabilities
+curl http://localhost:5000/mcp
+
+# Call the echo tool (requires proper MCP client)
+# Use an MCP-compatible HTTP client or build one using ModelContextProtocol.AspNetCore
+```
+
+## 📝 Adding New Features
+
+### Adding a New Tool
+
+1. Create interface and implementation in `Application/Services`:
+   ```csharp
+   public interface IMyService
+   {
+       Task<MyResponse> DoSomethingAsync(MyRequest request, CancellationToken ct);
+   }
+   ```
+
+2. Register in `Application/Extensions/ServiceCollectionExtensions.cs`:
+   ```csharp
+   services.AddScoped<IMyService, MyService>();
+   ```
+
+3. Create MCP tool in `Mcp/Tools`:
+   ```csharp
+   [McpServerToolType]
+   public sealed class MyTool(IMyService myService)
+   {
+       [McpServerTool(Name = "my_tool")]
+       [Description("Tool description")]
+       public async Task<MyResponse> ExecuteAsync(
+           [Description("Param description")] string param,
+           CancellationToken ct = default)
+       {
+           return await myService.DoSomethingAsync(new MyRequest(param), ct);
+       }
+   }
+   ```
+
+### Adding a New Prompt
+
+```csharp
+[McpServerPromptType]
+public sealed class MyPrompt(IMyService service)
+{
+    [McpServerPrompt(Name = "my_prompt")]
+    [Description("Prompt description")]
+    public async Task<string> GetPromptAsync(
+        [Description("Argument description")] string argument = "default",
+        CancellationToken ct = default)
+    {
+        return await service.GetPromptContentAsync(argument, ct);
+    }
+}
+```
+
+### Adding a New Resource
+
+```csharp
+[McpServerResourceType]
+public sealed class MyResource(IDependency dep)
+{
+    [McpServerResource(
+        Uri = "resource://my-resource",
+        Name = "My Resource",
+        MimeType = "text/plain")]
+    [Description("Resource description")]
+    public async Task<string> GetContentAsync(CancellationToken ct = default)
+    {
+        return await dep.GetResourceContentAsync(ct);
+    }
+}
+```
+
+## 🧪 Testing
+
+The solution includes comprehensive unit tests:
+
+```powershell
+# Run all tests
+dotnet test
+
+# Run tests with detailed output
+dotnet test --logger "console;verbosity=detailed"
+
+# Run tests for a specific project
+dotnet test tests/McpServer.Template.Application.Tests
+
+# Generate coverage report
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
+```
+
+**Test Organization:**
+- **Application.Tests**: Business logic validation (services)
+- **Infrastructure.Tests**: Technical provider tests (clock, app info)
+- **Mcp.Tests**: MCP adapter tests (tools, prompts, resources with mocked services)
+
+## 🔧 Configuration
+
+### Stdio Host (`src/McpServer.Template.Host.Stdio/appsettings.json`)
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "ModelContextProtocol": "Debug"
+    }
+  },
+  "McpServer": {
+    "Name": "McpServer.Template",
+    "Version": "1.0.0"
+  }
+}
+```
+
+### HTTP Host (`src/McpServer.Template.Host.Http/appsettings.json`)
+
+```json
+{
+  "Urls": "http://localhost:5000",
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "ModelContextProtocol": "Debug"
+    }
+  }
+}
+```
+
+Override via environment variables:
+```powershell
+$env:ASPNETCORE_URLS = "http://localhost:8080"
+dotnet run --project src/McpServer.Template.Host.Http
+```
+
+## 📦 Dependencies
+
+**Core Packages:**
+- `ModelContextProtocol` (0.5.0-preview.1) - MCP SDK for stdio
+- `ModelContextProtocol.AspNetCore` (0.5.0-preview.1) - MCP SDK for HTTP
+- `Microsoft.Extensions.DependencyInjection` (10.0.0) - DI container
+- `Microsoft.Extensions.Hosting` (10.0.0) - Generic host
+
+**Test Packages:**
+- `xunit` (2.9.2) - Test framework
+- `FluentAssertions` (6.12.1) - Assertion library
+- `NSubstitute` (5.3.0) - Mocking library
+- `coverlet.collector` (6.0.2) - Code coverage
+
+See [Directory.Build.props](Directory.Build.props) for complete package list.
+
+## 📚 Learn More
+
+- [Model Context Protocol Specification](https://modelcontextprotocol.io/)
+- [MCP .NET SDK Documentation](https://github.com/modelcontextprotocol/csharp-sdk)
+- [.NET 8 Documentation](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8)
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+Built with the official [ModelContextProtocol C# SDK](https://github.com/modelcontextprotocol/csharp-sdk).

@@ -1,0 +1,6 @@
+<Project>
+  <!-- Custom build targets can be added here -->
+  <Target Name="CustomCleanup" AfterTargets="Clean">
+    <Message Text="Custom cleanup completed for $(MSBuildProjectName)" Importance="high" />
+  </Target>
+</Project>

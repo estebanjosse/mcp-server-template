@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="$(ModelContextProtocolVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\McpServer.Template.Mcp\McpServer.Template.Mcp.csproj" />
+    <ProjectReference Include="..\McpServer.Template.Application\McpServer.Template.Application.csproj" />
+    <ProjectReference Include="..\McpServer.Template.Infrastructure\McpServer.Template.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
