@@ -38,7 +38,7 @@ var app = builder.Build();
 // - POST /mcp for messages
 app.MapMcp("/mcp");
 
-// Optional: Add a health check endpoint
+// Health check endpoint
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",
@@ -47,17 +47,51 @@ app.MapGet("/health", () => Results.Ok(new
     timestamp = DateTime.UtcNow
 }));
 
-// Optional: Add a root endpoint with information
+// Server information and capabilities endpoint
 app.MapGet("/", () => Results.Ok(new
 {
     message = "Model Context Protocol Server",
     transport = "HTTP/SSE",
+    version = "1.0.0",
     endpoints = new
     {
         mcp = "/mcp (GET for SSE, POST for messages)",
-        health = "/health"
+        health = "/health",
+        capabilities = "/capabilities"
     },
     documentation = "https://modelcontextprotocol.io"
 }));
+
+// List available capabilities (shows shared McpServer.Examples code)
+app.MapGet("/capabilities", () =>
+{
+    var tools = new[]
+    {
+        new { name = "calculator", description = "Performs basic arithmetic operations (add, subtract, multiply, divide)" },
+        new { name = "echo", description = "Echoes back the provided message" }
+    };
+    
+    var prompts = new[]
+    {
+        new { name = "greeting", description = "Generates a personalized greeting message" },
+        new { name = "code_review", description = "Provides a code review template" }
+    };
+    
+    var resources = new[]
+    {
+        new { name = "welcome", uri = "welcome://info", description = "Welcome message with server information" },
+        new { name = "status", uri = "status://server", description = "Current server status and statistics" }
+    };
+    
+    return Results.Ok(new
+    {
+        message = "These capabilities are shared between Console (STDIO) and Web (HTTP/SSE) transports",
+        sharedProject = "McpServer.Examples",
+        tools,
+        prompts,
+        resources,
+        note = "Adding a new tool/prompt/resource to McpServer.Examples makes it available in both transports automatically"
+    });
+});
 
 app.Run();

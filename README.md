@@ -21,38 +21,50 @@ McpServer.Implementation.ModelContextProtocol/  # MCP SDK Adapter (Hidden)
 ├── McpServerOptions.cs                         # Configuration
 └── ServiceCollectionExtensions.cs              # DI registration
 
-McpServer.Examples/                  # Example Implementations
-├── Tools/                          # Tool examples
+McpServer.Examples/                  # ⭐ Shared Business Logic for BOTH transports
+├── Tools/                          # Tool examples (work in STDIO & HTTP)
 │   ├── EchoTool.cs
 │   └── CalculatorTool.cs
-├── Prompts/                        # Prompt examples
+├── Prompts/                        # Prompt examples (work in STDIO & HTTP)
 │   ├── GreetingPrompt.cs
 │   └── CodeReviewPrompt.cs
-└── Resources/                      # Resource examples
+└── Resources/                      # Resource examples (work in STDIO & HTTP)
     ├── WelcomeResource.cs
     └── ServerStatusResource.cs
 
-McpServer.Host/                     # Application Entry Point
-└── Program.cs                      # DI setup and host configuration
+McpServer.Host/                     # 🖥️ Console Application (STDIO Transport)
+└── Program.cs                      # For Claude Desktop, CLI tools
+
+McpServer.Host.WebApi/              # 🌐 Web Application (HTTP/SSE Transport)
+└── Program.cs                      # For web services, APIs
 ```
+
+### Why Two Applications?
+
+The console app ([McpServer.Host](McpServer.Host/Program.cs)) and web app ([McpServer.Host.WebApi](McpServer.Host.WebApi/Program.cs)) use different transports:
+- **STDIO**: Reads from stdin, writes to stdout (for Claude Desktop)
+- **HTTP/SSE**: REST API with Server-Sent Events (for web services)
+
+Both applications share the **same business logic** from `McpServer.Examples` - when you add a new tool, it works in both transports automatically!
 
 ### Key Architecture Principles
 
 1. **Dependency Inversion**: SDK (ModelContextProtocol v0.5.0-preview.1) is wrapped and not exposed in public API
 2. **Stable Abstractions**: `McpServer.Abstractions` has zero external dependencies
 3. **Adapter Pattern**: Implementation layer translates between abstractions and SDK
-4. **SDK Replaceability**: Any MCP SDK can be used without changing application code
-5. **Clear Responsibilities**: Each layer has a single, well-defined purpose
+4. **SDK Replaceability**: Console app can use any MCP SDK without changing application code
+5. **Shared Code**: Same tools/prompts/resources work in both STDIO and HTTP/SSE transports
 6. **Simple Tool Creation**: `SimpleToolBase` auto-generates JSON schemas from method parameters
 
 ## Features
 
 - **Clean Architecture**: SDK completely isolated behind stable interfaces
+- **Dual Transport Support**:
+  - **Console (STDIO)**: For Claude Desktop and CLI tools → `McpServer.Host`
+  - **Web (HTTP/SSE)**: For web applications and APIs → `McpServer.Host.WebApi`
+- **Shared Business Logic**: Add a tool once in `McpServer.Examples`, use in both transports
 - **Dependency Injection**: Full Microsoft.Extensions.DependencyInjection support
 - **Options Pattern**: Configuration with DataAnnotations validation
-- **Multiple Transports**: 
-  - `stdio` - JSON-RPC over standard input/output
-  - `http` - Server-Sent Events (SSE) over HTTP
 - **Easy Extensibility**: Just implement interfaces and register in DI
 
 ## Getting Started
@@ -69,22 +81,36 @@ dotnet build
 
 ### Running
 
-#### Stdio Transport (Default)
+#### Console App (STDIO Transport) - For Claude Desktop
 
 ```bash
 dotnet run --project McpServer.Host
 ```
 
-Or set the transport explicitly:
+#### Web App (HTTP/SSE Transport) - For Web Services
 
 ```bash
-MCP_TRANSPORT=stdio dotnet run --project McpServer.Host
+dotnet run --project McpServer.Host.WebApi
+# Server starts at http://localhost:5000
+# Test with: curl http://localhost:5000/health
 ```
 
-#### HTTP Transport
+### Testing the Web API
+
+Once the web server is running:
 
 ```bash
-MCP_TRANSPORT=http MCP_HTTP_PORT=5000 dotnet run --project McpServer.Host
+# Check server health
+curl http://localhost:5000/health
+
+# Get server information and available capabilities
+curl http://localhost:5000/
+
+# List all tools, prompts, and resources
+curl http://localhost:5000/capabilities
+
+# Test with MCP Inspector
+npx @modelcontextprotocol/inspector http://localhost:5000/mcp
 ```
 
 ### Configuration
