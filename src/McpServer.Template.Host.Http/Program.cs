@@ -5,6 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add MCP server with all modules
 builder.Services.AddMcpTemplateModules();
+builder.Services.AddMcpServer()
+    .WithHttpTransport();
 
 var app = builder.Build();
 
