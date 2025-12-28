@@ -1,0 +1,38 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# Test projects
+tests/
+**/*.Tests/
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode/
+.vs/
+*.user
+*.suo
+*.swp
+*.swo
+*~
+
+# Documentation
+*.md
+LICENSE
+openspec/
+
+# Solution files (copied explicitly in Dockerfile)
+# *.sln is commented out since we need it
+
+# CI/CD
+.github/
+
+# Temporary files
+*.tmp
+*.temp
+*.log

@@ -4,7 +4,7 @@
 
 ## Tasks
 
-- [ ] **Create Dockerfile with multi-stage build**
+- [x] **Create Dockerfile with multi-stage build**
   - Add build stage using `mcr.microsoft.com/dotnet/sdk:8.0`
   - Copy solution and project files for NuGet restore
   - Restore dependencies with `dotnet restore`
@@ -19,7 +19,7 @@
   - **Validation**: Run `docker build -t mcp-server-template .` successfully
   - **Validation**: Verify final image size is under 250MB with `docker images`
 
-- [ ] **Create .dockerignore file**
+- [x] **Create .dockerignore file**
   - Exclude build artifacts (`bin/`, `obj/`)
   - Exclude test projects (`tests/`, `*.Tests/`)
   - Exclude version control (`.git/`, `.gitignore`, `.gitattributes`)
@@ -28,7 +28,7 @@
   - Exclude solution files (`*.sln`)
   - **Validation**: Build Docker image and verify excluded files are not in build context (check build output size)
 
-- [ ] **Test Docker container locally**
+- [x] **Test Docker container locally**
   - Run container: `docker run -p 5000:5000 mcp-server-template`
   - Verify HTTP server starts and listens on port 5000
   - Test MCP endpoint: `curl http://localhost:5000/mcp`
@@ -36,7 +36,7 @@
   - Test with custom port: `docker run -p 8080:8080 -e ASPNETCORE_URLS=http://+:8080 mcp-server-template`
   - **Validation**: All HTTP requests succeed, non-root user confirmed
 
-- [ ] **Add Docker documentation to README**
+- [x] **Add Docker documentation to README**
   - Add "🐳 Docker Deployment" section after "🎮 Running the Server"
   - Include build command with example: `docker build -t mcp-server-template .`
   - Include run command with port mapping: `docker run -d -p 5000:5000 --name mcp-server mcp-server-template`
@@ -46,20 +46,20 @@
   - Include troubleshooting tips (checking logs with `docker logs`)
   - **Validation**: Follow documented steps to build and run container successfully
 
-- [ ] **(Optional) Add HEALTHCHECK to Dockerfile**
+- [x] **(Optional) Add HEALTHCHECK to Dockerfile**
   - If `add-health-endpoint` change is implemented first, add `HEALTHCHECK` instruction
   - Use `curl` or `wget` to query `/health` endpoint
   - Set reasonable interval (30s), timeout (3s), retries (3)
   - **Validation**: Check container health status with `docker ps` shows "healthy"
   - **Note**: Skip if health endpoint not yet implemented; can be added later
 
-- [ ] **Security scan the Docker image**
+- [x] **Security scan the Docker image**
   - Run `docker scout quickview mcp-server-template` or `trivy image mcp-server-template`
   - Review scan results for critical/high vulnerabilities
   - Document any findings and mitigation steps
   - **Validation**: No critical vulnerabilities in application layer
 
-- [ ] **Test layer caching optimization**
+- [x] **Test layer caching optimization**
   - Make a source code change in a service file
   - Rebuild the Docker image
   - Verify that NuGet restore layer is reused (cached)

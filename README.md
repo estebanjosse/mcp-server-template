@@ -179,6 +179,150 @@ This endpoint is designed for:
 
 The health endpoint requires no authentication and returns minimal information suitable for frequent polling.
 
+## 🐳 Docker Deployment
+
+The HTTP host can be containerized using the provided multi-stage Dockerfile with security hardening and build optimization.
+
+### Building the Docker Image
+
+```powershell
+# Build the image
+docker build -t mcp-server-template .
+
+# Verify the image was created
+docker images mcp-server-template
+```
+
+The Dockerfile uses:
+- **Multi-stage build**: Separate build and runtime stages for minimal image size (~230MB)
+- **Official Microsoft images**: `mcr.microsoft.com/dotnet/sdk:8.0` (build) and `mcr.microsoft.com/dotnet/aspnet:8.0` (runtime)
+- **Layer caching**: Project files copied before source code for faster rebuilds
+- **Security hardening**: Non-root user (`mcpserver`), minimal base image
+- **Health check**: Built-in Docker HEALTHCHECK using the `/health` endpoint
+
+### Running the Container
+
+```powershell
+# Run the container with default settings (port 5000)
+docker run -d -p 5000:5000 --name mcp-server mcp-server-template
+
+# Test the endpoints
+curl http://localhost:5000/health
+curl http://localhost:5000/mcp
+
+# View container logs
+docker logs mcp-server
+
+# Check container health status
+docker ps --format "{{.Names}} - {{.Status}}"
+```
+
+### Configuration Options
+
+**Custom Port:**
+```powershell
+# Run on port 8080
+docker run -d -p 8080:8080 --name mcp-server mcp-server-template --urls http://+:8080
+```
+
+**Environment Variables:**
+```powershell
+# Set environment (Development/Production)
+docker run -d -p 5000:5000 \
+  -e ASPNETCORE_ENVIRONMENT=Development \
+  --name mcp-server \
+  mcp-server-template
+
+# Custom configuration file (mount volume)
+docker run -d -p 5000:5000 \
+  -v ${PWD}/appsettings.Production.json:/app/appsettings.Production.json:ro \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  --name mcp-server \
+  mcp-server-template
+```
+
+**Docker Compose Example:**
+```yaml
+version: '3.8'
+services:
+  mcp-server:
+    image: mcp-server-template
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+```
+
+### Container Management
+
+```powershell
+# Stop the container
+docker stop mcp-server
+
+# Start the container
+docker start mcp-server
+
+# Remove the container
+docker rm mcp-server
+
+# View resource usage
+docker stats mcp-server
+
+# Execute commands in the container
+docker exec mcp-server whoami  # Should output: mcpserver
+```
+
+### Troubleshooting
+
+**Container won't start:**
+```powershell
+# Check logs for errors
+docker logs mcp-server
+
+# Run in foreground mode to see output
+docker run --rm -p 5000:5000 mcp-server-template
+```
+
+**Port already in use:**
+```powershell
+# Use a different host port
+docker run -d -p 5001:5000 --name mcp-server mcp-server-template
+```
+
+**Health check failing:**
+```powershell
+# Inspect health check details
+docker inspect mcp-server --format='{{json .State.Health}}' | ConvertFrom-Json
+
+# Test health endpoint manually from inside container
+docker exec mcp-server curl http://localhost:5000/health
+```
+
+### Security Scanning
+
+```powershell
+# Scan for vulnerabilities with Docker Scout
+docker scout quickview mcp-server-template
+docker scout cves mcp-server-template
+
+# Scan with Trivy (if installed)
+trivy image mcp-server-template
+```
+
+The image is built with security best practices:
+- ✅ Runs as non-root user (`mcpserver`)
+- ✅ Minimal base image (ASP.NET Core runtime only, no SDK)
+- ✅ No unnecessary packages or tools
+- ✅ Official Microsoft base images with security updates
+- ✅ Regular security scanning recommended
+
 ## 📝 Adding New Features
 
 ### Adding a New Tool
