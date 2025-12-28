@@ -51,9 +51,12 @@ USER mcpserver
 # Expose HTTP port
 EXPOSE 5000
 
+# Configure ASP.NET Core to listen on all interfaces
+ENV ASPNETCORE_URLS=http://+:5000
+
 # Health check configuration
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Set entrypoint to bind to all interfaces
-ENTRYPOINT ["dotnet", "McpServer.Template.Host.Http.dll", "--urls", "http://+:5000"]
+# Set entrypoint
+ENTRYPOINT ["dotnet", "McpServer.Template.Host.Http.dll"]
