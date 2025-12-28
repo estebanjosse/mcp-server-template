@@ -143,6 +143,7 @@ dotnet run --project src/McpServer.Template.Host.Http
 
 # Server starts at http://localhost:5000
 # MCP endpoint: http://localhost:5000/mcp
+# Health endpoint: http://localhost:5000/health
 ```
 
 **Testing with HTTP:**
@@ -151,9 +152,32 @@ dotnet run --project src/McpServer.Template.Host.Http
 # Get server capabilities
 curl http://localhost:5000/mcp
 
+# Check health status
+curl http://localhost:5000/health
+
 # Call the echo tool (requires proper MCP client)
 # Use an MCP-compatible HTTP client or build one using ModelContextProtocol.AspNetCore
 ```
+
+**Health Endpoint:**
+
+The HTTP host includes a `/health` endpoint using ASP.NET Core health check middleware:
+
+```powershell
+# Get health status (returns HTTP 200 OK with JSON)
+curl http://localhost:5000/health
+
+# Example response:
+# {"status":"Healthy","checks":[]}
+```
+
+This endpoint is designed for:
+- Container orchestration (Kubernetes liveness/readiness probes)
+- Load balancer health checks
+- Monitoring and alerting systems
+- DevOps automation
+
+The health endpoint requires no authentication and returns minimal information suitable for frequent polling.
 
 ## 📝 Adding New Features
 

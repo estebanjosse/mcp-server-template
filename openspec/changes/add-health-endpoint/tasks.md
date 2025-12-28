@@ -4,13 +4,13 @@
 
 ## Tasks
 
-- [ ] Register health check services in `src/McpServer.Template.Host.Http/Program.cs` using `builder.Services.AddHealthChecks()`
-- [ ] Map health check endpoint in `src/McpServer.Template.Host.Http/Program.cs` using `app.MapHealthChecks("/health")`
-- [ ] Configure health check response format to return JSON with proper content type
-- [ ] Test health endpoint manually by running HTTP host and sending GET request to `/health`
-- [ ] Verify endpoint returns expected JSON structure with "Healthy" status
-- [ ] Verify existing MCP endpoint at `/mcp` continues to work correctly
-- [ ] Update README.md to document the new `/health` endpoint, ASP.NET Core health check middleware usage, and its purpose
+- [x] Register health check services in `src/McpServer.Template.Host.Http/Program.cs` using `builder.Services.AddHealthChecks()`
+- [x] Map health check endpoint in `src/McpServer.Template.Host.Http/Program.cs` using `app.MapHealthChecks("/health")`
+- [x] Configure health check response format to return JSON with proper content type
+- [x] Test health endpoint manually by running HTTP host and sending GET request to `/health`
+- [x] Verify endpoint returns expected JSON structure with "Healthy" status
+- [x] Verify existing MCP endpoint at `/mcp` continues to work correctly
+- [x] Update README.md to document the new `/health` endpoint, ASP.NET Core health check middleware usage, and its purpose
 
 ## Validation
 
