@@ -1,5 +1,7 @@
 # McpServer.Template
 
+[![CI](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml/badge.svg)](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml)
+
 A clean, scalable, production-ready implementation of a Model Context Protocol (MCP) server using the official C# SDK (.NET 8).
 
 ## 🎯 Architecture Overview
@@ -294,6 +296,52 @@ docker run --rm -p 5000:5000 mcp-server-template
 ```powershell
 # Use a different host port
 docker run -d -p 5001:5000 --name mcp-server mcp-server-template
+```
+
+## 📦 Using Pre-built Images from GHCR
+
+Pre-built Docker images are automatically published to GitHub Container Registry (GHCR) on every push to the main branch.
+
+### Pulling Images from GHCR
+
+```powershell
+# Pull the latest image
+docker pull ghcr.io/estebanjosse/mcp-server-template:latest
+
+# Pull a specific version
+docker pull ghcr.io/estebanjosse/mcp-server-template:v1.0.0
+
+# Pull by commit SHA
+docker pull ghcr.io/estebanjosse/mcp-server-template:sha-abc1234
+```
+
+### Running GHCR Images
+
+```powershell
+# Run the latest image from GHCR
+docker run -d -p 5000:5000 --name mcp-server ghcr.io/estebanjosse/mcp-server-template:latest
+
+# Test the server
+curl http://localhost:5000/health
+```
+
+### Available Tags
+
+- `latest` - Latest build from the main branch
+- `main` - Latest build from the main branch (same as latest)
+- `sha-<commit>` - Specific commit (e.g., `sha-abc1234`)
+- `v<version>` - Semantic version tags (e.g., `v1.0.0`, `v1.0`, `v1`)
+
+### Authentication (for private repositories)
+
+If the repository is private, authenticate with GitHub:
+
+```powershell
+# Login to GHCR
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+
+# Pull the image
+docker pull ghcr.io/estebanjosse/mcp-server-template:latest
 ```
 
 **Health check failing:**
