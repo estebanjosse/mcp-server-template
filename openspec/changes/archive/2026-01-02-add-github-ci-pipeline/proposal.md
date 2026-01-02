@@ -23,16 +23,20 @@ Currently, the project lacks automated continuous integration:
 
 This creates friction in the development workflow and increases the risk of introducing defects.
 
-## Problem Statement
+## What Changes
 
-Currently, the project lacks automated continuous integration:
-- No automated test execution on code changes
-- No automated Docker image builds
-- No centralized artifact publishing to a container registry
-- Manual verification required for every change
-- Risk of shipping untested or broken builds
+This change adds a new capability `ci-pipeline` with comprehensive GitHub Actions workflow automation:
 
-This creates friction in the development workflow and increases the risk of introducing defects.
+**New Files:**
+- `.github/workflows/ci.yml` - Complete CI/CD workflow with test, build, and publish jobs
+
+**Modified Files:**
+- `README.md` - Added CI status badge and GHCR image usage documentation
+
+**New Capability:**
+- `ci-pipeline` - See `specs/ci-pipeline/spec.md` for full requirements
+
+The workflow implements three sequential jobs (test → build → publish) with proper caching, conditional publishing, and multi-tag strategy for Docker images.
 
 ## Proposed Solution
 

@@ -1,13 +1,14 @@
-# CI Pipeline Specification (Delta)
+# CI Pipeline Specification
 
 **Capability**: `ci-pipeline`  
-**Status**: Proposed  
 **Version**: 1.0.0  
-**Change**: `add-github-ci-pipeline`
+**Status**: Proposed
 
-## Purpose
+## Overview
 
-Provides automated continuous integration pipeline using GitHub Actions to ensure code quality, build Docker images, and publish artifacts to GitHub Container Registry.
+The CI pipeline capability provides automated continuous integration using GitHub Actions to ensure code quality, build Docker images, and publish artifacts to GitHub Container Registry. This capability implements a complete CI/CD workflow with test execution, Docker image building, and container registry publishing.
+
+---
 
 ## ADDED Requirements
 
@@ -256,6 +257,22 @@ The CI pipeline SHALL manage concurrent workflow executions to prevent resource 
 
 ---
 
+## Implementation Notes
+
+- **Workflow File**: Located at `.github/workflows/ci.yml`
+- **Runner**: Uses `ubuntu-latest` for all jobs
+- **Job Flow**: test → build → publish (sequential dependencies)
+- **Test Execution**: `dotnet test --configuration Release --no-build --verbosity normal`
+- **Docker Build**: Uses Docker Buildx with GitHub Actions cache backend
+- **Image Registry**: GitHub Container Registry (ghcr.io)
+- **Authentication**: Built-in GITHUB_TOKEN with `packages: write` permission
+- **Tag Strategy**: Multi-tag approach (latest, SHA, branch, semver)
+- **Caching**: NuGet packages and Docker layers cached for performance
+- **Concurrency**: Cancel in-progress runs when new commits pushed to same branch
+- **Timeouts**: 30-minute timeout per job to prevent hung workflows
+
+---
+
 ## Dependencies
 
 This specification depends on:
@@ -269,10 +286,3 @@ This specification depends on:
 - GITHUB_TOKEN must have `packages: write` permission
 - Repository must allow GitHub Packages (GHCR)
 - Workflow file must be located at `.github/workflows/ci.yml`
-
-## Non-Functional Requirements
-
-- **Performance**: Workflow completion time <15 minutes (cold cache), <8 minutes (warm cache)
-- **Reliability**: Workflow success rate >95% (excluding legitimate test failures)
-- **Security**: No secrets exposed in logs or artifacts
-- **Maintainability**: Workflow configuration is clear and well-documented
