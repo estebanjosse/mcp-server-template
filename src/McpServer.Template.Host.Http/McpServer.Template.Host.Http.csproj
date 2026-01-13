@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="$(ModelContextProtocolVersion)" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="$(PrometheusNetAspNetCoreVersion)" />
   </ItemGroup>
 
   <ItemGroup>

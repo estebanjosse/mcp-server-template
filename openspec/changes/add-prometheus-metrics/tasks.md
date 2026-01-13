@@ -1,5 +1,5 @@
 ## 1. Metrics Integration
-- [ ] 1.1 Add prometheus-net.AspNetCore package and register metrics services in the HTTP host when enabled.
+- [x] 1.1 Add prometheus-net.AspNetCore package and register metrics services in the HTTP host when enabled.
 - [ ] 1.2 Implement configuration options binding for `Metrics:Enabled` with `MCP_METRICS_ENABLED` override and ensure the endpoint is not mapped when disabled.
 - [ ] 1.3 Expose the `/metrics` scraping endpoint and publish default ASP.NET metrics when enabled.
 

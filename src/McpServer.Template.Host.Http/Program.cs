@@ -1,7 +1,9 @@
 using McpServer.Template.Mcp.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using ModelContextProtocol.AspNetCore;
+using Prometheus;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +15,18 @@ builder.Services.AddMcpServer()
 
 // Add health check services
 builder.Services.AddHealthChecks();
+
+var metricsEnabled = builder.Configuration.GetValue<bool>("Metrics:Enabled");
+
+if (metricsEnabled)
+{
+    builder.Services.AddSingleton(_ => Metrics.NewCustomRegistry());
+    builder.Services.AddSingleton<IMetricFactory>(sp =>
+    {
+        var registry = sp.GetRequiredService<CollectorRegistry>();
+        return Metrics.WithCustomRegistry(registry);
+    });
+}
 
 var app = builder.Build();
 
