@@ -1,5 +1,7 @@
+using McpServer.Template.Host.Http.Options;
 using McpServer.Template.Mcp.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using ModelContextProtocol.AspNetCore;
@@ -16,7 +18,20 @@ builder.Services.AddMcpServer()
 // Add health check services
 builder.Services.AddHealthChecks();
 
-var metricsEnabled = builder.Configuration.GetValue<bool>("Metrics:Enabled");
+var configuration = builder.Configuration;
+
+builder.Services.AddOptions<MetricsOptions>()
+    .Bind(configuration.GetSection("Metrics"))
+    .PostConfigure(options =>
+    {
+        var envOverride = configuration["MCP_METRICS_ENABLED"];
+        if (bool.TryParse(envOverride, out var envEnabled))
+        {
+            options.Enabled = envEnabled;
+        }
+    });
+
+var metricsEnabled = configuration.GetValue<bool>("Metrics:Enabled");
 
 if (metricsEnabled)
 {
@@ -55,3 +70,4 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 
 app.Run();
+
