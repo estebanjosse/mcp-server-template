@@ -31,19 +31,22 @@ builder.Services.AddOptions<MetricsOptions>()
         }
     });
 
-var metricsEnabled = configuration.GetValue<bool>("Metrics:Enabled");
+var metricsEnabled = ShouldEnableMetrics(configuration);
 
 if (metricsEnabled)
 {
-    builder.Services.AddSingleton(_ => Metrics.NewCustomRegistry());
-    builder.Services.AddSingleton<IMetricFactory>(sp =>
-    {
-        var registry = sp.GetRequiredService<CollectorRegistry>();
-        return Metrics.WithCustomRegistry(registry);
-    });
+    builder.Services.AddSingleton(Metrics.DefaultRegistry);
+    builder.Services.AddSingleton<IMetricFactory>(_ => Metrics.DefaultFactory);
 }
 
 var app = builder.Build();
+
+if (metricsEnabled)
+{
+    app.UseHttpMetrics();
+    var registry = app.Services.GetRequiredService<CollectorRegistry>();
+    app.MapMetrics("/metrics", registry);
+}
 
 // Map MCP endpoint with HTTP/SSE transport
 app.MapMcp("/mcp");
@@ -70,4 +73,15 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 });
 
 app.Run();
+
+static bool ShouldEnableMetrics(ConfigurationManager configuration)
+{
+    var envOverride = configuration["MCP_METRICS_ENABLED"];
+    if (bool.TryParse(envOverride, out var envEnabled))
+    {
+        return envEnabled;
+    }
+
+    return configuration.GetValue<bool>("Metrics:Enabled");
+}
 
