@@ -1,5 +1,6 @@
 using McpServer.Template.Application.Ports;
 using McpServer.Template.Contracts.DTOs;
+using McpServer.Template.Mcp.Instrumentation;
 using McpServer.Template.Mcp.Tools;
 
 namespace McpServer.Template.Mcp.Tests.Tools;
@@ -7,12 +8,14 @@ namespace McpServer.Template.Mcp.Tests.Tools;
 public sealed class EchoToolTests
 {
     private readonly IEchoService _echoService;
+    private readonly IMcpMetricsRecorder _metricsRecorder;
     private readonly EchoTool _sut;
 
     public EchoToolTests()
     {
         _echoService = Substitute.For<IEchoService>();
-        _sut = new EchoTool(_echoService);
+        _metricsRecorder = Substitute.For<IMcpMetricsRecorder>();
+        _sut = new EchoTool(_echoService, _metricsRecorder);
     }
 
     [Fact]

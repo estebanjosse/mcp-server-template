@@ -4,7 +4,7 @@
 - [x] 1.3 Expose the `/metrics` scraping endpoint and publish default ASP.NET metrics when enabled.
 
 ## 2. MCP Instrumentation
-- [ ] 2.1 Emit aggregate counters for MCP requests, tool invocations, and active sessions.
+- [x] 2.1 Emit aggregate counters for MCP requests, tool invocations, and active sessions.
 - [ ] 2.2 Emit per-tool counters alongside aggregates using prometheus-net labeled metrics.
 
 ## 3. Documentation & Tests
