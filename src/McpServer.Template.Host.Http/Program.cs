@@ -111,3 +111,5 @@ static bool ShouldEnableMetrics(ConfigurationManager configuration)
     return configuration.GetValue<bool>("Metrics:Enabled");
 }
 
+public partial class Program;
+

@@ -9,4 +9,4 @@
 
 ## 3. Documentation & Tests
 - [x] 3.1 Document metrics configuration, enablement workflow, and default disabled posture.
-- [ ] 3.2 Add automated tests that start the host with metrics enabled and assert the `/metrics` endpoint returns Prometheus text content.
+- [x] 3.2 Add automated tests that start the host with metrics enabled and assert the `/metrics` endpoint returns Prometheus text content.
