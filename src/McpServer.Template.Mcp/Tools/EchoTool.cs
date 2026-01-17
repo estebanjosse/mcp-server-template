@@ -1,12 +1,13 @@
-using System.ComponentModel;
 using McpServer.Template.Application.Ports;
 using McpServer.Template.Contracts.DTOs;
+using McpServer.Template.Mcp.Instrumentation;
 using ModelContextProtocol.Server;
+using System.ComponentModel;
 
 namespace McpServer.Template.Mcp.Tools;
 
 [McpServerToolType]
-public sealed class EchoTool(IEchoService echoService)
+public sealed class EchoTool(IEchoService echoService, IMcpMetricsRecorder metricsRecorder)
 {
     [McpServerTool(Name = "echo")]
     [Description("Echoes back the provided message with a timestamp")]
@@ -15,6 +16,8 @@ public sealed class EchoTool(IEchoService echoService)
         CancellationToken cancellationToken = default)
     {
         var request = new EchoRequest(message);
-        return await echoService.EchoAsync(request, cancellationToken);
+        var response = await echoService.EchoAsync(request, cancellationToken);
+        metricsRecorder.RecordToolInvocation("echo");
+        return response;
     }
 }

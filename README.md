@@ -181,6 +181,25 @@ This endpoint is designed for:
 
 The health endpoint requires no authentication and returns minimal information suitable for frequent polling.
 
+### Prometheus Metrics
+
+Operational metrics are disabled by default. Enable them by setting `Metrics:Enabled` to `true` in configuration (for example, [src/McpServer.Template.Host.Http/appsettings.json](src/McpServer.Template.Host.Http/appsettings.json)) or by exporting the `MCP_METRICS_ENABLED=true` environment variable. Once enabled, the host exposes a `/metrics` endpoint that serves Prometheus exposition format (`text/plain`) and includes:
+
+- `mcp_requests_total`
+- `mcp_tool_invocations_total`
+- `mcp_tool_invocations_by_tool_total` (labelled by `tool`)
+- `mcp_sessions_active`
+
+Example workflow:
+
+```powershell
+$env:MCP_METRICS_ENABLED = "true"
+dotnet run --project src/McpServer.Template.Host.Http
+curl http://localhost:5000/metrics
+```
+
+Remember to remove or secure the metrics endpoint in production environments if it should not be publicly accessible.
+
 ## 🐳 Docker Deployment
 
 The HTTP host can be containerized using the provided multi-stage Dockerfile with security hardening and build optimization.

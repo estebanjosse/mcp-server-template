@@ -1,5 +1,6 @@
 using McpServer.Template.Application.Ports;
 using McpServer.Template.Contracts.DTOs;
+using McpServer.Template.Mcp.Instrumentation;
 using McpServer.Template.Mcp.Tools;
 using ModelContextProtocol;
 
@@ -8,12 +9,14 @@ namespace McpServer.Template.Mcp.Tests.Tools;
 public sealed class CalcDivideToolTests
 {
     private readonly ICalculatorService _calculatorService;
+    private readonly IMcpMetricsRecorder _metricsRecorder;
     private readonly CalcDivideTool _sut;
 
     public CalcDivideToolTests()
     {
         _calculatorService = Substitute.For<ICalculatorService>();
-        _sut = new CalcDivideTool(_calculatorService);
+        _metricsRecorder = Substitute.For<IMcpMetricsRecorder>();
+        _sut = new CalcDivideTool(_calculatorService, _metricsRecorder);
     }
 
     [Theory]
