@@ -8,5 +8,5 @@
 - [x] 2.2 Emit per-tool counters alongside aggregates using prometheus-net labeled metrics.
 
 ## 3. Documentation & Tests
-- [ ] 3.1 Document metrics configuration, enablement workflow, and default disabled posture.
+- [x] 3.1 Document metrics configuration, enablement workflow, and default disabled posture.
 - [ ] 3.2 Add automated tests that start the host with metrics enabled and assert the `/metrics` endpoint returns Prometheus text content.
