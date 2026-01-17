@@ -5,7 +5,7 @@
 
 ## 2. MCP Instrumentation
 - [x] 2.1 Emit aggregate counters for MCP requests, tool invocations, and active sessions.
-- [ ] 2.2 Emit per-tool counters alongside aggregates using prometheus-net labeled metrics.
+- [x] 2.2 Emit per-tool counters alongside aggregates using prometheus-net labeled metrics.
 
 ## 3. Documentation & Tests
 - [ ] 3.1 Document metrics configuration, enablement workflow, and default disabled posture.
