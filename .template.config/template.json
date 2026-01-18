@@ -59,7 +59,8 @@
             "**/obj/**",
             "openspec/**",
             "AGENTS.md",
-            "scripts/**"
+            "scripts/**",
+            "docs/**"
           ]
         },
         {

@@ -5,7 +5,7 @@
 - [x] 1.3 Author automation or manual verification scripts that run `dotnet new mcp-server` with common flag combinations to confirm the scaffold restores, builds, and runs.
 
 ## 2. Packaging & Documentation
-- [ ] 2.1 Write documentation under `docs/` that explains the template layout, parameters, packaging workflow, and installation commands.
+- [x] 2.1 Write documentation under `docs/` that explains the template layout, parameters, packaging workflow, and installation commands.
 - [ ] 2.2 Create a minimal `.nuspec` that sources metadata (ID, version, authors) from existing repository versioning and references the generated template artifacts.
 
 ## 3. CI Publishing Pipeline
