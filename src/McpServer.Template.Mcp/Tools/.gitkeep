@@ -1,0 +1,24 @@
+# Sample Tools Placeholder
+
+This directory is where you can add your MCP server tools.
+
+To create a new tool, add a class that implements the MCP tool patterns. See the documentation for examples.
+
+Example:
+```csharp
+using ModelContextProtocol.Server;
+using System.ComponentModel;
+
+[McpServerToolType]
+public sealed class MyTool
+{
+    [McpServerTool(Name = "my_tool")]
+    [Description("Description of what my tool does")]
+    public async Task<MyResponse> ExecuteAsync(
+        [Description("Parameter description")] string input,
+        CancellationToken cancellationToken = default)
+    {
+        // Implementation
+    }
+}
+```

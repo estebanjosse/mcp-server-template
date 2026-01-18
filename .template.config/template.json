@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Esteban Josse",
+  "classifications": ["MCP", "Server", "Model Context Protocol", ".NET"],
+  "identity": "McpServer.Template",
+  "name": "MCP Server Template",
+  "shortName": "mcp-server",
+  "tags": {
+    "language": "C#",
+    "type": "solution"
+  },
+  "sourceName": "McpServer.Template",
+  "preferNameDirectory": true,
+  "defaultName": "McpServer.Template",
+  "symbols": {
+    "httpHost": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Include the HTTP host project"
+    },
+    "stdioHost": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Include the Stdio host project"
+    },
+    "includeSampleTools": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Include sample MCP tools (EchoTool, CalcDivideTool)"
+    },
+    "includeTests": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Include test projects"
+    },
+    "hostSelected": {
+      "type": "computed",
+      "value": "(httpHost || stdioHost)"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            ".git/**",
+            ".github/prompts/**",
+            ".template.config/**",
+            ".vscode/**",
+            "**/bin/**",
+            "**/obj/**",
+            "openspec/**",
+            "AGENTS.md"
+          ]
+        },
+        {
+          "condition": "(!httpHost)",
+          "exclude": [
+            "src/McpServer.Template.Host.Http/**"
+          ]
+        },
+        {
+          "condition": "(!stdioHost)",
+          "exclude": [
+            "src/McpServer.Template.Host.Stdio/**"
+          ]
+        },
+        {
+          "condition": "(!includeTests)",
+          "exclude": [
+            "tests/**"
+          ]
+        },
+        {
+          "condition": "(!includeSampleTools)",
+          "exclude": [
+            "src/McpServer.Template.Mcp/Tools/EchoTool.cs",
+            "src/McpServer.Template.Mcp/Tools/CalcDivideTool.cs",
+            "tests/McpServer.Template.Mcp.Tests/Tools/**"
+          ]
+        },
+        {
+          "condition": "(includeSampleTools)",
+          "exclude": [
+            "src/McpServer.Template.Mcp/Tools/.gitkeep"
+          ]
+        },
+        {
+          "condition": "(includeTests && !httpHost)",
+          "exclude": [
+            "tests/McpServer.Template.Host.Http.Tests/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "SpecialCustomOperations": {
+    "**/*.slnx": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": ["<!--#if"],
+            "else": ["<!--#else"],
+            "elseif": ["<!--#elseif"],
+            "endif": ["<!--#endif"],
+            "trim": true,
+            "wholeLine": true
+          }
+        }
+      ]
+    }
+  },
+  "constraints": {
+    "host-required": {
+      "type": "expression",
+      "condition": "(httpHost || stdioHost)",
+      "args": {
+        "message": "At least one host option (--http-host or --stdio-host) must be specified."
+      }
+    }
+  }
+}
