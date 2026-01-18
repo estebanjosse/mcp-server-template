@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy solution and project files for dependency restoration
-COPY ["McpServer.Template.sln", "./"]
+COPY ["McpServer.Template.slnx", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["Directory.Build.targets", "./"]
 COPY ["src/McpServer.Template.Contracts/McpServer.Template.Contracts.csproj", "src/McpServer.Template.Contracts/"]

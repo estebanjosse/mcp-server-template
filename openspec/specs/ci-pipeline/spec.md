@@ -2,12 +2,12 @@
 
 ## Purpose
 TBD - created by archiving change add-github-ci-pipeline. Update Purpose after archive.
-## Requirements
-### Requirement: Workflow Triggers
-**Priority**: Must Have  
-**Category**: Automation
 
-The CI workflow SHALL be triggered automatically on relevant repository events.
+## Requirements
+
+### Requirement: Workflow Triggers
+
+The CI workflow MUST be triggered automatically on relevant repository events.
 
 #### Scenario: Trigger on push to main branches
 **Given** a push event to the main or develop branch  
@@ -31,8 +31,6 @@ The CI workflow SHALL be triggered automatically on relevant repository events.
 ---
 
 ### Requirement: Automated Test Execution
-**Priority**: Must Have  
-**Category**: Quality Assurance
 
 The CI pipeline SHALL execute all unit tests automatically and report results.
 
@@ -59,8 +57,6 @@ The CI pipeline SHALL execute all unit tests automatically and report results.
 ---
 
 ### Requirement: Docker Image Build
-**Priority**: Must Have  
-**Category**: Artifact Creation
 
 The CI pipeline SHALL build a Docker image from the repository's Dockerfile.
 
@@ -87,8 +83,6 @@ The CI pipeline SHALL build a Docker image from the repository's Dockerfile.
 ---
 
 ### Requirement: Image Publishing to GHCR
-**Priority**: Must Have  
-**Category**: Artifact Distribution
 
 The CI pipeline SHALL publish built Docker images to GitHub Container Registry (GHCR) under specific conditions.
 
@@ -115,8 +109,6 @@ The CI pipeline SHALL publish built Docker images to GitHub Container Registry (
 ---
 
 ### Requirement: GHCR Authentication
-**Priority**: Must Have  
-**Category**: Security
 
 The CI pipeline SHALL authenticate to GitHub Container Registry securely.
 
@@ -137,8 +129,6 @@ The CI pipeline SHALL authenticate to GitHub Container Registry securely.
 ---
 
 ### Requirement: Image Tagging Strategy
-**Priority**: Must Have  
-**Category**: Versioning
 
 The CI pipeline SHALL apply multiple meaningful tags to Docker images based on build context.
 
@@ -165,8 +155,6 @@ The CI pipeline SHALL apply multiple meaningful tags to Docker images based on b
 ---
 
 ### Requirement: Build Performance Optimization
-**Priority**: Should Have  
-**Category**: Performance
 
 The CI pipeline SHALL optimize build times through caching and parallelization.
 
@@ -185,8 +173,6 @@ The CI pipeline SHALL optimize build times through caching and parallelization.
 ---
 
 ### Requirement: Workflow Status Reporting
-**Priority**: Must Have  
-**Category**: Observability
 
 The CI pipeline SHALL provide clear status reporting for all workflow executions.
 
@@ -207,8 +193,6 @@ The CI pipeline SHALL provide clear status reporting for all workflow executions
 ---
 
 ### Requirement: Image Metadata
-**Priority**: Should Have  
-**Category**: Traceability
 
 Published Docker images SHALL include metadata for traceability and identification.
 
@@ -228,8 +212,6 @@ Published Docker images SHALL include metadata for traceability and identificati
 ---
 
 ### Requirement: Workflow Concurrency Control
-**Priority**: Should Have  
-**Category**: Resource Management
 
 The CI pipeline SHALL manage concurrent workflow executions to prevent resource conflicts.
 
@@ -245,6 +227,30 @@ The CI pipeline SHALL manage concurrent workflow executions to prevent resource 
 **When** workflows are triggered  
 **Then** each PR workflow SHALL run independently  
 **And** PR workflows SHALL not cancel each other
+
+---
+
+### Requirement: Template NuGet Publishing
+
+The CI system MUST publish the dotnet template package to nuget.org only after tests succeed for the release commit.
+
+#### Scenario: Publish template on version tag
+**Given** a semantic version tag (e.g., `v1.3.0`) is pushed  
+**And** the solution tests have passed for that commit  
+**When** the template publishing workflow runs  
+**Then** the workflow MUST pack the template into a `.nupkg`  
+**And** the workflow MUST push the package to nuget.org using the `NUGET_API_KEY` secret
+
+#### Scenario: Skip publishing outside release triggers
+**Given** a pull request or branch push runs CI  
+**When** the template publishing workflow evaluates triggers  
+**Then** no NuGet push SHALL occur  
+**And** the workflow SHALL report that publishing is skipped for non-release builds
+
+#### Scenario: Archive published artifacts
+**Given** the template publishing workflow completes  
+**When** reviewing CI artifacts for the run  
+**Then** the built `.nupkg` MUST be uploaded as a workflow artifact for traceability
 
 ---
 

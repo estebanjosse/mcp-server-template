@@ -4,6 +4,25 @@
 
 A clean, scalable, production-ready implementation of a Model Context Protocol (MCP) server using the official C# SDK (.NET 8).
 
+## 📦 Quick Start with `dotnet new`
+
+Install the template and create a new MCP server in seconds:
+
+```bash
+# Install the template
+dotnet new install McpServer.Template
+
+# Create a new server with HTTP transport
+dotnet new mcp-server --name MyCompany.McpServer --http-host -o my-server
+
+# Build and run
+cd my-server
+dotnet build
+dotnet run --project src/MyCompany.McpServer.Host.Http
+```
+
+See [docs/template.md](docs/template.md) for all template options and detailed documentation.
+
 ## 🎯 Architecture Overview
 
 This template demonstrates a **strict separation of concerns** with a layered architecture that keeps MCP SDK dependencies isolated while maintaining a shared business logic foundation:

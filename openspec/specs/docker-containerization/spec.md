@@ -11,8 +11,6 @@ Provides Docker containerization support for the MCP server HTTP host, enabling 
 ## Requirements
 
 ### Requirement: Multi-Stage Build Pattern
-**Priority**: Must Have  
-**Category**: Build Optimization
 
 The Dockerfile SHALL use a multi-stage build pattern with separate stages for build and runtime to minimize final image size.
 
@@ -31,8 +29,6 @@ The Dockerfile SHALL use a multi-stage build pattern with separate stages for bu
 ---
 
 ### Requirement: Official .NET Base Images
-**Priority**: Must Have  
-**Category**: Foundation
 
 The Dockerfile SHALL use official Microsoft .NET Docker images as base images.
 
@@ -50,8 +46,6 @@ The Dockerfile SHALL use official Microsoft .NET Docker images as base images.
 ---
 
 ### Requirement: Non-Root User Execution
-**Priority**: Must Have  
-**Category**: Security
 
 The containerized application SHALL run as a non-root user to follow security best practices.
 
@@ -70,8 +64,6 @@ The containerized application SHALL run as a non-root user to follow security be
 ---
 
 ### Requirement: Layer Caching Optimization
-**Priority**: Should Have  
-**Category**: Build Optimization
 
 The Dockerfile SHALL optimize layer caching to minimize rebuild times when only source code changes.
 
@@ -90,8 +82,6 @@ The Dockerfile SHALL optimize layer caching to minimize rebuild times when only 
 ---
 
 ### Requirement: Docker Ignore File
-**Priority**: Must Have  
-**Category**: Build Optimization
 
 A `.dockerignore` file SHALL exclude unnecessary files from the Docker build context.
 
@@ -112,8 +102,6 @@ A `.dockerignore` file SHALL exclude unnecessary files from the Docker build con
 ---
 
 ### Requirement: Port Exposure
-**Priority**: Must Have  
-**Category**: Networking
 
 The Dockerfile SHALL expose the HTTP server port and support configuration via environment variables.
 
@@ -131,8 +119,6 @@ The Dockerfile SHALL expose the HTTP server port and support configuration via e
 ---
 
 ### Requirement: Minimal Attack Surface
-**Priority**: Should Have  
-**Category**: Security
 
 The final image SHALL contain only necessary runtime components without development tools, debuggers, or unnecessary packages.
 
@@ -151,8 +137,6 @@ The final image SHALL contain only necessary runtime components without developm
 ---
 
 ### Requirement: Working Directory Convention
-**Priority**: Should Have  
-**Category**: Convention
 
 The Dockerfile SHALL follow .NET container conventions for working directory structure.
 
@@ -165,8 +149,6 @@ The Dockerfile SHALL follow .NET container conventions for working directory str
 ---
 
 ### Requirement: Build Configuration
-**Priority**: Should Have  
-**Category**: Build Optimization
 
 The Dockerfile SHALL build the application in Release configuration for production optimization.
 
@@ -185,8 +167,6 @@ The Dockerfile SHALL build the application in Release configuration for producti
 ---
 
 ### Requirement: Documentation for Container Usage
-**Priority**: Must Have  
-**Category**: Documentation
 
 The project SHALL include documentation for building, running, and configuring the Docker container.
 
@@ -211,8 +191,6 @@ The project SHALL include documentation for building, running, and configuring t
 ---
 
 ### Requirement: Health Check Integration
-**Priority**: Could Have  
-**Category**: Operations
 
 The Dockerfile SHALL support optional health check configuration that can leverage a health endpoint when available.
 
@@ -229,10 +207,3 @@ The Dockerfile SHALL support optional health check configuration that can levera
 **And** container orchestrators SHALL rely on TCP port checks for liveness
 
 ---
-
-## Metadata
-
-**Created**: 2025-12-28  
-**Author**: AI Assistant  
-**Related Changes**: add-dockerfile  
-**Dependencies**: None (complements add-health-endpoint for health checks)
