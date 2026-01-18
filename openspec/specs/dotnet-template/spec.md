@@ -5,8 +5,6 @@ Defines the packaging and usage requirements for the dotnet new template that sc
 
 ## Requirements
 ### Requirement: Template Baseline Scaffold
-**Priority**: Must Have  
-**Category**: Template Engine
 
 The dotnet template MUST register with the short name `mcp-server` and generate a runnable solution that includes at least one host project selected by the caller.
 
@@ -31,8 +29,6 @@ The dotnet template MUST register with the short name `mcp-server` and generate 
 ---
 
 ### Requirement: Optional Content Flags
-**Priority**: Must Have  
-**Category**: Template Configuration
 
 The template MUST expose boolean parameters that opt into sample tools and test projects without including them by default.
 
@@ -55,8 +51,6 @@ The template MUST expose boolean parameters that opt into sample tools and test 
 ---
 
 ### Requirement: Template Packaging Process
-**Priority**: Must Have  
-**Category**: Distribution
 
 The repository MUST produce a NuGet package that contains the template configuration and assets, versioned in sync with the solution.
 
@@ -75,8 +69,6 @@ The repository MUST produce a NuGet package that contains the template configura
 ---
 
 ### Requirement: Template Documentation
-**Priority**: Should Have  
-**Category**: Documentation
 
 The repository MUST document template usage, packaging, and publishing steps under `docs/`.
 

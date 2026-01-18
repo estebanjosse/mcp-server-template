@@ -2,12 +2,12 @@
 
 ## Purpose
 TBD - created by archiving change add-github-ci-pipeline. Update Purpose after archive.
-## Requirements
-### Requirement: Workflow Triggers
-**Priority**: Must Have  
-**Category**: Automation
 
-The CI workflow SHALL be triggered automatically on relevant repository events.
+## Requirements
+
+### Requirement: Workflow Triggers
+
+The CI workflow MUST be triggered automatically on relevant repository events.
 
 #### Scenario: Trigger on push to main branches
 **Given** a push event to the main or develop branch  
@@ -31,8 +31,6 @@ The CI workflow SHALL be triggered automatically on relevant repository events.
 ---
 
 ### Requirement: Automated Test Execution
-**Priority**: Must Have  
-**Category**: Quality Assurance
 
 The CI pipeline SHALL execute all unit tests automatically and report results.
 
@@ -59,8 +57,6 @@ The CI pipeline SHALL execute all unit tests automatically and report results.
 ---
 
 ### Requirement: Docker Image Build
-**Priority**: Must Have  
-**Category**: Artifact Creation
 
 The CI pipeline SHALL build a Docker image from the repository's Dockerfile.
 
@@ -87,8 +83,6 @@ The CI pipeline SHALL build a Docker image from the repository's Dockerfile.
 ---
 
 ### Requirement: Image Publishing to GHCR
-**Priority**: Must Have  
-**Category**: Artifact Distribution
 
 The CI pipeline SHALL publish built Docker images to GitHub Container Registry (GHCR) under specific conditions.
 
@@ -115,8 +109,6 @@ The CI pipeline SHALL publish built Docker images to GitHub Container Registry (
 ---
 
 ### Requirement: GHCR Authentication
-**Priority**: Must Have  
-**Category**: Security
 
 The CI pipeline SHALL authenticate to GitHub Container Registry securely.
 
@@ -137,8 +129,6 @@ The CI pipeline SHALL authenticate to GitHub Container Registry securely.
 ---
 
 ### Requirement: Image Tagging Strategy
-**Priority**: Must Have  
-**Category**: Versioning
 
 The CI pipeline SHALL apply multiple meaningful tags to Docker images based on build context.
 
@@ -165,8 +155,6 @@ The CI pipeline SHALL apply multiple meaningful tags to Docker images based on b
 ---
 
 ### Requirement: Build Performance Optimization
-**Priority**: Should Have  
-**Category**: Performance
 
 The CI pipeline SHALL optimize build times through caching and parallelization.
 
@@ -185,8 +173,6 @@ The CI pipeline SHALL optimize build times through caching and parallelization.
 ---
 
 ### Requirement: Workflow Status Reporting
-**Priority**: Must Have  
-**Category**: Observability
 
 The CI pipeline SHALL provide clear status reporting for all workflow executions.
 
@@ -207,8 +193,6 @@ The CI pipeline SHALL provide clear status reporting for all workflow executions
 ---
 
 ### Requirement: Image Metadata
-**Priority**: Should Have  
-**Category**: Traceability
 
 Published Docker images SHALL include metadata for traceability and identification.
 
@@ -228,8 +212,6 @@ Published Docker images SHALL include metadata for traceability and identificati
 ---
 
 ### Requirement: Workflow Concurrency Control
-**Priority**: Should Have  
-**Category**: Resource Management
 
 The CI pipeline SHALL manage concurrent workflow executions to prevent resource conflicts.
 
@@ -249,8 +231,6 @@ The CI pipeline SHALL manage concurrent workflow executions to prevent resource 
 ---
 
 ### Requirement: Template NuGet Publishing
-**Priority**: Must Have  
-**Category**: Artifact Distribution
 
 The CI system MUST publish the dotnet template package to nuget.org only after tests succeed for the release commit.
 
