@@ -9,5 +9,5 @@
 - [x] 2.2 Create a minimal `.csproj` that sources metadata (ID, version, authors) from existing repository versioning and references the generated template artifacts.
 
 ## 3. CI Publishing Pipeline
-- [ ] 3.1 Extend GitHub Actions so the NuGet release pipeline runs after tests succeed (e.g., on version tags) and builds the template package.
-- [ ] 3.2 Configure the workflow to push the `.nupkg` to nuget.org using a repository secret for the API key and publish the artifact for traceability.
+- [x] 3.1 Create a dedicated `nuget-publish.yml` workflow that triggers on version tags (`v*.*.*`), waits for the CI workflow to succeed, then packs and publishes the template. This workflow is excluded from the template output.
+- [x] 3.2 Configure the workflow to push the `.nupkg` to nuget.org using a repository secret for the API key and publish the artifact for traceability.

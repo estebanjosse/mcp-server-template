@@ -53,6 +53,7 @@
           "exclude": [
             ".git/**",
             ".github/prompts/**",
+            ".github/workflows/nuget-publish.yml",
             ".template.config/**",
             ".vscode/**",
             "**/bin/**",
@@ -60,7 +61,9 @@
             "openspec/**",
             "AGENTS.md",
             "scripts/**",
-            "docs/**"
+            "docs/**",
+            "nupkg/**",
+            "McpServer.Template.csproj"
           ]
         },
         {
