@@ -13,33 +13,37 @@
   "preferNameDirectory": true,
   "defaultName": "McpServer.Template",
   "symbols": {
-    "httpHost": {
+    "http-host": {
       "type": "parameter",
       "datatype": "bool",
       "defaultValue": "false",
+      "displayName": "HTTP Host",
       "description": "Include the HTTP host project"
     },
-    "stdioHost": {
+    "stdio-host": {
       "type": "parameter",
       "datatype": "bool",
       "defaultValue": "false",
+      "displayName": "Stdio Host",
       "description": "Include the Stdio host project"
     },
-    "includeSampleTools": {
+    "include-sample-tools": {
       "type": "parameter",
       "datatype": "bool",
       "defaultValue": "false",
+      "displayName": "Include Sample Tools",
       "description": "Include sample MCP tools (EchoTool, CalcDivideTool)"
     },
-    "includeTests": {
+    "include-tests": {
       "type": "parameter",
       "datatype": "bool",
       "defaultValue": "false",
+      "displayName": "Include Tests",
       "description": "Include test projects"
     },
     "hostSelected": {
       "type": "computed",
-      "value": "(httpHost || stdioHost)"
+      "value": "(http-host || stdio-host)"
     }
   },
   "sources": [
@@ -58,25 +62,25 @@
           ]
         },
         {
-          "condition": "(!httpHost)",
+          "condition": "(!http-host)",
           "exclude": [
             "src/McpServer.Template.Host.Http/**"
           ]
         },
         {
-          "condition": "(!stdioHost)",
+          "condition": "(!stdio-host)",
           "exclude": [
             "src/McpServer.Template.Host.Stdio/**"
           ]
         },
         {
-          "condition": "(!includeTests)",
+          "condition": "(!include-tests)",
           "exclude": [
             "tests/**"
           ]
         },
         {
-          "condition": "(!includeSampleTools)",
+          "condition": "(!include-sample-tools)",
           "exclude": [
             "src/McpServer.Template.Mcp/Tools/EchoTool.cs",
             "src/McpServer.Template.Mcp/Tools/CalcDivideTool.cs",
@@ -84,13 +88,13 @@
           ]
         },
         {
-          "condition": "(includeSampleTools)",
+          "condition": "(include-sample-tools)",
           "exclude": [
             "src/McpServer.Template.Mcp/Tools/.gitkeep"
           ]
         },
         {
-          "condition": "(includeTests && !httpHost)",
+          "condition": "(include-tests && !http-host)",
           "exclude": [
             "tests/McpServer.Template.Host.Http.Tests/**"
           ]
@@ -113,15 +117,6 @@
           }
         }
       ]
-    }
-  },
-  "constraints": {
-    "host-required": {
-      "type": "expression",
-      "condition": "(httpHost || stdioHost)",
-      "args": {
-        "message": "At least one host option (--http-host or --stdio-host) must be specified."
-      }
     }
   }
 }
