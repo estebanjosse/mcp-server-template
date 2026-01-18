@@ -168,20 +168,48 @@ dotnet nuget push ./bin/Release/McpServer.Template.1.0.0.nupkg \
 
 ## CI/CD Integration
 
-The template includes a GitHub Actions workflow that:
+The repository uses two separate GitHub Actions workflows:
 
-1. Runs tests on every push and pull request
-2. Builds and publishes the NuGet package on version tags (e.g., `v1.0.0`)
+### CI Workflow (`.github/workflows/ci.yml`)
+
+Runs on every push to `main` and pull requests:
+
+1. **Test** - Restores, builds, and runs all tests
+2. **Build Docker Image** - Builds the Docker image (no push on PRs)
+3. **Publish to GHCR** - Pushes Docker image to GitHub Container Registry (main branch only)
+
+This workflow is **included in generated projects** from the template.
+
+### NuGet Publish Workflow (`.github/workflows/nuget-publish.yml`)
+
+Runs only on version tags (e.g., `v1.0.0`):
+
+1. **Wait for CI** - Waits for the CI workflow's `Test` job to succeed
+2. **Pack** - Creates the `.nupkg` template package with version from tag
+3. **Publish** - Pushes to nuget.org using `NUGET_API_KEY` secret
+
+This workflow is **excluded from generated projects** (template-specific).
 
 ### Publishing a New Version
 
-1. Update version in `Directory.Build.props`
+1. Ensure all changes are committed and pushed to `main`
 2. Create and push a version tag:
    ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
+   git tag v1.2.0
+   git push origin v1.2.0
    ```
-3. The CI pipeline automatically publishes to NuGet
+3. The CI workflow runs tests on the tag
+4. The NuGet Publish workflow waits for tests, then packs and publishes
+
+### Required Secrets
+
+| Secret | Description |
+|--------|-------------|
+| `NUGET_API_KEY` | API key for nuget.org publishing |
+
+### Optional: Environment Protection
+
+Create a `nuget` environment in GitHub repository settings to add approval requirements before publishing.
 
 ## Verification
 
