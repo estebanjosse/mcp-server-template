@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>McpServer.Template</PackageId>
+    <Title>MCP Server Template</Title>
+    <Description>A dotnet new template for scaffolding Model Context Protocol (MCP) servers in .NET 8 with clean architecture, multiple transport options (HTTP/Stdio), and full test coverage.</Description>
+    <PackageTags>dotnet-new;templates;mcp;model-context-protocol;server;dotnet</PackageTags>
+    <PackageProjectUrl>https://github.com/estebanjosse/mcp-server-template</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    
+    <!-- Version - updated manually or via CI -->
+    <Version>1.0.0</Version>
+    
+    <!-- Template package settings - no compilation needed -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <NoWarn>$(NoWarn);NU5128;NU5110;NU5111</NoWarn>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    
+    <!-- Disable build/compile - this is a content-only package -->
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include=".template.config\**\*" Exclude=".template.config\**\bin\**;.template.config\**\obj\**" />
+    <Content Include="src\**\*" Exclude="**\bin\**;**\obj\**" />
+    <Content Include="tests\**\*" Exclude="**\bin\**;**\obj\**" />
+    <Content Include="scripts\**\*" Exclude="**\bin\**;**\obj\**" />
+    <Content Include="docs\**\*" />
+    <Content Include="Directory.Build.props" />
+    <Content Include="Directory.Build.targets" />
+    <Content Include="McpServer.Template.slnx" />
+    <Content Include="Dockerfile" />
+    <Content Include=".dockerignore" />
+    <Content Include=".gitignore" />
+    <Content Include="LICENSE" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="icon.png" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

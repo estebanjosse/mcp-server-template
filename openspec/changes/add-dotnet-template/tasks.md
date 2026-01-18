@@ -6,7 +6,7 @@
 
 ## 2. Packaging & Documentation
 - [x] 2.1 Write documentation under `docs/` that explains the template layout, parameters, packaging workflow, and installation commands.
-- [ ] 2.2 Create a minimal `.nuspec` that sources metadata (ID, version, authors) from existing repository versioning and references the generated template artifacts.
+- [x] 2.2 Create a minimal `.csproj` that sources metadata (ID, version, authors) from existing repository versioning and references the generated template artifacts.
 
 ## 3. CI Publishing Pipeline
 - [ ] 3.1 Extend GitHub Actions so the NuGet release pipeline runs after tests succeed (e.g., on version tags) and builds the template package.
