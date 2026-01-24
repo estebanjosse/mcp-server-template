@@ -4,6 +4,50 @@
 
 A clean, scalable, production-ready implementation of a Model Context Protocol (MCP) server using the official C# SDK (.NET 8).
 
+## 🚀 Onboarding: From Template to Running Server
+
+### 1. Prerequisites
+
+- .NET 8 SDK or later
+- (Optional) MCP client such as MCP Inspector for testing stdio servers
+
+### 2. Install the template
+
+```bash
+dotnet new install McpServer.Template
+```
+
+### 3. Create a new MCP server
+
+Create a new server that includes both HTTP and stdio hosts:
+
+```bash
+dotnet new mcp-server \
+  --name MyCompany.McpServer \
+  --http-host \
+  --stdio-host \
+  --include-tests \
+  -o my-server
+```
+
+You can also create HTTP-only or stdio-only servers by choosing the corresponding flags.
+
+### 4. Configure and run the hosts
+
+From the generated server directory:
+
+```bash
+cd my-server
+
+# Run HTTP host
+dotnet run --project src/MyCompany.McpServer.Host.Http
+
+# Run stdio host
+dotnet run --project src/MyCompany.McpServer.Host.Stdio
+```
+
+Configuration is managed via `appsettings*.json` files and environment variables (for example, enabling metrics via `MCP_METRICS_ENABLED=true`). Use the generated hosts' README and configuration files as the source of truth for environment-specific configuration.
+
 ## 📦 Quick Start with `dotnet new`
 
 Install the template and create a new MCP server in seconds:
@@ -25,7 +69,7 @@ See [docs/template.md](docs/template.md) for all template options and detailed d
 
 ## 🎯 Architecture Overview
 
-This template demonstrates a **strict separation of concerns** with a layered architecture that keeps MCP SDK dependencies isolated while maintaining a shared business logic foundation:
+This template demonstrates a **strict separation of concerns** with a layered architecture that keeps MCP SDK dependencies isolated while maintaining a shared business logic foundation. For a fuller reference, including project layout and design principles, see [docs/architecture.md](docs/architecture.md).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -104,6 +148,8 @@ McpServer.Template/
 - **`echo`**: Echoes back a message with a UTC timestamp
 - **`calc_divide`**: Divides two numbers (with division-by-zero validation)
 
+See [docs/capabilities.md](docs/capabilities.md) for a capabilities-focused overview of tools, prompts, and resources.
+
 ### Prompts
 - **`greeting`**: Generates a multilingual greeting message (en, fr, es, de)
 
@@ -144,6 +190,8 @@ dotnet run --project src/McpServer.Template.Host.Stdio
 # Or with MCP Inspector
 npx @modelcontextprotocol/inspector dotnet run --project src/McpServer.Template.Host.Stdio
 ```
+
+For additional operational guidance (health checks, metrics, Docker, and GHCR), see [docs/operations.md](docs/operations.md).
 
 **Testing with MCP Inspector:**
 ```powershell
