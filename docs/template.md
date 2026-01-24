@@ -1,6 +1,8 @@
 # MCP Server Template
 
-A `dotnet new` template for quickly scaffolding Model Context Protocol (MCP) servers in .NET.
+McpServer.Template is a `dotnet new` template for quickly scaffolding clean, scalable, production-ready Model Context Protocol (MCP) servers in .NET 8.
+
+This package is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions (HTTP and/or stdio hosts, application layer, tests, and more).
 
 ## Installation
 
@@ -23,17 +25,33 @@ dotnet new install .
 
 ## Usage
 
-### Basic Usage
+### Recommended quick start
 
-Create a new MCP server with HTTP transport:
+Create a new MCP server that includes both HTTP and stdio hosts plus tests (mirrors the example from the root README):
 
 ```bash
-dotnet new mcp-server --name MyCompany.McpServer --http-host -o my-server
+dotnet new mcp-server \ 
+    --name MyCompany.McpServer \ 
+    --http-host \ 
+    --stdio-host \ 
+    --include-tests \ 
+    -o my-server
+
 cd my-server
 dotnet build
 ```
 
-### Template Options
+Run the generated hosts:
+
+```bash
+# HTTP host
+dotnet run --project src/MyCompany.McpServer.Host.Http
+
+# Stdio host
+dotnet run --project src/MyCompany.McpServer.Host.Stdio
+```
+
+### Template options
 
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
@@ -67,7 +85,7 @@ dotnet new mcp-server --name Contoso.Mcp --http-host --stdio-host --include-test
 dotnet new mcp-server --name Contoso.Mcp --http-host --include-tests --include-sample-tools
 ```
 
-## Generated Project Structure
+## Generated project structure
 
 ```
 MyCompany.McpServer/
@@ -88,27 +106,7 @@ MyCompany.McpServer/
     └── MyCompany.McpServer.Host.Http.Tests/ # (if --http-host)
 ```
 
-## Running the Server
-
-### HTTP Host
-
-```bash
-cd src/MyCompany.McpServer.Host.Http
-dotnet run
-```
-
-The server starts on `http://localhost:5000` by default.
-
-### Stdio Host
-
-```bash
-cd src/MyCompany.McpServer.Host.Stdio
-dotnet run
-```
-
-Use this for MCP clients that communicate via standard input/output.
-
-## Adding MCP Tools
+## Adding MCP tools
 
 Create a new tool in `src/MyCompany.McpServer.Mcp/Tools/`:
 
@@ -133,7 +131,7 @@ public sealed class MyTool
 }
 ```
 
-## Packaging the Template
+## Packaging the template
 
 ### Building the NuGet Package
 
@@ -166,7 +164,7 @@ dotnet nuget push ./bin/Release/McpServer.Template.1.0.0.nupkg \
     --source https://api.nuget.org/v3/index.json
 ```
 
-## CI/CD Integration
+## CI/CD integration
 
 The repository uses two separate GitHub Actions workflows:
 
