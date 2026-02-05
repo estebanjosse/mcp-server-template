@@ -1,4 +1,4 @@
-# McpServer.Template
+# EasyMcp.McpServer.Template
 
 [![CI](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml/badge.svg)](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml)
 
@@ -16,7 +16,7 @@ This NuGet package is a **template**, not a runtime library: installing it adds 
 ### 2. Install the template
 
 ```bash
-dotnet new install McpServer.Template
+dotnet new install EasyMcp.McpServer.Template
 ```
 
 ### 3. Create a new MCP server

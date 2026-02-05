@@ -11,7 +11,7 @@
     <!-- Package Metadata -->
     <Authors>Esteban Josse</Authors>
     <Company>McpServer.Template</Company>
-    <Product>McpServer.Template</Product>
+    <Product>EasyMcp.McpServer.Template</Product>
     <Copyright>Copyright © 2025 Esteban Josse</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>

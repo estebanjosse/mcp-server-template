@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/template",
   "author": "Esteban Josse",
   "classifications": ["MCP", "Server", "Model Context Protocol", ".NET"],
-  "identity": "McpServer.Template",
+  "identity": "EasyMcp.McpServer.Template",
   "name": "MCP Server Template",
   "shortName": "mcp-server",
   "tags": {
@@ -11,7 +11,7 @@
   },
   "sourceName": "McpServer.Template",
   "preferNameDirectory": true,
-  "defaultName": "McpServer.Template",
+  "defaultName": "EasyMcp.McpServer.Template",
   "symbols": {
     "http-host": {
       "type": "parameter",
@@ -61,7 +61,7 @@
             "openspec/**",
             "AGENTS.md",
             "scripts/**",
-            "docs/**",
+            "docs/template.md",
             "nupkg/**",
             "McpServer.Template.csproj"
           ]
@@ -89,7 +89,8 @@
           "exclude": [
             "src/McpServer.Template.Mcp/Tools/EchoTool.cs",
             "src/McpServer.Template.Mcp/Tools/CalcDivideTool.cs",
-            "tests/McpServer.Template.Mcp.Tests/Tools/**"
+            "tests/McpServer.Template.Mcp.Tests/Tools/**",
+            "docs/capabilities.md"
           ]
         },
         {

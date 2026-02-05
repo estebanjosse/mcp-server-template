@@ -1,6 +1,6 @@
 # MCP Server Template
 
-McpServer.Template is a `dotnet new` template for quickly scaffolding clean, scalable, production-ready Model Context Protocol (MCP) servers in .NET 8.
+EasyMcp.McpServer.Template is a `dotnet new` template for quickly scaffolding clean, scalable, production-ready Model Context Protocol (MCP) servers in .NET 8.
 
 This package is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions (HTTP and/or stdio hosts, application layer, tests, and more).
 
@@ -9,7 +9,7 @@ This package is a **template**, not a runtime library: installing it adds a `mcp
 ### From NuGet (recommended)
 
 ```bash
-dotnet new install McpServer.Template
+dotnet new install EasyMcp.McpServer.Template
 ```
 
 ### From local source
@@ -106,31 +106,6 @@ MyCompany.McpServer/
     └── MyCompany.McpServer.Host.Http.Tests/ # (if --http-host)
 ```
 
-## Adding MCP tools
-
-Create a new tool in `src/MyCompany.McpServer.Mcp/Tools/`:
-
-```csharp
-using ModelContextProtocol.Server;
-using System.ComponentModel;
-
-namespace MyCompany.McpServer.Mcp.Tools;
-
-[McpServerToolType]
-public sealed class MyTool
-{
-    [McpServerTool(Name = "my_tool")]
-    [Description("Description of what my tool does")]
-    public async Task<MyResponse> ExecuteAsync(
-        [Description("Parameter description")] string input,
-        CancellationToken cancellationToken = default)
-    {
-        // Implementation
-        return new MyResponse(/* ... */);
-    }
-}
-```
-
 ## Packaging the template
 
 ### Building the NuGet Package
@@ -140,17 +115,17 @@ public sealed class MyTool
 dotnet pack -c Release
 
 # The package is created at:
-# bin/Release/McpServer.Template.<version>.nupkg
+# bin/Release/EasyMcp.McpServer.Template.<version>.nupkg
 ```
 
 ### Testing Locally
 
 ```bash
 # Uninstall existing version
-dotnet new uninstall McpServer.Template
+dotnet new uninstall EasyMcp.McpServer.Template
 
 # Install from local package
-dotnet new install ./bin/Release/McpServer.Template.1.0.0.nupkg
+dotnet new install ./bin/Release/EasyMcp.McpServer.Template.1.0.0.nupkg
 
 # Verify installation
 dotnet new list mcp-server
@@ -159,7 +134,7 @@ dotnet new list mcp-server
 ### Publishing to NuGet
 
 ```bash
-dotnet nuget push ./bin/Release/McpServer.Template.1.0.0.nupkg \
+dotnet nuget push ./bin/Release/EasyMcp.McpServer.Template.0.0.2-preview.nupkg \
     --api-key YOUR_API_KEY \
     --source https://api.nuget.org/v3/index.json
 ```
@@ -225,7 +200,7 @@ Options:
 
 ```bash
 # From NuGet package
-dotnet new uninstall McpServer.Template
+dotnet new uninstall EasyMcp.McpServer.Template
 
 # From local source
 dotnet new uninstall /path/to/mcp-server-template
