@@ -4,7 +4,7 @@
 
 A `dotnet new` template that scaffolds a clean, scalable, production-ready Model Context Protocol (MCP) server using the official C# SDK (.NET 8).
 
-This NuGet package is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions.
+This [NuGet package](https://www.nuget.org/packages/EasyMcp.McpServer.Template) is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions.
 
 ## 🚀 Quick start
 
