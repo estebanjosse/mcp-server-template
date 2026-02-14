@@ -23,6 +23,6 @@ rules:
     - Reference existing patterns in the codebase before inventing new ones
   design:
     - Respect layer boundaries — never leak MCP SDK types into Application
-    - Include sequence diagrams for cross-layer flows
+    - Include GitHub-friendly mermaid sequence diagrams for cross-layer flows
   tasks:
     - Each task must be independently testable and commited
