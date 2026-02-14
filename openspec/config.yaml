@@ -1,0 +1,28 @@
+schema: custom-spec-driven
+
+context: |
+  .NET 8 MCP server template (C# latest). Hexagonal architecture:
+    Contracts → Infrastructure → Application → Mcp → Hosts (Stdio, Http)
+  Only McpServer.Template.Mcp may reference MCP SDK packages.
+  Application layer is MCP/transport-agnostic — business logic lives there.
+  DI via extension methods (AddMcpTemplateModules). Options pattern for config.
+  Sealed classes for concrete services. File-scoped namespaces. Nullable enabled.
+  All public service methods async with CancellationToken.
+  Testing: xUnit + FluentAssertions + NSubstitute. SUT named _sut.
+  Test naming: MethodName_Scenario_ExpectedResult.
+  Commits: Conventional Commits (feat:, fix:, docs:, test:, refactor:, chore:, spec:).
+  No external APIs or databases — self-contained, in-memory.
+  Package versions centralized in Directory.Build.props.
+
+rules:
+  proposal:
+    - Check openspec/specs/ for existing capabilities before listing new ones
+    - Mark any breaking changes with **BREAKING**
+  specs:
+    - Use Given/When/Then for behavioral scenarios
+    - Reference existing patterns in the codebase before inventing new ones
+  design:
+    - Respect layer boundaries — never leak MCP SDK types into Application
+    - Include sequence diagrams for cross-layer flows
+  tasks:
+    - Each task must be independently testable and commited
