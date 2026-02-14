@@ -1,0 +1,55 @@
+name: fast-spec
+version: 1
+description: Fast iteration with minimal overhead
+
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Quick proposal
+    template: proposal.md
+    instruction: |
+      Create a brief proposal for this change.
+      Focus on what and why, skip detailed specs.
+    requires: []
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist
+    template: tasks.md
+    requires: [proposal]
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Read proposal file and work through tasks ONE AT A TIME. 
+    After each task, STOP and hand back to the user.
+
+    Workflow per task:
+    1. Identify the next pending task (first unchecked `- [ ]`).
+    2. Implement ONLY that single task. Do not start the next one.
+    3. Mark the task as complete (`- [x]`) in tasks.md.
+    4. Run relevant tests to confirm nothing is broken.
+    5. STOP and present the following to the user:
+
+    **Summary format (use exactly this structure):**
+
+    ### ✅ Task X.Y — <task title>
+
+    **What changed:**
+    - Bullet list of files created/modified and why
+
+    **Proposed commit:**
+    ```
+    <type>(<scope>): <description>
+    ```
+
+    **Next up:** Task X.Z — <next task title> (or "All tasks complete" if done)
+
+    ---
+
+    Wait for the user to review, adjust, and commit before proceeding.
+    Do NOT continue to the next task unless the user explicitly asks.
+
+    If you hit a blocker or ambiguity on the current task, stop and ask
+    for clarification instead of guessing.
