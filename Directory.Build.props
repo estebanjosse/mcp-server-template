@@ -31,7 +31,7 @@
     <MicrosoftExtensionsHostingVersion>10.0.3</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsConfigVersion>10.0.3</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
-    <AspNetCoreMvcTestingVersion>8.0.23</AspNetCoreMvcTestingVersion>
+    <AspNetCoreMvcTestingVersion>8.0.24</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.3</XunitVersion>
     <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
     <TestSdkVersion>18.0.1</TestSdkVersion>
