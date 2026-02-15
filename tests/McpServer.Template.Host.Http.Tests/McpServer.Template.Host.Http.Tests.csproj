@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="$(MicrosoftExtensionsHostingVersion)" />
     <ProjectReference Include="..\..\src\McpServer.Template.Host.Http\McpServer.Template.Host.Http.csproj" />
   </ItemGroup>
 
