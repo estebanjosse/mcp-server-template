@@ -53,6 +53,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: test
     timeout-minutes: 30
+    env:
+      CI_IMAGE_NAME: mcp-server-template
+      CI_IMAGE_TAG: sha-${{ github.sha }}
+      CI_CONTAINER_NAME: mcp-runtime-smoke
+      CI_HOST_PORT: '18080'
     
     steps:
       - name: Checkout code
@@ -61,34 +66,62 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=sha,prefix=sha-
-            type=raw,value=latest,enable={{is_default_branch}}
-          labels: |
-            org.opencontainers.image.title=MCP Server Template
-            org.opencontainers.image.description=Model Context Protocol Server Template (.NET 8)
-            org.opencontainers.image.vendor=MCP Server Template
-      
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          load: true
+          tags: ${{ env.CI_IMAGE_NAME }}:${{ env.CI_IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Start runtime validation container
+        run: |
+          docker run -d \
+            --name "$CI_CONTAINER_NAME" \
+            -p "$CI_HOST_PORT:5000" \
+            "$CI_IMAGE_NAME:$CI_IMAGE_TAG"
+
+      - name: Wait for /health readiness
+        run: |
+          set -euo pipefail
+          max_attempts=30
+          sleep_seconds=2
+
+          for attempt in $(seq 1 "$max_attempts"); do
+            state="$(docker inspect -f '{{.State.Status}}' "$CI_CONTAINER_NAME" 2>/dev/null || echo missing)"
+            if [ "$state" != "running" ]; then
+              echo "Container state is '$state' before readiness was reached."
+              exit 1
+            fi
+
+            http_code="$(curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$CI_HOST_PORT/health" || true)"
+            if [ "$http_code" = "200" ]; then
+              echo "Container is healthy."
+              exit 0
+            fi
+
+            echo "Attempt $attempt/$max_attempts: /health returned HTTP $http_code."
+            sleep "$sleep_seconds"
+          done
+
+          echo "Timed out waiting for /health readiness."
+          exit 1
+
+      - name: Capture container diagnostics
+        if: failure()
+        run: |
+          echo "=== docker logs ==="
+          docker logs "$CI_CONTAINER_NAME" || true
+          echo "=== docker inspect ==="
+          docker inspect "$CI_CONTAINER_NAME" || true
+
+      - name: Cleanup runtime validation container
+        if: always()
+        run: |
+          docker rm -f "$CI_CONTAINER_NAME" >/dev/null 2>&1 || true
 
   publish:
     name: Publish to GHCR
