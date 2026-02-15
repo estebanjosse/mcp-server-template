@@ -34,7 +34,7 @@
     <AspNetCoreMvcTestingVersion>8.0.23</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.3</XunitVersion>
     <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
-    <TestSdkVersion>17.11.1</TestSdkVersion>
+    <TestSdkVersion>18.0.1</TestSdkVersion>
     <FluentAssertionsVersion>8.8.0</FluentAssertionsVersion>
     <NSubstituteVersion>5.3.0</NSubstituteVersion>
     <CoverletVersion>6.0.4</CoverletVersion>
