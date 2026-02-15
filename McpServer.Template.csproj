@@ -11,7 +11,7 @@
     <PackageIcon>icon.png</PackageIcon>
     
     <!-- Version - updated manually or via CI -->
-    <Version>0.0.2-preview</Version>
+    <Version>0.0.3-preview</Version>
     
     <!-- Template package settings - no compilation needed -->
     <TargetFramework>netstandard2.0</TargetFramework>
