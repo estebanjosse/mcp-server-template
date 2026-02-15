@@ -58,7 +58,7 @@ The CI pipeline SHALL execute all unit tests automatically and report results.
 
 ### Requirement: Docker Image Build
 
-The CI pipeline SHALL build a Docker image from the repository's Dockerfile.
+The CI pipeline SHALL build a Docker image from the repository's Dockerfile and SHALL validate container runtime startup before the Docker build stage is considered successful.
 
 #### Scenario: Build image with Docker Buildx
 **Given** the build job is triggered after successful tests  
@@ -79,6 +79,24 @@ The CI pipeline SHALL build a Docker image from the repository's Dockerfile.
 **When** the build completes  
 **Then** the image SHALL be tagged with `sha-<commit-sha>`  
 **And** the SHA tag SHALL uniquely identify the commit that triggered the build
+
+#### Scenario: Run built image in CI runtime validation
+**Given** a Docker image has been built in the CI build job  
+**When** runtime validation starts  
+**Then** the workflow SHALL start a container from the built image  
+**And** the container SHALL expose the HTTP host on the expected CI port mapping
+
+#### Scenario: Validate container readiness through health endpoint
+**Given** the runtime validation container is running  
+**When** the workflow probes `GET /health` with retries within a bounded timeout  
+**Then** the workflow SHALL pass runtime validation only after receiving HTTP 200 from `/health`  
+**And** the workflow SHALL fail if readiness is not reached before timeout
+
+#### Scenario: Fail fast and publish diagnostics on runtime startup failure
+**Given** runtime validation has started for the built image  
+**When** the container exits before readiness or health checks keep failing until timeout  
+**Then** the workflow SHALL fail the build job  
+**And** the workflow SHALL capture container diagnostics including `docker logs` and `docker inspect`
 
 ---
 
