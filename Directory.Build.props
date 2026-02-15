@@ -33,7 +33,7 @@
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
     <AspNetCoreMvcTestingVersion>8.0.23</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.2</XunitVersion>
-    <XunitRunnerVersion>2.8.2</XunitRunnerVersion>
+    <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
     <TestSdkVersion>17.11.1</TestSdkVersion>
     <FluentAssertionsVersion>8.8.0</FluentAssertionsVersion>
     <NSubstituteVersion>5.3.0</NSubstituteVersion>
