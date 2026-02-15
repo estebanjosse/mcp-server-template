@@ -37,6 +37,6 @@
     <TestSdkVersion>18.0.1</TestSdkVersion>
     <FluentAssertionsVersion>8.8.0</FluentAssertionsVersion>
     <NSubstituteVersion>5.3.0</NSubstituteVersion>
-    <CoverletVersion>6.0.4</CoverletVersion>
+    <CoverletVersion>8.0.0</CoverletVersion>
   </PropertyGroup>
 </Project>
