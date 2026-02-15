@@ -27,9 +27,9 @@
   <PropertyGroup>
     <!-- Package Version Management -->
     <ModelContextProtocolVersion>0.6.0-preview.1</ModelContextProtocolVersion>
-    <MicrosoftExtensionsVersion>10.0.2</MicrosoftExtensionsVersion>
-    <MicrosoftExtensionsHostingVersion>10.0.2</MicrosoftExtensionsHostingVersion>
-    <MicrosoftExtensionsConfigVersion>10.0.2</MicrosoftExtensionsConfigVersion>
+    <MicrosoftExtensionsVersion>10.0.3</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsHostingVersion>10.0.3</MicrosoftExtensionsHostingVersion>
+    <MicrosoftExtensionsConfigVersion>10.0.3</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
     <AspNetCoreMvcTestingVersion>8.0.24</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.3</XunitVersion>
