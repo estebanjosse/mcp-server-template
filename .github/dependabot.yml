@@ -4,11 +4,11 @@ updates:
   directory: "/"
   schedule:
     interval: "weekly"
-    day: "sunday"
-    time: "15:00"
+    day: "friday"
+    time: "19:00"
 - package-ecosystem: "docker"
   directory: "/"
   schedule:
     interval: "weekly"
-    day: "sunday"
-    time: "15:00"
+    day: "friday"
+    time: "19:00"
