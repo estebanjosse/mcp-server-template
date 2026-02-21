@@ -1,12 +1,12 @@
 ## 1. Upgrade MCP dependencies
 
-- [ ] 1.1 Update `ModelContextProtocolVersion` to `0.8.0-preview.1` in centralized version management.
-- [ ] 1.2 Restore and build the solution to confirm package resolution and compile-time compatibility for HTTP and stdio hosts.
+- [x] 1.1 Update `ModelContextProtocolVersion` to `0.8.0-preview.1` in centralized version management.
+- [x] 1.2 Restore and build the solution to confirm package resolution and compile-time compatibility for HTTP and stdio hosts.
 
 ## 2. Validate runtime and test compatibility
 
-- [ ] 2.1 Run targeted MCP adapter and host tests (tools/prompts/resources and HTTP host tests) to detect regressions after the upgrade.
-- [ ] 2.2 Run full test suite and validate no new failures related to MCP transport registration, `McpException` handling, or protocol type usage.
+- [x] 2.1 Run targeted MCP adapter and host tests (tools/prompts/resources and HTTP host tests) to detect regressions after the upgrade.
+- [x] 2.2 Run full test suite and validate no new failures related to MCP transport registration, `McpException` handling, or protocol type usage.
 
 ## 3. Capture breaking-change impact
 
