@@ -159,3 +159,19 @@ docker scout cves mcp-server-template
 ```
 
 Use these scans to identify and triage vulnerabilities before deploying images to production environments.
+
+## License and notice redistribution
+
+When redistributing binaries or container images generated from this template, include:
+
+- Your project license text.
+- Third-party license and notice attributions relevant to bundled dependencies.
+
+For MCP SDK dependencies specifically:
+
+- See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for current transition context (Apache-2.0 for new upstream contributions and historical MIT portions).
+- If upstream introduces or updates a dedicated `NOTICE` requirement, propagate that notice into your binary/container distribution artifacts.
+
+Operational recommendation:
+
+- Add a release checklist item to verify that license/notice files are present in published artifacts (NuGet package, binary zip, container image labels/filesystem paths).

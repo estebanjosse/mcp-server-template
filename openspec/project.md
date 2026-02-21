@@ -11,7 +11,7 @@ A clean, scalable, production-ready template for building Model Context Protocol
 
 ## Tech Stack
 - **.NET 8.0** - Target framework with C# latest language version
-- **Model Context Protocol SDK 0.5.0-preview.1** - Official MCP C# SDK
+- **Model Context Protocol SDK 0.8.0-preview.1** - Official MCP C# SDK
 - **ASP.NET Core** - HTTP/SSE transport host
 - **Microsoft.Extensions** (v10.0.0) - Dependency injection, configuration, hosting, logging
 - **xUnit 2.9.2** - Unit testing framework
@@ -96,7 +96,7 @@ This template demonstrates how to build MCP servers that work with both transpor
 ## External Dependencies
 - **Model Context Protocol SDK**: Official C# SDK from Anthropic/ModelContextProtocol organization
   - Version managed via `$(ModelContextProtocolVersion)` in Directory.Build.props
-  - Packages: `ModelContextProtocol.SDK`, `ModelContextProtocol.AspNetCore`
+  - Packages: `ModelContextProtocol`, `ModelContextProtocol.AspNetCore`
 - **Microsoft.Extensions**: Dependency injection, configuration, hosting abstractions
   - Core DI, Logging, Options pattern
 - **ASP.NET Core**: Used only in HTTP host for web-based transport

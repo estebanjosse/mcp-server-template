@@ -124,6 +124,8 @@ If you are working on this repository or on a project generated from the templat
 
 This project is licensed under the MIT License – see [LICENSE](LICENSE) for details.
 
+Third-party dependency attribution guidance is documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 ## 🙏 Acknowledgments
 
 Built with the official [ModelContextProtocol C# SDK](https://github.com/modelcontextprotocol/csharp-sdk).
