@@ -11,7 +11,7 @@ A clean, scalable, production-ready template for building Model Context Protocol
 
 ## Tech Stack
 - **.NET 8.0** - Target framework with C# latest language version
-- **Model Context Protocol SDK 0.8.0-preview.1** - Official MCP C# SDK
+- **Model Context Protocol SDK 0.9.0-preview.1** - Official MCP C# SDK
 - **ASP.NET Core** - HTTP/SSE transport host
 - **Microsoft.Extensions** (v10.0.0) - Dependency injection, configuration, hosting, logging
 - **xUnit 2.9.2** - Unit testing framework

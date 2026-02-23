@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml/badge.svg)](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml)
 
-A `dotnet new` template that scaffolds a clean, scalable, production-ready Model Context Protocol (MCP) server using the official C# SDK (.NET 8).
+A `dotnet new` template that scaffolds a clean, scalable, production-ready Model Context Protocol (MCP) server using [the official C# SDK](https://github.com/modelcontextprotocol/csharp-sdk).
 
 This [NuGet package](https://www.nuget.org/packages/EasyMcp.McpServer.Template) is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions.
 
@@ -32,7 +32,7 @@ dotnet new mcp-server \
   -o my-server
 ```
 
-Other combinations are supported (HTTP-only, stdio-only, without tests); see the template documentation below for all options.
+Other combinations are supported (HTTP-only, stdio-only, without tests); see the [template documentation](docs/template.md) for all options.
 
 ### 4. Build and run the generated hosts
 
@@ -118,7 +118,6 @@ If you are working on this repository or on a project generated from the templat
 
 - [Model Context Protocol Specification](https://modelcontextprotocol.io/)
 - [MCP .NET SDK Documentation](https://github.com/modelcontextprotocol/csharp-sdk)
-- [.NET 8 Documentation](https://learn.microsoft.com/en-us/dotnet/core/whats-new/dotnet-8)
 
 ## 📄 License
 
