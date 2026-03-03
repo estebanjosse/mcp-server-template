@@ -9,9 +9,10 @@
     <PackageProjectUrl>https://github.com/estebanjosse/mcp-server-template</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>
+    <PackageReleaseNotes>https://github.com/estebanjosse/mcp-server-template/releases</PackageReleaseNotes>
     
-    <!-- Version - updated manually or via CI -->
-    <Version>0.0.3-preview</Version>
+    <!-- Local development version - overridden by CI with tag/release version -->
+    <Version>0.0.0-local</Version>
     
     <!-- Template package settings - no compilation needed -->
     <TargetFramework>netstandard2.0</TargetFramework>
