@@ -44,9 +44,11 @@ The repository MUST provide configuration for auto-generated release notes so th
 #### Scenario: Categorize PRs by label
 **Given** a `.github/release.yml` configuration file exists  
 **When** a release is created with `--generate-notes`  
-**Then** PRs labeled `enhancement` SHALL appear under a "Features" category  
-**And** PRs labeled `bug` SHALL appear under a "Bug Fixes" category  
-**And** remaining PRs SHALL appear under a "Maintenance" category
+**Then** PRs labeled `enhancement` SHALL appear under a "🚀 Features" category  
+**And** PRs labeled `bug` SHALL appear under a "🐛 Bug Fixes" category  
+**And** PRs labeled `documentation` SHALL appear under a "📚 Documentation" category  
+**And** PRs labeled `dependencies` SHALL appear under a "⬆️ Dependencies" category  
+**And** remaining PRs SHALL appear under a "🧰 Maintenance" category
 
 ---
 
