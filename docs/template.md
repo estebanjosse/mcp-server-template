@@ -155,9 +155,9 @@ This workflow is **included in generated projects** from the template.
 
 ### NuGet Publish Workflow (`.github/workflows/nuget-publish.yml`)
 
-Runs only on version tags (e.g., `v1.0.0`):
+Runs when a GitHub Release is published with a version tag (e.g., `v1.0.0`):
 
-1. **Wait for CI** - Waits for the CI workflow's `Test` job to succeed
+1. **Extract Version** - Reads version from release tag (`refs/tags/v*.*.*`)
 2. **Pack** - Creates the `.nupkg` template package with version from tag
 3. **Publish** - Pushes to nuget.org using `NUGET_API_KEY` secret
 
@@ -166,13 +166,16 @@ This workflow is **excluded from generated projects** (template-specific).
 ### Publishing a New Version
 
 1. Ensure all changes are committed and pushed to `main`
-2. Create and push a version tag:
+2. Create a GitHub Release (this creates the tag and notes in one step):
    ```bash
-   git tag v1.2.0
-   git push origin v1.2.0
+    gh release create v1.2.0 \
+      --target main \
+      --generate-notes
    ```
-3. The CI workflow runs tests on the tag
-4. The NuGet Publish workflow waits for tests, then packs and publishes
+3. The NuGet Publish workflow runs automatically on `release: published`, then packs and publishes
+
+> Note: `McpServer.Template.csproj` uses a local placeholder version (`0.0.0-local`).
+> CI overrides it at pack time with the version extracted from the release tag.
 
 ### Required Secrets
 

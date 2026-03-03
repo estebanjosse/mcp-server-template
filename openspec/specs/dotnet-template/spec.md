@@ -66,6 +66,18 @@ The repository MUST produce a NuGet package that contains the template configura
 **Then** the template MUST become discoverable in `dotnet new list`  
 **And** `dotnet new mcp-server` MUST use the installed package to scaffold projects
 
+#### Scenario: Version placeholder for local development
+**Given** the `McpServer.Template.csproj` is used for local development  
+**When** `dotnet pack` is run without a `-p:Version` override  
+**Then** the package SHALL use a placeholder version `0.0.0-local`  
+**And** a comment in the csproj SHALL indicate the version is overridden by CI
+
+#### Scenario: Release notes metadata on NuGet.org
+**Given** the template package is published to NuGet.org  
+**When** a user views the package page  
+**Then** a `PackageReleaseNotes` link SHALL point to `https://github.com/estebanjosse/mcp-server-template/releases`  
+**And** the link SHALL be clickable on the NuGet.org package page
+
 ---
 
 ### Requirement: Template Documentation

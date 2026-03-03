@@ -28,6 +28,28 @@ The CI workflow MUST be triggered automatically on relevant repository events.
 **Then** the CI workflow SHALL execute automatically  
 **And** the publish job SHALL tag the image with the semantic version
 
+#### Scenario: Trigger NuGet publish on GitHub Release
+**Given** a GitHub Release is published with a tag matching `v*.*.*`  
+**When** the release event is processed by GitHub  
+**Then** the NuGet publish workflow SHALL execute automatically  
+**And** the version SHALL be extracted from the release tag  
+**And** a tag-push alone (without a release) SHALL NOT trigger NuGet publishing
+
+---
+
+### Requirement: Release Notes Categorization
+
+The repository MUST provide configuration for auto-generated release notes so that GitHub Releases group changes by type.
+
+#### Scenario: Categorize PRs by label
+**Given** a `.github/release.yml` configuration file exists  
+**When** a release is created with `--generate-notes`  
+**Then** PRs labeled `enhancement` SHALL appear under a "🚀 Features" category  
+**And** PRs labeled `bug` SHALL appear under a "🐛 Bug Fixes" category  
+**And** PRs labeled `documentation` SHALL appear under a "📚 Documentation" category  
+**And** PRs labeled `dependencies` SHALL appear under a "⬆️ Dependencies" category  
+**And** remaining PRs SHALL appear under a "🧰 Maintenance" category
+
 ---
 
 ### Requirement: Automated Test Execution

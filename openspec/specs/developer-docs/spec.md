@@ -18,6 +18,13 @@ The repository SHALL expose detailed architecture, capability, and operations in
 - **WHEN** a user navigates into docs/
 - **THEN** they find separate markdown files covering architecture overview, feature and capability reference, and operational procedures.
 
+#### Scenario: Release process documentation
+- **WHEN** a contributor opens `docs/template.md`
+- **THEN** the "Publishing a New Version" section SHALL describe a single-step release process using `gh release create`
+- **AND** the documentation SHALL explain that the version in `McpServer.Template.csproj` is a local placeholder overridden by CI
+- **AND** the documentation SHALL list the exact `gh release create` command with `--generate-notes` flag
+- **AND** the old multi-step process (manual version bump → PR → tag → release) SHALL be removed
+
 ### Requirement: Cross-linked Documentation Navigation
 The onboarding README SHALL link to the corresponding docs/ pages so that advanced readers can access deep-dive material directly from the landing page.
 
