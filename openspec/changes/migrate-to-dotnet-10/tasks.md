@@ -8,6 +8,3 @@
 - [x] 2.1 Update `Dockerfile` to .NET 10 SDK/runtime images and verify container build plus HTTP host startup checks succeed.
 - [x] 2.2 Add a `.NET 10` badge in the main `README.md` and verify rendered markdown displays the new badge correctly.
 
-## 3. Operational compatibility follow-up
-
-- [ ] 3.1 Create and document a manual process to keep a dedicated `.NET 8` maintenance branch in sync for critical fixes (manual task, not automated in this change).
