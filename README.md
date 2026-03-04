@@ -1,6 +1,7 @@
 # EasyMcp.McpServer.Template
 
 [![CI](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml/badge.svg)](https://github.com/estebanjosse/mcp-server-template/actions/workflows/ci.yml)
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)](https://dotnet.microsoft.com/download/dotnet/10.0)
 
 A `dotnet new` template that scaffolds a clean, scalable, production-ready Model Context Protocol (MCP) server using [the official C# SDK](https://github.com/modelcontextprotocol/csharp-sdk).
 
