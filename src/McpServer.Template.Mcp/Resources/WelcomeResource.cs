@@ -18,7 +18,7 @@ public sealed class WelcomeResource
             Welcome to McpServer.Template!
             
             This is a demonstration of a clean, scalable Model Context Protocol (MCP) server 
-            built with .NET 8 and proper architecture.
+            built with .NET 10 and proper architecture.
             
             Features:
             - Shared business logic between stdio and HTTP transports

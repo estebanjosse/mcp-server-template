@@ -3,7 +3,7 @@ schema: custom-spec-driven
 context: |
   Language: English
   All artifacts must be written in english.
-  .NET 8 MCP server template (C# latest). Hexagonal architecture:
+  .NET 10 MCP server template (C# latest). Hexagonal architecture:
     Contracts → Infrastructure → Application → Mcp → Hosts (Stdio, Http)
   Only McpServer.Template.Mcp may reference MCP SDK packages.
   Application layer is MCP/transport-agnostic — business logic lives there.
