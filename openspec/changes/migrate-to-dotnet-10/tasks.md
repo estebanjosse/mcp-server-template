@@ -1,6 +1,6 @@
 ## 1. Upgrade framework and build pipeline
 
-- [ ] 1.1 Update target frameworks and SDK settings to .NET 10 across solution and project files, then run the full test suite successfully.
+- [x] 1.1 Update target frameworks and SDK settings to .NET 10 across solution and project files, then run the full test suite successfully.
 - [x] 1.2 Update centralized package/tooling versions (where required for .NET 10 compatibility) and validate restore/build passes in CI-equivalent commands.
 
 ## 2. Update containerization and docs
