@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <!-- Target Framework -->
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -31,7 +31,7 @@
     <MicrosoftExtensionsHostingVersion>10.0.3</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsConfigVersion>10.0.3</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
-    <AspNetCoreMvcTestingVersion>8.0.24</AspNetCoreMvcTestingVersion>
+    <AspNetCoreMvcTestingVersion>10.0.3</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.3</XunitVersion>
     <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
     <TestSdkVersion>18.3.0</TestSdkVersion>
