@@ -1,7 +1,7 @@
 # Project Context
 
 ## Purpose
-A clean, scalable, production-ready template for building Model Context Protocol (MCP) servers using the official C# SDK (.NET 8). This template demonstrates best practices for:
+A clean, scalable, production-ready template for building Model Context Protocol (MCP) servers using the official C# SDK (.NET 10). This template demonstrates best practices for:
 - Strict separation of concerns with MCP SDK isolation
 - Shared business logic that works across multiple transport mechanisms (stdio and HTTP/SSE)
 - Full testability with unit tests for all layers
@@ -10,7 +10,7 @@ A clean, scalable, production-ready template for building Model Context Protocol
 **Goal**: Provide a starting point for building robust, maintainable MCP servers that follow hexagonal architecture principles and can easily be extended with new tools, prompts, and resources.
 
 ## Tech Stack
-- **.NET 8.0** - Target framework with C# latest language version
+- **.NET 10.0** - Target framework with C# latest language version
 - **Model Context Protocol SDK 0.9.0-preview.1** - Official MCP C# SDK
 - **ASP.NET Core** - HTTP/SSE transport host
 - **Microsoft.Extensions** (v10.0.0) - Dependency injection, configuration, hosting, logging
@@ -88,7 +88,7 @@ This template demonstrates how to build MCP servers that work with both transpor
 - **MCP SDK Isolation**: Only `McpServer.Template.Mcp` project may reference MCP SDK packages
 - **No Warnings as Errors**: `TreatWarningsAsErrors` is set to `false` in Directory.Build.props
 - **Documentation**: XML documentation generation is disabled (`GenerateDocumentationFile=false`)
-- **.NET 8 Minimum**: Project requires .NET 8 SDK or later
+- **.NET 10 Minimum**: Project requires .NET 10 SDK or later
 - **Centralized Versioning**: All package versions managed in `Directory.Build.props`
 - **Namespace Alignment**: Namespaces must match folder structure
 - **Async Throughout**: All public service methods must be async with CancellationToken support

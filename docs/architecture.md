@@ -1,6 +1,6 @@
 # Architecture
 
-This template implements a layered, testable architecture for MCP servers built with .NET 8. It keeps MCP SDK usage isolated while sharing business logic across multiple transports.
+This template implements a layered, testable architecture for MCP servers built with .NET 10. It keeps MCP SDK usage isolated while sharing business logic across multiple transports.
 
 ## Layered Design
 

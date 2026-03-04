@@ -4,7 +4,7 @@
     <PackageType>Template</PackageType>
     <PackageId>EasyMcp.McpServer.Template</PackageId>
     <Title>MCP Server Template</Title>
-    <Description>A dotnet new template for scaffolding Model Context Protocol (MCP) servers in .NET 8 with clean architecture, multiple transport options (HTTP/Stdio), and full test coverage.</Description>
+    <Description>A dotnet new template for scaffolding Model Context Protocol (MCP) servers in .NET 10 with clean architecture, multiple transport options (HTTP/Stdio), and full test coverage.</Description>
     <PackageTags>dotnet-new;templates;mcp;model-context-protocol;server;dotnet</PackageTags>
     <PackageProjectUrl>https://github.com/estebanjosse/mcp-server-template</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>

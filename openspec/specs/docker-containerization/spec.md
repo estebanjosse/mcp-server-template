@@ -24,7 +24,7 @@ The Dockerfile SHALL use a multi-stage build pattern with separate stages for bu
 **Given** a multi-stage Dockerfile  
 **When** the final image is built  
 **Then** the image size SHALL be significantly smaller than a single-stage build including the SDK  
-**And** the image SHALL not exceed 250MB (typical .NET 8 runtime + app size)
+**And** the image SHALL not exceed 250MB (typical .NET 10 runtime + app size)
 
 ---
 

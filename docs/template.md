@@ -1,6 +1,6 @@
 # MCP Server Template
 
-EasyMcp.McpServer.Template is a `dotnet new` template for quickly scaffolding clean, scalable, production-ready Model Context Protocol (MCP) servers in .NET 8.
+EasyMcp.McpServer.Template is a `dotnet new` template for quickly scaffolding clean, scalable, production-ready Model Context Protocol (MCP) servers in .NET 10.
 
 This package is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions (HTTP and/or stdio hosts, application layer, tests, and more).
 

@@ -158,7 +158,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=MCP Server Template
-            org.opencontainers.image.description=Model Context Protocol Server Template (.NET 8)
+            org.opencontainers.image.description=Model Context Protocol Server Template (.NET 10)
             org.opencontainers.image.vendor=MCP Server Template
       
       - name: Build and push Docker image

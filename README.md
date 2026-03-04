@@ -11,7 +11,7 @@ This [NuGet package](https://www.nuget.org/packages/EasyMcp.McpServer.Template) 
 
 ### 1. Prerequisites
 
-- .NET 8 SDK or later
+- .NET 10 SDK or later
 - (Optional) an MCP client such as MCP Inspector for testing the stdio host
 
 ### 2. Install the template
