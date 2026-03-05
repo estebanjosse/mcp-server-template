@@ -50,6 +50,9 @@ else
 
 var app = builder.Build();
 
+// Authentication middleware scoped to /mcp (must run before metrics and MCP endpoint)
+app.UseMcpAuthentication();
+
 var metricsRecorder = app.Services.GetRequiredService<IMcpMetricsRecorder>();
 
 if (metricsEnabled)
