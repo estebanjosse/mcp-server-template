@@ -9,6 +9,9 @@ changelog:
     - title: 📝 Documentation
       labels:
         - documentation
+    - title: 📐 Specifications
+      labels:
+        - spec
     - title: 📦 Dependencies
       labels:
         - dependencies
