@@ -3,7 +3,7 @@
 - [x] 1.2 Add startup validation: reject invalid mode values, enforce minimum key length (32) in simple mode, discard empty keys, reject invalid header names.
 - [x] 1.3 Define `IMcpAuthStrategy` interface (in Host.Http) with `AuthenticateAsync(HttpContext)` → `AuthResult` and register strategy dispatch middleware scoped to `/mcp` only.
 - [x] 1.4 Implement `NoneAuthStrategy` (pass-through) and `SecurePlaceholderStrategy` (returns 501 with descriptive message).
-- [ ] 1.5 Add tests: mode selection from config and env var, invalid mode rejection, env var override precedence, 501 for unimplemented secure mode, monitoring endpoints bypass.
+- [x] 1.5 Add tests: mode selection from config and env var, invalid mode rejection, env var override precedence, 501 for unimplemented secure mode, monitoring endpoints bypass.
 
 ## 2. Simple mode — API key guard
 - [ ] 2.1 Implement `ApiKeyAuthStrategy` with constant-time comparison (`CryptographicOperations.FixedTimeEquals`) across all configured keys without short-circuiting.
