@@ -21,6 +21,37 @@ builder.Services.AddHealthChecks();
 
 var configuration = builder.Configuration;
 
+builder.Services.AddOptions<AuthenticationOptions>()
+    .Bind(configuration.GetSection("Authentication"))
+    .PostConfigure(options =>
+    {
+        var modeOverride = configuration["MCP_AUTH_MODE"];
+        if (!string.IsNullOrEmpty(modeOverride))
+        {
+            if (Enum.TryParse<AuthenticationMode>(modeOverride, ignoreCase: true, out var mode))
+            {
+                options.Mode = mode;
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Invalid authentication mode '{modeOverride}' from MCP_AUTH_MODE. Valid modes: none, simple, secure.");
+            }
+        }
+
+        var keyOverride = configuration["MCP_AUTH_API_KEY"];
+        if (!string.IsNullOrEmpty(keyOverride))
+        {
+            options.ApiKeys = [keyOverride];
+        }
+
+        var headerOverride = configuration["MCP_AUTH_HEADER"];
+        if (!string.IsNullOrEmpty(headerOverride))
+        {
+            options.HeaderName = headerOverride;
+        }
+    });
+
 builder.Services.AddOptions<MetricsOptions>()
     .Bind(configuration.GetSection("Metrics"))
     .PostConfigure(options =>

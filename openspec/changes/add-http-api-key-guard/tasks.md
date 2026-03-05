@@ -1,5 +1,5 @@
 ## 1. Foundation — Mode switching and strategy pattern
-- [ ] 1.1 Create `AuthenticationOptions` with `Mode` (enum: None, Simple, Secure), `ApiKeys` (string[]), `HeaderName` (string?), and env var overrides (`MCP_AUTH_MODE`, `MCP_AUTH_API_KEY`, `MCP_AUTH_HEADER`).
+- [x] 1.1 Create `AuthenticationOptions` with `Mode` (enum: None, Simple, Secure), `ApiKeys` (string[]), `HeaderName` (string?), and env var overrides (`MCP_AUTH_MODE`, `MCP_AUTH_API_KEY`, `MCP_AUTH_HEADER`).
 - [ ] 1.2 Add startup validation: reject invalid mode values, enforce minimum key length (32) in simple mode, discard empty keys, reject invalid header names.
 - [ ] 1.3 Define `IMcpAuthStrategy` interface (in Host.Http) with `AuthenticateAsync(HttpContext)` → `AuthResult` and register strategy dispatch middleware scoped to `/mcp` only.
 - [ ] 1.4 Implement `NoneAuthStrategy` (pass-through) and `SecurePlaceholderStrategy` (returns 501 with descriptive message).
