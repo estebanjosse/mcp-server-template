@@ -1,5 +1,7 @@
+using McpServer.Template.Host.Http.Authentication;
 using McpServer.Template.Host.Http.Options;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace McpServer.Template.Host.Http.Extensions;
 
@@ -79,6 +81,21 @@ public static class AuthenticationServiceExtensions
                "In simple mode, at least one API key of minimum 32 characters is required. " +
                "Header names must not be empty or contain control characters, colons, or spaces.")
             .ValidateOnStart();
+
+        services.AddSingleton<NoneAuthStrategy>();
+        services.AddSingleton<SecurePlaceholderStrategy>();
+
+        services.AddSingleton<IMcpAuthStrategy>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<AuthenticationOptions>>().Value;
+            return options.Mode switch
+            {
+                AuthenticationMode.None => sp.GetRequiredService<NoneAuthStrategy>(),
+                AuthenticationMode.Secure => sp.GetRequiredService<SecurePlaceholderStrategy>(),
+                _ => throw new InvalidOperationException(
+                    $"No authentication strategy registered for mode '{options.Mode}'.")
+            };
+        });
 
         return services;
     }

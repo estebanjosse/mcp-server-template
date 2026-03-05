@@ -19,7 +19,10 @@ public sealed class AuthenticationMiddleware
 
         if (!result.IsAuthenticated)
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            }
             return;
         }
 
