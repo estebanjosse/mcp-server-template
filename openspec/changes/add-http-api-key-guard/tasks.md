@@ -19,4 +19,4 @@
 
 ## 4. Configuration and documentation
 - [x] 4.1 Update `appsettings.json` with `Authentication` section (Mode, ApiKeys, HeaderName) with commented examples.
-- [ ] 4.2 Document configuration keys, mode descriptions, rotation workflow, and env var overrides in docs/.
+- [x] 4.2 Document configuration keys, mode descriptions, rotation workflow, and env var overrides in docs/.

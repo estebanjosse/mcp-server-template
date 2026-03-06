@@ -75,6 +75,81 @@ When enabled, the `/metrics` endpoint exposes Prometheus-formatted metrics such 
 
 Review [src/McpServer.Template.Host.Http/appsettings.json](../src/McpServer.Template.Host.Http/appsettings.json) for configuration examples.
 
+## Authentication
+
+The HTTP host supports pluggable authentication for the `/mcp` endpoint. The `/health` and `/metrics` endpoints are always unauthenticated.
+
+### Modes
+
+| Mode | Description |
+|------|-------------|
+| `none` | No authentication (default). All requests to `/mcp` are allowed. |
+| `simple` | API key guard. Requests must present a valid key via `Authorization: Bearer <key>` or a custom header. |
+| `secure` | Reserved for future mTLS/OAuth integration. Returns `501 Not Implemented`. |
+
+### Configuration Keys
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `Authentication:Mode` | string | `none` | Authentication mode (`none`, `simple`, `secure`). |
+| `Authentication:ApiKeys` | string[] | — | One or more API keys (minimum 32 characters each). Required when mode is `simple`. |
+| `Authentication:HeaderName` | string? | `null` | Custom header name for key extraction. When `null`, the middleware reads `Authorization: Bearer <key>`. |
+
+A single string value for `ApiKeys` is automatically coerced to a one-element array.
+
+### Environment Variable Overrides
+
+Environment variables take precedence over `appsettings.json`:
+
+| Variable | Overrides | Notes |
+|----------|-----------|-------|
+| `MCP_AUTH_MODE` | `Authentication:Mode` | Case-insensitive (`none`, `simple`, `secure`). |
+| `MCP_AUTH_API_KEY` | `Authentication:ApiKeys` | Sets a single key. Useful for container deployments. |
+| `MCP_AUTH_HEADER` | `Authentication:HeaderName` | Custom header name. |
+
+Example:
+
+```powershell
+$env:MCP_AUTH_MODE = "simple"
+$env:MCP_AUTH_API_KEY = "my-secret-api-key-at-least-32-characters-long"
+dotnet run --project src/McpServer.Template.Host.Http
+```
+
+### Key Rotation
+
+The `ApiKeys` array supports dual-key rotation for zero-downtime key changes:
+
+1. Add the new key to the `ApiKeys` array alongside the existing key.
+2. Deploy the updated configuration. Both keys are now accepted.
+3. Migrate all clients to the new key.
+4. Remove the old key from `ApiKeys` and redeploy.
+
+```json
+{
+  "Authentication": {
+    "Mode": "simple",
+    "ApiKeys": [
+      "new-key-at-least-32-characters-long-here",
+      "old-key-at-least-32-characters-long-here"
+    ]
+  }
+}
+```
+
+### Brute-Force Protection
+
+The middleware tracks consecutive authentication failures per client IP. After 5 failures within a 60-second window:
+
+- A `Retry-After` header is added to 401 responses with a progressive delay (1s, 2s, 4s, ... up to 30s).
+- A successful authentication resets the counter for that IP.
+
+### Security Notes
+
+- API keys are compared using constant-time comparison (`CryptographicOperations.FixedTimeEquals`) to prevent timing attacks.
+- All configured keys are evaluated on every request regardless of match to avoid leaking key position.
+- Authentication logs never include key material. Failed attempts log the denial reason only.
+- 401 responses include a `WWW-Authenticate: Bearer realm="MCP"` header.
+
 ## Docker Deployment
 
 The repository includes a multi-stage Dockerfile for containerizing the HTTP host.
