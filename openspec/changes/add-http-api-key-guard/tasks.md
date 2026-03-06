@@ -13,7 +13,7 @@
 - [x] 2.5 Add tests: valid key accepted, invalid key rejected, dual-key rotation, custom header, constant-time comparison (no short-circuit), single-string coercion.
 
 ## 3. Security — Logging and brute-force protection
-- [ ] 3.1 Emit structured auth event logs (Information on success, Warning on failure) with client IP, path, mode, result — never log credentials.
+- [x] 3.1 Emit structured auth event logs (Information on success, Warning on failure) with client IP, path, mode, result — never log credentials.
 - [ ] 3.2 Implement per-IP brute-force mitigation: track consecutive failures, add `Retry-After` with progressive delay after 5 failures in 60s, reset on success.
 - [ ] 3.3 Add tests: log entries contain expected fields, log entries never contain key material, brute-force delay triggers and resets correctly.
 
