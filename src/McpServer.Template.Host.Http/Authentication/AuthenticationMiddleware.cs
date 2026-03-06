@@ -11,17 +11,20 @@ public sealed partial class AuthenticationMiddleware
     private readonly IMcpAuthStrategy _strategy;
     private readonly ILogger<AuthenticationMiddleware> _logger;
     private readonly AuthenticationMode _mode;
+    private readonly BruteForceTracker _bruteForce;
 
     public AuthenticationMiddleware(
         RequestDelegate next,
         IMcpAuthStrategy strategy,
         ILogger<AuthenticationMiddleware> logger,
-        IOptions<AuthenticationOptions> options)
+        IOptions<AuthenticationOptions> options,
+        BruteForceTracker bruteForce)
     {
         _next = next;
         _strategy = strategy;
         _logger = logger;
         _mode = options.Value.Mode;
+        _bruteForce = bruteForce;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -36,10 +39,16 @@ public sealed partial class AuthenticationMiddleware
             if (result.IsAuthenticated)
             {
                 LogAuthSuccess(_logger, clientIp, path, _mode);
+                _bruteForce.RecordSuccess(clientIp);
             }
             else
             {
                 LogAuthFailure(_logger, clientIp, path, _mode, result.FailureReason ?? "unknown");
+                var retryAfter = _bruteForce.RecordFailure(clientIp);
+                if (retryAfter is not null)
+                {
+                    context.Response.Headers["Retry-After"] = retryAfter.Value.ToString();
+                }
             }
         }
 

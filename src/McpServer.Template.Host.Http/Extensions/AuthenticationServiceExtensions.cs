@@ -85,6 +85,7 @@ public static class AuthenticationServiceExtensions
         services.AddSingleton<NoneAuthStrategy>();
         services.AddSingleton<ApiKeyAuthStrategy>();
         services.AddSingleton<SecurePlaceholderStrategy>();
+        services.AddSingleton<BruteForceTracker>();
 
         services.AddSingleton<IMcpAuthStrategy>(sp =>
         {
