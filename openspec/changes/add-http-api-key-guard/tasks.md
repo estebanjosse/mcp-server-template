@@ -7,10 +7,10 @@
 
 ## 2. Simple mode — API key guard
 - [x] 2.1 Implement `ApiKeyAuthStrategy` with constant-time comparison (`CryptographicOperations.FixedTimeEquals`) across all configured keys without short-circuiting.
-- [ ] 2.2 Support `Authorization: Bearer <key>` by default and custom header via `Authentication:HeaderName`.
-- [ ] 2.3 Support dual-key rotation: accept any key in `Authentication:ApiKeys` array; coerce single string value to array.
-- [ ] 2.4 Return `WWW-Authenticate: Bearer realm="MCP"` on 401 responses.
-- [ ] 2.5 Add tests: valid key accepted, invalid key rejected, dual-key rotation, custom header, constant-time comparison (no short-circuit), single-string coercion.
+- [x] 2.2 Support `Authorization: Bearer <key>` by default and custom header via `Authentication:HeaderName`.
+- [x] 2.3 Support dual-key rotation: accept any key in `Authentication:ApiKeys` array; coerce single string value to array.
+- [x] 2.4 Return `WWW-Authenticate: Bearer realm="MCP"` on 401 responses.
+- [x] 2.5 Add tests: valid key accepted, invalid key rejected, dual-key rotation, custom header, constant-time comparison (no short-circuit), single-string coercion.
 
 ## 3. Security — Logging and brute-force protection
 - [ ] 3.1 Emit structured auth event logs (Information on success, Warning on failure) with client IP, path, mode, result — never log credentials.

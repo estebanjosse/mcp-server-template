@@ -22,6 +22,7 @@ public sealed class AuthenticationMiddleware
             if (!context.Response.HasStarted)
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.Headers["WWW-Authenticate"] = "Bearer realm=\"MCP\"";
             }
             return;
         }
