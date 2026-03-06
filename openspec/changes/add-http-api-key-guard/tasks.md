@@ -18,5 +18,5 @@
 - [x] 3.3 Add tests: log entries contain expected fields, log entries never contain key material, brute-force delay triggers and resets correctly.
 
 ## 4. Configuration and documentation
-- [ ] 4.1 Update `appsettings.json` with `Authentication` section (Mode, ApiKeys, HeaderName) with commented examples.
+- [x] 4.1 Update `appsettings.json` with `Authentication` section (Mode, ApiKeys, HeaderName) with commented examples.
 - [ ] 4.2 Document configuration keys, mode descriptions, rotation workflow, and env var overrides in docs/.
