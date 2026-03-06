@@ -83,6 +83,7 @@ public static class AuthenticationServiceExtensions
             .ValidateOnStart();
 
         services.AddSingleton<NoneAuthStrategy>();
+        services.AddSingleton<ApiKeyAuthStrategy>();
         services.AddSingleton<SecurePlaceholderStrategy>();
 
         services.AddSingleton<IMcpAuthStrategy>(sp =>
@@ -91,9 +92,10 @@ public static class AuthenticationServiceExtensions
             return options.Mode switch
             {
                 AuthenticationMode.None => sp.GetRequiredService<NoneAuthStrategy>(),
+                AuthenticationMode.Simple => sp.GetRequiredService<ApiKeyAuthStrategy>(),
                 AuthenticationMode.Secure => sp.GetRequiredService<SecurePlaceholderStrategy>(),
                 _ => throw new InvalidOperationException(
-                    $"No authentication strategy registered for mode '{options.Mode}'.")
+                    $"Unknown authentication mode '{options.Mode}'.")
             };
         });
 

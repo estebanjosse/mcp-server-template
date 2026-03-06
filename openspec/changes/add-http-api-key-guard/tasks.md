@@ -6,7 +6,7 @@
 - [x] 1.5 Add tests: mode selection from config and env var, invalid mode rejection, env var override precedence, 501 for unimplemented secure mode, monitoring endpoints bypass.
 
 ## 2. Simple mode — API key guard
-- [ ] 2.1 Implement `ApiKeyAuthStrategy` with constant-time comparison (`CryptographicOperations.FixedTimeEquals`) across all configured keys without short-circuiting.
+- [x] 2.1 Implement `ApiKeyAuthStrategy` with constant-time comparison (`CryptographicOperations.FixedTimeEquals`) across all configured keys without short-circuiting.
 - [ ] 2.2 Support `Authorization: Bearer <key>` by default and custom header via `Authentication:HeaderName`.
 - [ ] 2.3 Support dual-key rotation: accept any key in `Authentication:ApiKeys` array; coerce single string value to array.
 - [ ] 2.4 Return `WWW-Authenticate: Bearer realm="MCP"` on 401 responses.
