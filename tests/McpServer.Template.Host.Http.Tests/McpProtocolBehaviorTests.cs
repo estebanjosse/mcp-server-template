@@ -1,16 +1,26 @@
 using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 
 namespace McpServer.Template.Host.Http.Tests;
 
-public sealed class McpProtocolBehaviorTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class McpProtocolBehaviorTests
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    public McpProtocolBehaviorTests(WebApplicationFactory<Program> factory)
+    public McpProtocolBehaviorTests()
     {
-        _factory = factory;
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, c) =>
+            {
+                c.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Authentication:Mode"] = "none"
+                });
+            });
+        });
     }
 
     [Fact]

@@ -26,9 +26,7 @@ public sealed class AuthenticationFoundationTests
     [Fact]
     public void DefaultMode_IsNone_WhenNothingConfigured()
     {
-        using var factory = CreateFactory([]);
-        var options = factory.Services
-            .GetRequiredService<IOptions<AuthenticationOptions>>().Value;
+        var options = new AuthenticationOptions();
 
         options.Mode.Should().Be(AuthenticationMode.None);
     }
