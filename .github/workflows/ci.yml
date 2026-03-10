@@ -110,18 +110,83 @@ jobs:
           echo "Timed out waiting for /health readiness."
           exit 1
 
+      - name: 'Auth smoke: wrong key returns 401'
+        run: |
+          http_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H 'Authorization: Bearer this-is-a-wrong-key-that-is-long-enough' \
+            "http://127.0.0.1:$CI_HOST_PORT/mcp")"
+          echo "/mcp with wrong key: HTTP $http_code"
+          [ "$http_code" = "401" ] || { echo "FAIL: expected 401"; exit 1; }
+
+      - name: 'Auth smoke: correct key is accepted'
+        run: |
+          http_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H 'Authorization: Bearer new-key-at-least-32-characters-long-here' \
+            "http://127.0.0.1:$CI_HOST_PORT/mcp")"
+          echo "/mcp with correct key: HTTP $http_code"
+          [ "$http_code" != "401" ] || { echo "FAIL: got 401 with valid key"; exit 1; }
+
+      - name: 'Auth smoke: no key returns 401'
+        run: |
+          http_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+            "http://127.0.0.1:$CI_HOST_PORT/mcp")"
+          echo "/mcp with no key: HTTP $http_code"
+          [ "$http_code" = "401" ] || { echo "FAIL: expected 401"; exit 1; }
+
+      - name: Stop auth-simple container
+        run: docker rm -f "$CI_CONTAINER_NAME" >/dev/null 2>&1
+
+      - name: Start container with auth mode none
+        env:
+          CI_NOAUTH_NAME: mcp-runtime-smoke-noauth
+        run: |
+          docker run -d \
+            --name "$CI_NOAUTH_NAME" \
+            -p "$CI_HOST_PORT:5000" \
+            -e "MCP_AUTH_MODE=none" \
+            "$CI_IMAGE_NAME:$CI_IMAGE_TAG"
+
+      - name: Wait for /health readiness (no-auth)
+        env:
+          CI_NOAUTH_NAME: mcp-runtime-smoke-noauth
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            state="$(docker inspect -f '{{.State.Status}}' "$CI_NOAUTH_NAME" 2>/dev/null || echo missing)"
+            [ "$state" = "running" ] || { echo "Container '$state'."; exit 1; }
+            http_code="$(curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$CI_HOST_PORT/health" || true)"
+            [ "$http_code" = "200" ] && { echo "Healthy."; exit 0; }
+            echo "Attempt $attempt/30: HTTP $http_code"; sleep 2
+          done
+          echo "Timed out."; exit 1
+
+      - name: 'Auth smoke: mode none allows unauthenticated access'
+        env:
+          CI_NOAUTH_NAME: mcp-runtime-smoke-noauth
+        run: |
+          http_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+            "http://127.0.0.1:$CI_HOST_PORT/mcp")"
+          echo "/mcp with no key (auth=none): HTTP $http_code"
+          [ "$http_code" != "401" ] || { echo "FAIL: got 401 with auth mode none"; exit 1; }
+
       - name: Capture container diagnostics
         if: failure()
+        env:
+          CI_NOAUTH_NAME: mcp-runtime-smoke-noauth
         run: |
-          echo "=== docker logs ==="
-          docker logs "$CI_CONTAINER_NAME" || true
-          echo "=== docker inspect ==="
-          docker inspect "$CI_CONTAINER_NAME" || true
+          for ctr in "$CI_CONTAINER_NAME" "$CI_NOAUTH_NAME"; do
+            echo "=== docker logs ($ctr) ==="
+            docker logs "$ctr" 2>&1 || true
+            echo "=== docker inspect ($ctr) ==="
+            docker inspect "$ctr" 2>&1 || true
+          done
 
-      - name: Cleanup runtime validation container
+      - name: Cleanup runtime validation containers
         if: always()
+        env:
+          CI_NOAUTH_NAME: mcp-runtime-smoke-noauth
         run: |
-          docker rm -f "$CI_CONTAINER_NAME" >/dev/null 2>&1 || true
+          docker rm -f "$CI_CONTAINER_NAME" "$CI_NOAUTH_NAME" >/dev/null 2>&1 || true
 
   publish:
     name: Publish to GHCR
