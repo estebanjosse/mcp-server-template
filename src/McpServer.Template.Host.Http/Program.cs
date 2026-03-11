@@ -1,4 +1,5 @@
 using McpServer.Template.Host.Http.Options;
+using McpServer.Template.Host.Http.Extensions;
 using McpServer.Template.Mcp.Instrumentation;
 using McpServer.Template.Mcp.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -20,6 +21,8 @@ builder.Services.AddMcpServer()
 builder.Services.AddHealthChecks();
 
 var configuration = builder.Configuration;
+
+builder.Services.AddMcpAuthentication(configuration);
 
 builder.Services.AddOptions<MetricsOptions>()
     .Bind(configuration.GetSection("Metrics"))
@@ -46,6 +49,9 @@ else
 }
 
 var app = builder.Build();
+
+// Authentication middleware scoped to /mcp (must run before metrics and MCP endpoint)
+app.UseMcpAuthentication();
 
 var metricsRecorder = app.Services.GetRequiredService<IMcpMetricsRecorder>();
 
