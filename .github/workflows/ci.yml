@@ -58,6 +58,7 @@ jobs:
       CI_IMAGE_TAG: sha-${{ github.sha }}
       CI_CONTAINER_NAME: mcp-runtime-smoke
       CI_HOST_PORT: '18080'
+      CI_SIMPLE_AUTH_KEY: new-key-at-least-32-characters-long-here
     
     steps:
       - name: Checkout code
@@ -82,6 +83,8 @@ jobs:
           docker run -d \
             --name "$CI_CONTAINER_NAME" \
             -p "$CI_HOST_PORT:5000" \
+            -e "MCP_AUTH_MODE=simple" \
+            -e "MCP_AUTH_API_KEY=$CI_SIMPLE_AUTH_KEY" \
             "$CI_IMAGE_NAME:$CI_IMAGE_TAG"
 
       - name: Wait for /health readiness
@@ -121,7 +124,7 @@ jobs:
       - name: 'Auth smoke: correct key is accepted'
         run: |
           http_code="$(curl -sS -o /dev/null -w '%{http_code}' \
-            -H 'Authorization: Bearer new-key-at-least-32-characters-long-here' \
+            -H "Authorization: Bearer $CI_SIMPLE_AUTH_KEY" \
             "http://127.0.0.1:$CI_HOST_PORT/mcp")"
           echo "/mcp with correct key: HTTP $http_code"
           [ "$http_code" != "401" ] || { echo "FAIL: got 401 with valid key"; exit 1; }
