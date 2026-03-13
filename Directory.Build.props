@@ -26,7 +26,7 @@
 
   <PropertyGroup>
     <!-- Package Version Management -->
-    <ModelContextProtocolVersion>1.0.0</ModelContextProtocolVersion>
+    <ModelContextProtocolVersion>1.1.0</ModelContextProtocolVersion>
     <MicrosoftExtensionsVersion>10.0.3</MicrosoftExtensionsVersion>
     <MicrosoftExtensionsHostingVersion>10.0.3</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsConfigVersion>10.0.5</MicrosoftExtensionsConfigVersion>
