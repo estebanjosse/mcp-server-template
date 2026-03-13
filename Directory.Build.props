@@ -27,7 +27,7 @@
   <PropertyGroup>
     <!-- Package Version Management -->
     <ModelContextProtocolVersion>1.0.0</ModelContextProtocolVersion>
-    <MicrosoftExtensionsVersion>10.0.3</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
     <MicrosoftExtensionsHostingVersion>10.0.3</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsConfigVersion>10.0.3</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
