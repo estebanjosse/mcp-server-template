@@ -158,6 +158,8 @@ The HTTP host now binds the standard ASP.NET Core `Kestrel` section explicitly, 
 
 When an HTTPS endpoint is configured, the host enables HTTPS redirection automatically so plaintext HTTP requests are redirected to TLS.
 
+For local development, you can provision a test certificate with `pwsh ./scripts/New-DevCertificate.ps1` and then point `Kestrel:Endpoints:Https:Certificate:Path` to `certs/mcp-server-dev.pfx` inside the HTTP host project.
+
 **Reverse proxy example:**
 
 ```json

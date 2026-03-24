@@ -48,6 +48,50 @@ Useful endpoints:
 - Health endpoint: `http://localhost:5000/health`
 - Metrics endpoint (when enabled): `http://localhost:5000/metrics`
 
+## Local HTTPS Testing
+
+To exercise the HTTP host over TLS locally, export a development certificate into the HTTP host project:
+
+```powershell
+pwsh ./scripts/New-DevCertificate.ps1
+```
+
+The script writes `src/McpServer.Template.Host.Http/certs/mcp-server-dev.pfx` by default and prints a ready-to-paste `Kestrel` configuration block. Generated `.pfx` files are ignored by git.
+
+Add this to `src/McpServer.Template.Host.Http/appsettings.Development.json`:
+
+```json
+{
+    "Kestrel": {
+        "Endpoints": {
+            "Http": {
+                "Url": "http://localhost:5000"
+            },
+            "Https": {
+                "Url": "https://localhost:5001",
+                "Certificate": {
+                    "Path": "certs/mcp-server-dev.pfx",
+                    "Password": "changeit"
+                }
+            }
+        }
+    }
+}
+```
+
+If you want the certificate trusted by the local machine as well, rerun the script with `-Trust`:
+
+```powershell
+pwsh ./scripts/New-DevCertificate.ps1 -Trust
+```
+
+Then start the host and verify HTTPS directly:
+
+```powershell
+dotnet run --project src/McpServer.Template.Host.Http
+curl -k https://localhost:5001/health
+```
+
 ## Metrics and health checks
 
 Operational metrics are disabled by default. Enable them with configuration or environment variables:
