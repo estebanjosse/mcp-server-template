@@ -123,6 +123,57 @@ $env:MCP_METRICS_ENABLED = "true"
 
 ---
 
+### Transport Security
+
+**Applies to:** HTTP host only.
+
+The HTTP host now binds the standard ASP.NET Core `Kestrel` section explicitly, so TLS endpoints can be configured entirely through configuration without code changes.
+
+| Config Key | Env Variable | Type | Default | Description |
+|---|---|---|---|---|
+| `TransportSecurity:ForwardedHeadersEnabled` | `TransportSecurity__ForwardedHeadersEnabled` | bool | `false` | Enable `X-Forwarded-For` and `X-Forwarded-Proto` processing when the app runs behind a trusted reverse proxy. |
+| `TransportSecurity:ForwardLimit` | `TransportSecurity__ForwardLimit` | int | `1` | Maximum number of proxy hops to trust. |
+| `TransportSecurity:KnownProxies` | `TransportSecurity__KnownProxies__0` | string[] | — | Explicit list of trusted proxy IPs allowed to supply forwarded headers. |
+
+**Kestrel HTTPS example:**
+
+```json
+{
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:5000"
+      },
+      "Https": {
+        "Url": "https://0.0.0.0:5001",
+        "Certificate": {
+          "Path": "certs/mcp-server.pfx",
+          "Password": "changeit"
+        }
+      }
+    }
+  }
+}
+```
+
+When an HTTPS endpoint is configured, the host enables HTTPS redirection automatically so plaintext HTTP requests are redirected to TLS.
+
+**Reverse proxy example:**
+
+```json
+{
+  "TransportSecurity": {
+    "ForwardedHeadersEnabled": true,
+    "ForwardLimit": 1,
+    "KnownProxies": ["127.0.0.1"]
+  }
+}
+```
+
+Use forwarded headers only when the server sits behind a proxy you control. Restrict trusted hops with `KnownProxies` instead of trusting all network sources.
+
+---
+
 ### Logging
 
 **Applies to:** Both HTTP and stdio hosts.
@@ -158,6 +209,7 @@ These are standard .NET variables, not specific to this template, but important 
 | `ASPNETCORE_ENVIRONMENT` | `Development` (launch) | Active environment for the HTTP host. Controls which `appsettings.{env}.json` is loaded. |
 | `DOTNET_ENVIRONMENT` | `Development` (launch) | Equivalent for the stdio host (generic host). |
 | `ASPNETCORE_URLS` | `http://+:5000` (Docker) | Listen addresses. Example: `http://+:8080` to change port. |
+| `ASPNETCORE_HTTPS_PORT` | — | Preferred HTTPS port for redirection when HTTP and HTTPS endpoints are both exposed. |
 | `AllowedHosts` | `*` | Semicolon-separated list of allowed host headers. `*` allows all. |
 
 ---

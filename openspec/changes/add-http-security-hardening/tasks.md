@@ -1,5 +1,5 @@
 ## 1. TLS Enablement
-- [ ] 1.1 Add TLS configuration options for Kestrel and document reverse-proxy termination patterns.
+- [x] 1.1 Add TLS configuration options for Kestrel and document reverse-proxy termination patterns.
 - [ ] 1.2 Provide scripts or guidance to provision and load certificates locally for testing.
 
 ## 2. Perimeter Protections

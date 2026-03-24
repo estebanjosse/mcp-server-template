@@ -3,6 +3,7 @@ using McpServer.Template.Host.Http.Extensions;
 using McpServer.Template.Mcp.Instrumentation;
 using McpServer.Template.Mcp.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -11,6 +12,11 @@ using Prometheus;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel((context, options) =>
+{
+    options.Configure(context.Configuration.GetSection("Kestrel"));
+});
 
 // Add MCP server with all modules
 builder.Services.AddMcpTemplateModules();
@@ -23,6 +29,7 @@ builder.Services.AddHealthChecks();
 var configuration = builder.Configuration;
 
 builder.Services.AddMcpAuthentication(configuration);
+builder.Services.AddMcpTransportSecurity(configuration);
 
 builder.Services.AddOptions<MetricsOptions>()
     .Bind(configuration.GetSection("Metrics"))
@@ -49,6 +56,8 @@ else
 }
 
 var app = builder.Build();
+
+app.UseMcpTransportSecurity();
 
 // Authentication middleware scoped to /mcp (must run before metrics and MCP endpoint)
 app.UseMcpAuthentication();

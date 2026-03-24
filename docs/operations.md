@@ -35,6 +35,66 @@ By default the server listens on `http://localhost:5000`. Useful endpoints inclu
 
 You can use `curl` or a browser to verify these endpoints respond as expected.
 
+## TLS Deployment Patterns
+
+The HTTP host supports two production deployment patterns:
+
+### Direct TLS Termination in Kestrel
+
+Configure both HTTP and HTTPS endpoints under `Kestrel:Endpoints` and provide a certificate path/password for the HTTPS listener. When an HTTPS endpoint is present, the host enables HTTPS redirection automatically.
+
+```json
+{
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:5000"
+      },
+      "Https": {
+        "Url": "https://0.0.0.0:5001",
+        "Certificate": {
+          "Path": "certs/mcp-server.pfx",
+          "Password": "changeit"
+        }
+      }
+    }
+  }
+}
+```
+
+Recommended verification:
+
+```powershell
+curl -I http://localhost:5000/health
+curl -k https://localhost:5001/health
+```
+
+The first command should return a redirect to HTTPS. The second should succeed over TLS.
+
+### TLS Offload Behind a Reverse Proxy
+
+If TLS terminates at Nginx, YARP, Traefik, Azure Container Apps, or another ingress proxy, keep the app on HTTP internally and allow only the proxy to forward the original client scheme.
+
+```json
+{
+  "TransportSecurity": {
+    "ForwardedHeadersEnabled": true,
+    "ForwardLimit": 1,
+    "KnownProxies": ["127.0.0.1"]
+  }
+}
+```
+
+Your proxy must forward `X-Forwarded-Proto` and `X-Forwarded-For`. Restrict `KnownProxies` to the actual ingress IPs so untrusted clients cannot spoof HTTPS.
+
+Recommended verification:
+
+```powershell
+curl -I -H "X-Forwarded-Proto: https" -H "X-Forwarded-For: 203.0.113.10" http://localhost:5000/health
+```
+
+Use this pattern when certificate rotation and public TLS policy are managed upstream.
+
 ## Health and Metrics
 
 ### Health Endpoint
