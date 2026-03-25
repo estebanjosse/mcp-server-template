@@ -3,10 +3,12 @@ using McpServer.Template.Host.Http.Extensions;
 using McpServer.Template.Mcp.Instrumentation;
 using McpServer.Template.Mcp.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.AspNetCore;
 using Prometheus;
 using System.Text.Json;
@@ -30,6 +32,7 @@ var configuration = builder.Configuration;
 
 builder.Services.AddMcpAuthentication(configuration);
 builder.Services.AddMcpTransportSecurity(configuration);
+builder.Services.AddMcpRateLimiting(configuration);
 
 builder.Services.AddOptions<MetricsOptions>()
     .Bind(configuration.GetSection("Metrics"))
@@ -56,8 +59,10 @@ else
 }
 
 var app = builder.Build();
+var rateLimitingOptions = app.Services.GetRequiredService<IOptions<RateLimitingOptions>>().Value;
 
 app.UseMcpTransportSecurity();
+app.UseRateLimiter();
 
 // Authentication middleware scoped to /mcp (must run before metrics and MCP endpoint)
 app.UseMcpAuthentication();
@@ -90,7 +95,8 @@ if (metricsEnabled)
 }
 
 // Map MCP endpoint with HTTP/SSE transport
-app.MapMcp("/mcp");
+app.MapMcp("/mcp")
+    .RequireRateLimiting(rateLimitingOptions.PolicyName);
 
 // Map health check endpoint with JSON response
 app.MapHealthChecks("/health", new HealthCheckOptions

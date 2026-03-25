@@ -52,15 +52,6 @@ public sealed class ApiKeyAuthStrategy : IMcpAuthStrategy
 
     private string? ExtractCredential(HttpContext context)
     {
-        if (_customHeader is not null)
-        {
-            return context.Request.Headers[_customHeader].FirstOrDefault();
-        }
-
-        var authorization = context.Request.Headers.Authorization.FirstOrDefault();
-        if (authorization is null || !authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        return authorization["Bearer ".Length..];
+        return ApiKeyCredentialReader.ExtractCredential(context, _customHeader);
     }
 }
