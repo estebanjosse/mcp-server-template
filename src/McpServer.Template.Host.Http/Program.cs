@@ -33,6 +33,7 @@ var configuration = builder.Configuration;
 builder.Services.AddMcpAuthentication(configuration);
 builder.Services.AddMcpTransportSecurity(configuration);
 builder.Services.AddMcpRateLimiting(configuration);
+builder.Services.AddMcpSecurityHeaders(configuration);
 
 builder.Services.AddOptions<MetricsOptions>()
     .Bind(configuration.GetSection("Metrics"))
@@ -62,6 +63,7 @@ var app = builder.Build();
 var rateLimitingOptions = app.Services.GetRequiredService<IOptions<RateLimitingOptions>>().Value;
 
 app.UseMcpTransportSecurity();
+app.UseMcpSecurityHeaders();
 app.UseRateLimiter();
 
 // Authentication middleware scoped to /mcp (must run before metrics and MCP endpoint)

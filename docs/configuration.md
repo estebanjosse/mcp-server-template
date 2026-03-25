@@ -176,6 +176,26 @@ Use forwarded headers only when the server sits behind a proxy you control. Rest
 
 ---
 
+### Security Headers
+
+**Applies to:** HTTP host only.
+
+| Config Key | Env Variable | Type | Default | Description |
+|---|---|---|---|---|
+| `SecurityHeaders:Enabled` | `SecurityHeaders__Enabled` | bool | `true` | Master switch for the security header middleware. |
+| `SecurityHeaders:HstsEnabled` | `SecurityHeaders__HstsEnabled` | bool | `true` | Emit `Strict-Transport-Security` on HTTPS responses. |
+| `SecurityHeaders:HstsMaxAgeSeconds` | `SecurityHeaders__HstsMaxAgeSeconds` | int | `31536000` | HSTS max-age value in seconds. |
+| `SecurityHeaders:HstsIncludeSubDomains` | `SecurityHeaders__HstsIncludeSubDomains` | bool | `true` | Append `includeSubDomains` to HSTS. |
+| `SecurityHeaders:HstsPreload` | `SecurityHeaders__HstsPreload` | bool | `false` | Append `preload` to HSTS when explicitly opted in. |
+| `SecurityHeaders:XContentTypeOptionsEnabled` | `SecurityHeaders__XContentTypeOptionsEnabled` | bool | `true` | Emit `X-Content-Type-Options: nosniff`. |
+| `SecurityHeaders:XFrameOptionsEnabled` | `SecurityHeaders__XFrameOptionsEnabled` | bool | `true` | Emit `X-Frame-Options`. |
+| `SecurityHeaders:XFrameOptionsValue` | `SecurityHeaders__XFrameOptionsValue` | `DENY` \| `SAMEORIGIN` | `DENY` | `X-Frame-Options` value when enabled. |
+| `SecurityHeaders:ContentSecurityPolicy` | `SecurityHeaders__ContentSecurityPolicy` | string? | — | Optional `Content-Security-Policy` header value. |
+
+Default behavior emits `X-Content-Type-Options: nosniff` and `X-Frame-Options: DENY` on HTTP responses. HSTS is emitted only when the request is HTTPS so it remains accurate behind TLS termination.
+
+---
+
 ### Logging
 
 **Applies to:** Both HTTP and stdio hosts.

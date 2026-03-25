@@ -4,7 +4,7 @@
 
 ## 2. Perimeter Protections
 - [x] 2.1 Implement configurable rate limiting middleware with sensible defaults for `/mcp` requests.
-- [ ] 2.2 Apply security header middleware (HSTS, X-Content-Type-Options, X-Frame-Options/CSP) and ensure they are configurable but enabled by default.
+- [x] 2.2 Apply security header middleware (HSTS, X-Content-Type-Options, X-Frame-Options/CSP) and ensure they are configurable but enabled by default.
 - [ ] 2.3 Define restrictive default CORS policy allowing explicit opt-in origins.
 
 ## 3. Validation & Docs
