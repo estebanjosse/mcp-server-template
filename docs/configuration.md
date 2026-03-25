@@ -196,6 +196,31 @@ Default behavior emits `X-Content-Type-Options: nosniff` and `X-Frame-Options: D
 
 ---
 
+### CORS
+
+**Applies to:** HTTP host only.
+
+| Config Key | Env Variable | Type | Default | Description |
+|---|---|---|---|---|
+| `Cors:PolicyName` | `Cors__PolicyName` | string | `mcp-browser` | Named policy attached to `/mcp`. |
+| `Cors:AllowedOrigins` | `Cors__AllowedOrigins__0` | string[] | — | Explicit browser origins allowed to call `/mcp`. Empty means deny by default. |
+| `Cors:AllowCredentials` | `Cors__AllowCredentials` | bool | `false` | Emit `Access-Control-Allow-Credentials: true` for allowed origins only when explicitly enabled. |
+
+Default behavior is deny-by-default for browser cross-origin access. With no configured origins, preflight requests to `/mcp` complete without `Access-Control-Allow-Origin`, so browsers reject the call.
+
+Example:
+
+```json
+{
+  "Cors": {
+    "AllowedOrigins": ["https://app.example.com"],
+    "AllowCredentials": true
+  }
+}
+```
+
+---
+
 ### Logging
 
 **Applies to:** Both HTTP and stdio hosts.

@@ -34,6 +34,7 @@ builder.Services.AddMcpAuthentication(configuration);
 builder.Services.AddMcpTransportSecurity(configuration);
 builder.Services.AddMcpRateLimiting(configuration);
 builder.Services.AddMcpSecurityHeaders(configuration);
+builder.Services.AddMcpCors(configuration);
 
 builder.Services.AddOptions<MetricsOptions>()
     .Bind(configuration.GetSection("Metrics"))
@@ -60,10 +61,12 @@ else
 }
 
 var app = builder.Build();
+var corsOptions = app.Services.GetRequiredService<IOptions<CorsOptions>>().Value;
 var rateLimitingOptions = app.Services.GetRequiredService<IOptions<RateLimitingOptions>>().Value;
 
 app.UseMcpTransportSecurity();
 app.UseMcpSecurityHeaders();
+app.UseCors();
 app.UseRateLimiter();
 
 // Authentication middleware scoped to /mcp (must run before metrics and MCP endpoint)
@@ -98,6 +101,7 @@ if (metricsEnabled)
 
 // Map MCP endpoint with HTTP/SSE transport
 app.MapMcp("/mcp")
+    .RequireCors(corsOptions.PolicyName)
     .RequireRateLimiting(rateLimitingOptions.PolicyName);
 
 // Map health check endpoint with JSON response
