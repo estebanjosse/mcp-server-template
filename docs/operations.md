@@ -256,6 +256,58 @@ Common options:
     mcp-server-template
   ```
 
+### Docker Compose Example
+
+You can run the HTTP host with Docker Compose using a `docker-compose.yml` file at the repository root:
+
+```yaml
+services:
+  mcp-server:
+    image: ghcr.io/estebanjosse/mcp-server-template:latest
+    container_name: mcp-server
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+```
+
+Run with:
+
+```powershell
+docker compose up -d
+curl http://localhost:5000/health
+curl http://localhost:5000/mcp
+```
+
+To enable simple authentication and metrics via environment variables:
+
+```yaml
+services:
+  mcp-server:
+    image: ghcr.io/estebanjosse/mcp-server-template:latest
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      MCP_AUTH_MODE: simple
+      MCP_AUTH_API_KEY: your-api-key-at-least-32-characters-long
+      MCP_METRICS_ENABLED: "true"
+```
+
+Then call the MCP endpoint with:
+
+```powershell
+curl -H "Authorization: Bearer your-api-key-at-least-32-characters-long" http://localhost:5000/mcp
+curl http://localhost:5000/metrics
+```
+
 ## Images from GHCR
 
 Pre-built images are published to GitHub Container Registry (GHCR) for this repository.
