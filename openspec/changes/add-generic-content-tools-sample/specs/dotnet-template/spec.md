@@ -13,7 +13,8 @@ The template MUST expose boolean parameters that opt into sample tools and test 
 #### Scenario: Exclude sample tools by default
 **Given** the template package is installed  
 **When** a developer runs `dotnet new mcp-server --http-host`  
-**Then** the generated `Mcp` project MUST contain an empty `Tools/` directory with a placeholder to keep the folder committed  
+**Then** the generated scaffold MUST preserve placeholder files in every source or test directory that would otherwise become empty because sample content was excluded  
+**And** at minimum the generated scaffold MUST keep guidance placeholders for empty MCP tool directories and any empty contracts, application, or test subdirectories created by sample exclusion  
 **And** `.template.config/template.json` MUST exclude sample-only source files, sample tests, and sample-facing documentation so the generated scaffold remains minimal and internally consistent
 
 #### Scenario: Include tests on request

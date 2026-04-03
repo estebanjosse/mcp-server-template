@@ -29,10 +29,13 @@
 - [ ] 5.3 Update host configuration and sample appsettings to support local storage and outbound HTTP policy configuration where required.
 - [ ] 5.4 Update `.template.config/template.json` so the generic content sample is fully governed by `--include-sample-tools`, including source files, tests, and sample-facing documentation.
 - [ ] 5.5 Remove the legacy `echo` and `calc_divide` sample tool footprint from the opt-in sample set and keep the default scaffold tool-free except for the `Tools/` placeholder.
+- [ ] 5.6 Audit every source and test directory that becomes empty when sample content is excluded and preserve them with placeholder files where needed.
+- [ ] 5.7 Preserve or refresh placeholder files such as `Tools/.gitkeep` so the tool-free scaffold still guides developers toward where custom tools belong.
 
 ## 6. Documentation and verification
 
 - [ ] 6.1 Update sample documentation to explain the new tool set, why it is coherent, and which MCP concepts it demonstrates.
-- [ ] 6.2 Add MCP adapter tests for tool contract mapping and error translation.
-- [ ] 6.3 Add infrastructure and host-level coverage for storage safety, safe HTTP policy enforcement, and runtime diagnostics exposure.
-- [ ] 6.4 Verify generated templates both with and without `--include-sample-tools` so the scaffold stays internally consistent.
+- [ ] 6.2 Refresh "add a new tool" documentation and placeholder examples if the current guidance no longer matches the generated scaffold.
+- [ ] 6.3 Add MCP adapter tests for tool contract mapping and error translation.
+- [ ] 6.4 Add infrastructure and host-level coverage for storage safety, safe HTTP policy enforcement, and runtime diagnostics exposure.
+- [ ] 6.5 Verify generated templates both with and without `--include-sample-tools` so the scaffold stays internally consistent.
