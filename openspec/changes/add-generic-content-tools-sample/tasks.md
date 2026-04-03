@@ -1,6 +1,6 @@
 ## 1. Contracts and service boundaries
 
-- [ ] 1.1 Add shared DTOs and request or response contracts for text storage, text search, JSON validation, JSON transformation, HTTP fetch, datetime, and health diagnostics.
+- [x] 1.1 Add shared DTOs and request or response contracts for text storage, text search, JSON validation, JSON transformation, HTTP fetch, datetime, and health diagnostics.
 - [ ] 1.2 Add Application ports for the new capability groups and register them through the existing DI extension pattern.
 - [ ] 1.3 Add configuration contracts for bounded local storage and safe outbound HTTP behavior.
 
