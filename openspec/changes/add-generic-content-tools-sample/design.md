@@ -68,12 +68,14 @@ The new sample footprint will remain controlled by `.template.config/template.js
 
 Rationale:
 - The template already defines sample tools as optional content and should remain minimal by default.
+- Leaving even one active demonstration tool in the default scaffold would make `--include-sample-tools=false` semantically ambiguous.
 - A larger sample set increases the risk of partially generated scaffolds unless inclusion and exclusion are managed centrally in `template.json`.
 - This keeps the generated project aligned with the documented promise in the template capability.
 
 Alternatives considered:
 - Include the new sample by default: rejected because it increases scaffold size and noise for users who want a minimal starting point.
 - Add a second template flag just for advanced samples: rejected because the current `--include-sample-tools` flag already communicates the intent well enough.
+- Keep a hyper-simple active tool such as `echo` in the default scaffold: rejected because it weakens the opt-in model and leaves two competing sample stories in the template.
 
 ### Decision: Use bounded local storage with document identifiers
 Text persistence will use stable `document_id` values and a server-controlled local storage root. Contracts will not expose raw filesystem paths.

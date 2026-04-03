@@ -28,6 +28,7 @@
 - [ ] 5.2 Wire new services into the MCP module registration and record tool-level metrics consistently with existing MCP instrumentation patterns.
 - [ ] 5.3 Update host configuration and sample appsettings to support local storage and outbound HTTP policy configuration where required.
 - [ ] 5.4 Update `.template.config/template.json` so the generic content sample is fully governed by `--include-sample-tools`, including source files, tests, and sample-facing documentation.
+- [ ] 5.5 Remove the legacy `echo` and `calc_divide` sample tool footprint from the opt-in sample set and keep the default scaffold tool-free except for the `Tools/` placeholder.
 
 ## 6. Documentation and verification
 

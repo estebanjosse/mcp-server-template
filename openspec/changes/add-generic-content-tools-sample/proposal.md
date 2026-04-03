@@ -5,10 +5,12 @@ The current sample capabilities are intentionally minimal, but they do not yet s
 ## What Changes
 
 - Replace the current toy-tool posture with a cohesive content utility sample centered on text persistence, search, JSON processing, and safe runtime helpers.
+- Remove the legacy `echo` and `calc_divide` sample tools instead of carrying them alongside the new sample set.
 - Define a file-backed text workflow with `save_text`, `read_text`, and `search_text` using stable document identifiers instead of arbitrary filesystem paths.
 - Add JSON-oriented tools with bounded scope: `validate_json_schema` and `transform_json`.
 - Add cross-cutting runtime tools: `get_current_datetime`, `http_fetch`, and `health_check`.
 - Update the template packaging rules so all sample-related files remain opt-in through `.template.config/template.json` and the existing `--include-sample-tools` flag.
+- Preserve a tool-free default scaffold when `--include-sample-tools` is not selected, keeping only the empty `Tools/` placeholder.
 - Document the role of the sample, why the tool set is coherent, and which MCP concepts and backend practices it demonstrates.
 
 ## Capabilities
