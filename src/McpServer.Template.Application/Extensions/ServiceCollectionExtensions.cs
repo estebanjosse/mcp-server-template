@@ -12,6 +12,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICalculatorService, CalculatorService>();
         services.AddScoped<IStatusService, StatusService>();
         services.AddScoped<IGreetingService, GreetingService>();
+        services.AddScoped<IContentStorageService, ContentStorageService>();
+        services.AddScoped<IJsonProcessingService, JsonProcessingService>();
+        services.AddScoped<IRuntimeToolsService, RuntimeToolsService>();
         
         return services;
     }
