@@ -29,7 +29,7 @@
     <ModelContextProtocolVersion>1.2.0</ModelContextProtocolVersion>
     <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
     <MicrosoftExtensionsHostingVersion>10.0.5</MicrosoftExtensionsHostingVersion>
-    <MicrosoftExtensionsConfigVersion>10.0.5</MicrosoftExtensionsConfigVersion>
+    <MicrosoftExtensionsConfigVersion>10.0.7</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
     <AspNetCoreMvcTestingVersion>10.0.5</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.3</XunitVersion>
