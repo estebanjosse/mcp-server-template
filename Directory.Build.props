@@ -26,15 +26,15 @@
 
   <PropertyGroup>
     <!-- Package Version Management -->
-    <ModelContextProtocolVersion>1.2.0</ModelContextProtocolVersion>
-    <MicrosoftExtensionsVersion>10.0.5</MicrosoftExtensionsVersion>
-    <MicrosoftExtensionsHostingVersion>10.0.5</MicrosoftExtensionsHostingVersion>
-    <MicrosoftExtensionsConfigVersion>10.0.5</MicrosoftExtensionsConfigVersion>
+    <ModelContextProtocolVersion>1.3.0</ModelContextProtocolVersion>
+    <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
+    <MicrosoftExtensionsHostingVersion>10.0.7</MicrosoftExtensionsHostingVersion>
+    <MicrosoftExtensionsConfigVersion>10.0.7</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
-    <AspNetCoreMvcTestingVersion>10.0.5</AspNetCoreMvcTestingVersion>
+    <AspNetCoreMvcTestingVersion>10.0.7</AspNetCoreMvcTestingVersion>
     <XunitVersion>2.9.3</XunitVersion>
     <XunitRunnerVersion>3.1.5</XunitRunnerVersion>
-    <TestSdkVersion>18.3.0</TestSdkVersion>
+    <TestSdkVersion>18.5.1</TestSdkVersion>
     <FluentAssertionsVersion>8.9.0</FluentAssertionsVersion>
     <NSubstituteVersion>5.3.0</NSubstituteVersion>
     <CoverletVersion>10.0.0</CoverletVersion>
