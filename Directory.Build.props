@@ -28,7 +28,7 @@
     <!-- Package Version Management -->
     <ModelContextProtocolVersion>1.3.0</ModelContextProtocolVersion>
     <MicrosoftExtensionsVersion>10.0.7</MicrosoftExtensionsVersion>
-    <MicrosoftExtensionsHostingVersion>10.0.7</MicrosoftExtensionsHostingVersion>
+    <MicrosoftExtensionsHostingVersion>10.0.8</MicrosoftExtensionsHostingVersion>
     <MicrosoftExtensionsConfigVersion>10.0.7</MicrosoftExtensionsConfigVersion>
     <PrometheusNetAspNetCoreVersion>8.2.1</PrometheusNetAspNetCoreVersion>
     <AspNetCoreMvcTestingVersion>10.0.7</AspNetCoreMvcTestingVersion>
