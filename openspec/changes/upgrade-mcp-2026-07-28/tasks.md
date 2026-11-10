@@ -16,9 +16,9 @@
 ## 3. Consumer and release qualification — no publication authorized
 
 - [ ] 3.1 Pack and install the candidate template in an isolated environment and validate representative flag combinations.
-- [ ] 3.2 Rehearse the documented migration on an application generated from published template 1.4.0.
+- [ ] 3.2 Rehearse the simple voluntary migration guide on an application generated from published template 1.4.0, preserving user code and checking that advanced compatibility steps are conditional.
 - [ ] 3.3 Verify actual client/proxy scenarios, rollback and timeout/cancellation behavior.
-- [ ] 3.4 Finalize migration instructions, release notes, public compatibility matrix and required existing-spec deltas.
+- [ ] 3.4 Finalize the simple opt-in migration guide and separate advanced reference, release notes, public compatibility matrix and required existing-spec deltas.
 - [ ] 3.5 Review the exact implementation head and CI; obtain separate merge/release authorization before archival or publication.
 
 ## 4. Separate future work

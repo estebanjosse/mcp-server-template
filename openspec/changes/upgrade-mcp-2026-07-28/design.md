@@ -21,7 +21,7 @@ The protocol `latest` endpoint resolves to 2026-07-28; GitHub's latest stable SD
 
 Use the official C# SDK under `modelcontextprotocol/csharp-sdk`, not a different package or an unversioned draft.[42]
 
-**Recommended direction:** move directly to stable SDK 2.4.0, retain .NET 10 and the current layered design, and explicitly select modern stateless HTTP for new projects. Offer hybrid HTTP as the transition for existing session-dependent applications. These are recommendations awaiting approval, not edits made to the runtime.
+**Recommended direction:** move directly to stable SDK 2.4.0, retain .NET 10 and the current layered design, and explicitly select modern stateless HTTP for new projects. Existing generated projects are not required to migrate. Supply a simple manual guide for owners who choose to upgrade; hybrid HTTP is only an optional advanced path when they choose to retain session-dependent clients. This is not a commitment to migrate existing deployments or preserve every old behavior. These are recommendations awaiting approval, not edits made to the runtime.
 
 ## 2. Protocol changes: behavior, not just package versions
 
@@ -38,7 +38,7 @@ The HTTP host currently calls `.WithHttpTransport()` without selecting a policy 
 | SDK 2.4 mode | Modern 2026-07-28 | Initialize-handshake peers | Intended use |
 | --- | --- | --- | --- |
 | `Stateless` | Native, no HTTP session | Supported without persistent sessions | Recommended new template default |
-| `StatefulForInitializeClients` | Native stateless requests | Legacy clients receive sessions | Recommended existing-project transition when sessions matter |
+| `StatefulForInitializeClients` | Native stateless requests | Legacy clients receive sessions | Optional path for migrating owners retaining session-dependent clients |
 | `Stateful` | Refused; a dual-era client may fall back | Legacy sessions | Temporary down-level operation, not native modern HTTP support |
 
 `Stateless = false` means stateful-only, not hybrid. Set `SessionMode` explicitly and do not also assign the shorthand. Legacy `/sse` transport is separate and disabled by default; any temporary opt-in must be intentional and tested. It was already opt-in in SDK 1.3.0, so this is not a new 1.3-to-2.4 default change.[46]
@@ -147,7 +147,7 @@ Every row is **NOT RUN** at this study checkpoint. No local .NET SDK was availab
 
 ## 8. Consumer migration and release boundary
 
-The [draft migration guide](../../../docs/migrations/mcp-2026-07-28.md) is part of this study. Existing projects are owned source, not runtime consumers of the template NuGet package: updating the template does not patch generated files. Migration requires a manual, reviewed application diff, tests and a rollback point. A fresh scaffold is a comparison artifact, not an instruction to overwrite the application.
+The [draft migration guide](../../../docs/migrations/mcp-2026-07-28.md) is part of this study. Existing projects are owned source, not runtime consumers of the template NuGet package: updating the template does not patch generated files. Migration is voluntary. For owners who opt in, the deliverable is a simple step-by-step guide explaining the files to change, commands to run, checks and rollback. Advanced compatibility cases are a separate reference, not universal migration requirements. Choosing not to migrate does not imply a maintenance or security-support promise. A voluntary migration requires a manual, reviewed application diff, tests and a rollback point. A fresh scaffold is an optional comparison artifact, not an instruction to overwrite the application.
 
 A template release number, support policy for 1.x consumers, actual client test targets and HTTP mode approval remain open. A breaking template behavior deserves explicit release notes and a versioning decision; the template version must not simply be copied from the SDK. There is no authorized merge, release, deployment, external service or paid call.
 
