@@ -12,7 +12,9 @@ import argparse
 import hashlib
 import itertools
 import json
+import os
 import pathlib
+import signal
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -23,14 +25,37 @@ NS = {"t": "http://microsoft.com/schemas/VisualStudio/TeamTest/2010"}
 
 
 def invoke(command: list[str], cwd: pathlib.Path, log: pathlib.Path, timeout: int) -> dict:
+    """Run an owned command; on POSIX, bound cleanup of its process group.
+
+    Descendants that deliberately leave the group are outside this guarantee.
+    Windows uses bounded taskkill /T /F (not exercised by the Linux regression).
+    """
     started = time.monotonic()
     log.parent.mkdir(parents=True, exist_ok=True)
     with log.open("w") as stream:
+        process = subprocess.Popen(command, cwd=cwd, stdout=stream,
+                                   stderr=subprocess.STDOUT, start_new_session=os.name == "posix")
         try:
-            process = subprocess.run(command, cwd=cwd, stdout=stream,
-                                     stderr=subprocess.STDOUT, timeout=timeout)
-            code = process.returncode
+            code = process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
+            if os.name == "posix":
+                # Signal the owned group, even if its leader exits during cleanup.
+                for sig in (signal.SIGTERM, signal.SIGKILL):
+                    try:
+                        os.killpg(process.pid, sig)
+                    except ProcessLookupError:
+                        break
+                    if sig == signal.SIGTERM:
+                        time.sleep(1)
+            else:
+                try:
+                    subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                                   stdout=stream, stderr=subprocess.STDOUT, timeout=5)
+                except (OSError, subprocess.TimeoutExpired):
+                    pass
+            if process.poll() is None:
+                process.kill()
+            process.wait(timeout=5)
             code = 124
     return {"command": command, "exitCode": code,
             "seconds": round(time.monotonic() - started, 2), "log": str(log)}
@@ -45,6 +70,16 @@ def matrix() -> list[dict]:
         for host, tests, samples in itertools.product(
             ("http", "stdio", "both"), (False, True), (False, True))
     ]
+
+
+def solution_projects_match(solution: pathlib.Path, projects: list[pathlib.Path]) -> bool:
+    """Check project references relative to the solution's directory."""
+    references = ET.parse(solution).findall(".//Project")
+    resolved = [(solution.parent / ref.attrib["Path"]).resolve() for ref in references]
+    expected = [project.resolve() for project in projects]
+    return (len(resolved) == len(set(resolved)) == len(expected) == len(set(expected))
+            and set(resolved) == set(expected)
+            and all(project.is_file() for project in resolved))
 
 
 def trx_summary(directory: pathlib.Path, expected: set[str]) -> dict:
@@ -66,11 +101,12 @@ def trx_summary(directory: pathlib.Path, expected: set[str]) -> dict:
         for key in totals:
             totals[key] += numbers[key]
     actual = [item["storageName"].casefold() for item in assemblies]
-    complete = (set(actual) == {name.casefold() for name in expected}
+    complete = (bool(assemblies) and set(actual) == {name.casefold() for name in expected}
                 and len(actual) == len(expected) and len(set(actual)) == len(actual)
-                and totals["total"] > 0
-                and totals["executed"] == totals["passed"] == totals["total"]
-                and all(totals[key] == 0 for key in ("failed", "error", "timeout", "aborted", "notExecuted")))
+                and all(item["total"] > 0
+                        and item["executed"] == item["passed"] == item["total"]
+                        and all(item[key] == 0 for key in ("failed", "error", "timeout", "aborted", "notExecuted"))
+                        for item in assemblies))
     return {"assemblies": assemblies, "totals": totals, "complete": complete}
 
 
@@ -159,10 +195,7 @@ def main() -> int:
         solutions = list(directory.glob("*.slnx"))
         valid_solution = len(solutions) == 1
         if valid_solution:
-            tree = ET.parse(solutions[0])
-            references = tree.findall(".//Project")
-            valid_solution = (len(references) == len(projects)
-                              and all((directory / ref.attrib["Path"]).is_file() for ref in references))
+            valid_solution = solution_projects_match(solutions[0], projects)
         item["checks"].append({"name": "solution-project-references", "passed": valid_solution})
         item["observations"] = {
             "generatedCiWorkflowPresent": (directory / ".github/workflows/ci.yml").is_file(),
