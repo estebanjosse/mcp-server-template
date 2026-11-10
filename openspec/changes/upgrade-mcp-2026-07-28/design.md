@@ -41,13 +41,17 @@ The HTTP host currently calls `.WithHttpTransport()` without selecting a policy 
 | `StatefulForInitializeClients` | Native stateless requests | Legacy clients receive sessions | Recommended existing-project transition when sessions matter |
 | `Stateful` | Refused; a dual-era client may fall back | Legacy sessions | Temporary down-level operation, not native modern HTTP support |
 
-`Stateless = false` means stateful-only, not hybrid. Set `SessionMode` explicitly and do not also assign the shorthand. Legacy `/sse` transport is separate and disabled by default; any temporary opt-in must be intentional and tested. Supporting 2025-11-25 or 2025-06-18 does not necessarily require the old `/sse` transport.[12][19][31]
+`Stateless = false` means stateful-only, not hybrid. Set `SessionMode` explicitly and do not also assign the shorthand. Legacy `/sse` transport is separate and disabled by default; any temporary opt-in must be intentional and tested. It was already opt-in in SDK 1.3.0, so this is not a new 1.3-to-2.4 default change.[46]
+
+Supporting 2025-11-25 or 2025-06-18 does not necessarily require the old `/sse` transport.[12][19][31]
 
 ### Results, schemas, caching and errors
 
 Modern responses have `resultType` and cacheable results have `ttlMs` / `cacheScope`; tools may use any JSON Schema 2020-12 schema and structured results need not be objects. Missing resources use Invalid Params (`-32602`) rather than the legacy resource-not-found code. Header/version/capability errors have their own allocated codes. Assertions must distinguish the protocol era rather than replace every old fixture version string.[1][18]
 
-The SDK handles version-dependent serialization; test that down-level peers do not receive incompatible modern-only fields. Custom clients and proxies must not assume a `{ result: ... }` wrapper for scalar structured output or deserialize tools without `inputSchema`. The two shipped tools return object DTOs and do not explicitly enable `UseStructuredContent`, so the scalar-wrapper change is conditional for customized applications, not an observed break in these tools.[3][8]
+The SDK handles version-dependent serialization and fills unset modern cache hints with zero TTL and private scope; positive caching is optional, not a prerequisite.[47]
+
+Test that down-level peers do not receive incompatible modern-only fields. Custom clients and proxies must not assume a `{ result: ... }` wrapper for scalar structured output or deserialize tools without `inputSchema`. The two shipped tools return object DTOs and do not explicitly enable `UseStructuredContent`, so the scalar-wrapper change is conditional for customized applications, not an observed break in these tools. SDK 2.4 retains legacy schema/result wrapping for down-level peers; natural JSON applies to the modern path.[49]
 
 ### Interactions and notifications
 
@@ -67,7 +71,10 @@ sequenceDiagram
     Host->>SDK: Existing authentication guard, then transport
     SDK->>Adapter: Request-scoped modern dispatch
     Adapter->>App: Business operation
-    App-->>Modern: Version-shaped result via adapter and SDK
+    App-->>Adapter: Business result
+    Adapter-->>SDK: Capability result
+    SDK-->>Host: Version-shaped response
+    Host-->>Modern: Complete response
     Legacy->>Host: initialize with down-level revision
     Host->>SDK: Hybrid path if approved
     SDK-->>Legacy: Initialize response plus legacy session
@@ -81,7 +88,7 @@ sequenceDiagram
 | Stateless HTTP default and discovery-first SDK clients in 2.0 | Direct | Explicit mode; modern + legacy integration tests [3] |
 | Tasks moves to `ModelContextProtocol.Extensions.Tasks`, incompatible API/wire with 1.x experimental Tasks | Conditional: absent from template | Inventory consumer customizations; separate package/redesign if used [24] |
 | Roots/Sampling/Logging diagnostics (`MCP9005`) and stateful-only options (`MCP9006`) | Conditional: no explicit feature use found | Do not blanket-suppress; choose a documented compatibility path |
-| OAuth callback/issuer/PKCE, registration and token-cache hardening | Conditional: current `secure` mode is a placeholder, not SDK OAuth | Review customized deployments separately; do not weaken metadata checks |
+| OAuth callback/issuer/PKCE, registration and token-cache hardening | Conditional: current `secure` mode is a placeholder, not SDK OAuth | Review callback replacement, issuer/PKCE, registration shape and repeated insufficient-scope challenges; the latter now fail instead of retrying indefinitely [3] |
 | Structured scalar output and required tool `inputSchema` | Conditional | Test custom tools, clients, proxy JSON and fixtures |
 | Changed explicit SSE connection exceptions | Client/integration code | Update catches that rely on the old IOException wrapper |
 | `McpClient.ServerInfo` nullable in 2.3 | Conditional: template is server-side | Fix custom clients/harnesses with explicit null handling [32] |
@@ -92,6 +99,10 @@ sequenceDiagram
 These changes cross multiple release lines; 2.0 is not the latest target. Relevant 1.x maintenance releases also include HTTP session ownership hardening, an SSE memory-retention fix, and OAuth hardening. The 2.x stateful-session security fix was published in 2.3.1.[33]
 
 A temporary 1.4.2 maintenance option is not adoption of the new protocol. No claim is made that the template's API-key guard establishes the authenticated principal required by upstream per-user session protections.[5][28][29]
+
+### Authenticated legacy-session identity: an operational break to test
+
+SDK 2.3.1 hardens authenticated stateful HTTP/legacy SSE sessions: authenticated principals need a nonempty `ClaimTypes.NameIdentifier`, `sub` or `ClaimTypes.Upn` from an authenticated identity. Session ownership compares claim type, value and issuer; invalid identity or a mismatch yields 403. Customized authentication may need claim mapping, not a disabled safety check. This is conditional for the current template because its shared-key gate does not set `HttpContext.User`.[45]
 
 ## 4. Dependency impact from published packages
 
@@ -104,9 +115,10 @@ Plan to reconcile `MicrosoftExtensionsVersion`, `MicrosoftExtensionsHostingVersi
 - **Dependencies:** `Directory.Build.props:29-40`; MCP and both hosts' package references; Application/Infrastructure direct Microsoft dependencies participate in resolution even though their business code should not change.
 - **HTTP:** explicit mode and discovery/protocol assertions; `Program.cs` metrics wrapper currently counts active requests under a session metric name. Clarify that metric when HTTP transport sessions disappear; do not silently relabel historical dashboards.
 - **Stdio:** `Host.Stdio/Program.cs`, adapter DI and protocol integration. Suspected missing metrics-recorder registration must be reproduced as a baseline issue, not blamed on SDK 2. Verify stdout contains protocol messages only.
-- **Adapters:** `Mcp/Extensions/ServiceCollectionExtensions.cs`, sample tools, prompts/resources and exception handling. Attribute-based registration is not grounds for an architecture rewrite; compile and wire-test it.
-- **Tests:** `Host.Http.Tests/McpProtocolBehaviorTests.cs` pins 2025-06-18, lacks a valid-session end-to-end path and uses broad status assertions. Retain meaningful legacy cases and add strict modern cases rather than merely changing constants.
+- **Adapters:** `Mcp/Extensions/ServiceCollectionExtensions.cs`, sample tools, prompts/resources and exception handling. The tagged 2.4 builder still exposes the current assembly-registration and stdio-transport APIs; no wholesale registration rewrite is indicated by source inspection. Compilation and wire behavior remain unqualified.[48]
+- **Tests:** `Host.Http.Tests/McpProtocolBehaviorTests.cs` pins 2025-06-18, lacks a valid-session end-to-end path and uses broad status assertions. Retain meaningful legacy cases and add strict modern cases rather than merely changing constants. Supply a valid `Accept` header: the existing fixture omits it, so an observed rejection cannot safely be attributed to sessions alone.
 - **Generated deliverable:** `.template.config/template.json`, `scripts/Test-Template.ps1`, `McpServer.Template.csproj`, both workflows and Docker. CI currently tests the sample solution/container, and the NuGet workflow packs/publishes on release; neither workflow runs the generated-project script. A release is not the right first opportunity to discover an invalid scaffold.
+- **Published package gaps:** inspected template 1.4.0 contains the HTTP Dockerfile but no `.github` workflows or `THIRD_PARTY_NOTICES.md`, despite related documentation claims. Validate the actual candidate inventory and avoid promising generated CI. Independently scope fixes for no-host validation, stdio-only Docker output and sample-free welcome text if reproduced; these are pre-existing template concerns, not proven SDK regressions.[44]
 - **Docs/context:** README, `docs/architecture.md`, `docs/configuration.md`, `docs/development.md`, `docs/operations.md`, `docs/capabilities.md`, `docs/template.md`, `openspec/config.yaml` and `openspec/project.md`. Correct “HTTP/SSE” ambiguity, outdated versions/defaults and over-broad SDK-isolation wording within approved scope. Review third-party attribution for the actual release assets.
 
 ## 6. Existing proposal reconciliation
@@ -128,7 +140,7 @@ Every row is **NOT RUN** at this study checkpoint. No local .NET SDK was availab
 3. Legacy HTTP 2025-11-25 and 2025-06-18: successful initialize + normal calls, correct stateless/hybrid behavior, version-shaped responses; hybrid session lifecycle and owner boundaries where applicable.
 4. Stdio: modern discovery, down-level initialize fallback, two tool invocations, prompt/resource operations, clean stdout, cancellation and graceful shutdown. Exercise the actual client SDK, not only methods directly.
 5. Serialization/cache: output schemas, object/scalar custom fixtures, resultType, TTL/scope defaults and dynamic status freshness, deterministic lists, missing-resource errors.
-6. Authentication/configuration: none/simple guard continuity, custom header, invalid credentials and monitoring endpoints; secure remains explicitly unimplemented. Real OAuth only if a separately scoped consumer fixture exists.
+6. Authentication/configuration: none/simple guard continuity, custom header, invalid credentials and monitoring endpoints; secure remains explicitly unimplemented. For authenticated legacy sessions, test missing/empty identifiers, owner/issuer mismatches and valid owner continuation. Real OAuth only if a separately scoped consumer fixture exists.
 7. Pack/install the candidate template in an isolated template engine; generate HTTP-only/stdio-only/both, samples on/off and tests on/off. Enumerate valid combinations and separately test no-host rejection; build, run tests where present and exercise generated hosts.
 8. Rehearse the guide using the published 1.4.0 package, not only a copy of main; verify a customized fixture retains user logic. Include proxy/header/timeout behavior and rollback to a previously qualified immutable deployment.
 9. Do not claim broad client compatibility from one SDK integration. Record exact external client versions as available, plus untested clients.
@@ -162,7 +174,6 @@ Official revisions/releases, versioned SDK source and published NuGet metadata w
 [4] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v2.4.0 — sdk-release-2.4
 [5] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v1.4.2 — sdk-release-1.4.2
 [6] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/latest — sdk-release-latest
-[8] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/versioning.md — sdk-versioning
 [11] https://api.nuget.org/v3-flatcontainer/modelcontextprotocol/index.json — nuget-sdk
 [12] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/concepts/stateless/stateless.md — docs/concepts/stateless/stateless.md
 [13] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/concepts/transports/transports.md — docs/concepts/transports/transports.md
@@ -184,3 +195,8 @@ Official revisions/releases, versioned SDK source and published NuGet metadata w
 [41] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v1.3.0/src/ModelContextProtocol.Core/McpSessionHandler.cs — sdk-1.3-utils
 [42] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/README.md — sdk-readme
 [44] https://api.nuget.org/v3-flatcontainer/easymcp.mcpserver.template/1.4.0/easymcp.mcpserver.template.1.4.0.nupkg — Published template 1.4.0 contents
+[45] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/commits/bfbd8936c0575c3cce875fbe6adb7d305a0dec87 — auth-session-security-commit
+[46] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v1.3.0/src/ModelContextProtocol.AspNetCore/HttpServerTransportOptions.cs — http-options-1.3
+[47] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/ModelContextProtocol.Core/Server/McpServerImpl.cs — server-shaping-2.4
+[48] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/ModelContextProtocol/McpServerBuilderExtensions.cs — primitive-builder-2.4
+[49] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/ModelContextProtocol.Core/Server/AIFunctionMcpServerTool.cs — structured-tools-2.4
