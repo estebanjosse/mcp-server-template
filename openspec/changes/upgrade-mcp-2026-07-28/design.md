@@ -133,7 +133,7 @@ This proposal adds migration-specific capabilities. Before implementation, any a
 
 ## 7. Proposed acceptance matrix
 
-Every row is **NOT RUN** at this study checkpoint. No local .NET SDK was available; SDK packages were downloaded for metadata inspection only. No candidate binary exists.
+The initial study had no local .NET SDK. A private SDK has since been installed, and the unchanged pre-migration solution now passes restore, Release build (0 warnings/errors) and all 84 existing tests. See the [baseline receipt](../../../docs/validation/pre-migration-baseline.md) for the exact tested commit, tooling notice and limits. This executes the existing-suite portion of row 1 only; candidate qualification, separate stdio reproduction and the remaining acceptance rows are **NOT RUN**. No migrated candidate binary exists.
 
 1. Restore/build/test the old baseline and candidate; inspect downgrade warnings and new diagnostics separately.
 2. Modern HTTP: discovery, correct headers/metadata, lists, tool calls, prompt/resource reads, no session ID, GET/DELETE behavior, unsupported-version and header-mismatch errors.
@@ -164,7 +164,7 @@ Track separately after the core migration is qualified:
 
 ## Verification receipt
 
-Official revisions/releases, versioned SDK source and published NuGet metadata were retrieved; the published template baseline was inspected. Static repository analysis and documentation/OpenSpec validation are the only completed checks. Compilation, runtime protocol conformance, generated-project execution, external-client interoperability and deployment are not certified by this study.
+Official revisions/releases, versioned SDK source and published NuGet metadata were retrieved; the published template baseline was inspected. Static analysis and documentation/OpenSpec validation were completed. The subsequent [pre-migration baseline](../../../docs/validation/pre-migration-baseline.md) also establishes a successful Release build and 84 passing existing tests with SDK 1.3.0 unchanged. Migrated-candidate compilation, runtime protocol conformance, generated-project execution, external-client interoperability and deployment remain unqualified.
 
 ## Sources
 
