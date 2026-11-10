@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import queue
@@ -21,6 +22,7 @@ import signal
 import subprocess
 import sys
 import threading
+import tempfile
 import time
 import unittest
 
@@ -71,6 +73,8 @@ def decode_line(raw):
     if 'method' in obj:
         if not isinstance(obj['method'], str) or 'result' in obj or 'error' in obj:
             raise Failure('protocol_error', 'Invalid method envelope')
+        if 'params' in obj and not isinstance(obj['params'], dict):
+            raise Failure('protocol_error', 'MCP method params must be an object')
     elif ('id' not in obj or isinstance(obj['id'], bool)
           or not isinstance(obj['id'], (int, str))
           or ('result' in obj) == ('error' in obj)):
@@ -85,6 +89,8 @@ def decode_line(raw):
 
 def tool_success(result):
     require(isinstance(result, dict), 'Tool result must be an object')
+    if 'isError' in result:
+        require(type(result['isError']) is bool, 'Tool isError must be a boolean')
     if result.get('isError', False):
         raise Failure('business_error', json.dumps(result, ensure_ascii=False))
     content = result.get('content')
@@ -153,6 +159,9 @@ class Validator:
         self.transport_failures = []
         self.proc = None
         self.threads = []
+        self.reader_errors = []
+        self.drained_streams = set()
+        self.drain_failures = []
         self.client = (self.output / 'client.jsonl').open('w', encoding='utf-8')
 
     def check(self, name, action):
@@ -173,8 +182,14 @@ class Validator:
                     log.flush()
                     if name == 'stdout':
                         self.q.put(('line', raw))
+            self.drained_streams.add(name)
+        except Exception as exc:
+            self.reader_errors.append({'stream': name, 'detail': type(exc).__name__ + ': ' + str(exc)})
         finally:
-            stream.close()
+            try:
+                stream.close()
+            except Exception as exc:
+                self.reader_errors.append({'stream': name, 'detail': 'close: ' + type(exc).__name__ + ': ' + str(exc)})
             if name == 'stdout':
                 self.q.put(('eof', None))
 
@@ -314,6 +329,10 @@ class Validator:
                     'Invalid uptime format')
 
     def stdout_purity(self):
+        if (self.reader_errors or self.drain_failures
+                or (self.proc is not None and (self.drained_streams != {'stdout', 'stderr'}
+                                              or any(t.is_alive() for t in self.threads)))):
+            raise Failure('stream_error', 'Stream drains incomplete or failed; see summary.json reader evidence')
         if self.transport_failures:
             categories = sorted({f['category'] for f in self.transport_failures})
             raise Failure('protocol_error' if 'protocol_error' in categories else 'stdout_noise',
@@ -335,22 +354,44 @@ class Validator:
             if code != 0:
                 raise Failure('abrupt_exit', 'Nonzero host exit code: ' + str(code))
         finally:
-            if self.proc.poll() is None:
-                os.killpg(self.proc.pid, signal.SIGTERM)
+            original_failure = sys.exc_info()[0] is not None
+
+            def join_readers(timeout):
+                deadline = time.monotonic() + timeout
+                for thread in self.threads:
+                    thread.join(timeout=max(0, deadline - time.monotonic()))
+
+            # Direct-process exit is not a barrier: descendants may still own the pipes.
+            join_readers(self.args.shutdown_timeout)
+            if any(t.is_alive() for t in self.threads) or self.drained_streams != {'stdout', 'stderr'}:
+                self.drain_failures.append('Streams did not drain after stdin EOF within shutdown timeout')
+            # Always clean the owned session, even after its original leader exited.
+            for sig in (signal.SIGTERM, signal.SIGKILL):
                 try:
-                    self.proc.wait(timeout=2)
+                    os.killpg(self.proc.pid, sig)
+                except ProcessLookupError:
+                    pass
+                except OSError as exc:
+                    self.drain_failures.append('Process-group cleanup: ' + str(exc))
+                join_readers(1)
+                try:
+                    self.proc.wait(timeout=1)
                 except subprocess.TimeoutExpired:
-                    os.killpg(self.proc.pid, signal.SIGKILL)
-                    self.proc.wait(timeout=2)
+                    if sig == signal.SIGKILL:
+                        self.drain_failures.append('Host remained alive after SIGKILL')
             if not self.proc.stdin.closed:
                 try:
                     self.proc.stdin.close()
                 except OSError:
                     pass  # Preserve the original abrupt-exit failure during cleanup.
-            for thread in self.threads:
-                thread.join(timeout=2)
-            while not self.q.empty():
+            if any(t.is_alive() for t in self.threads):
+                self.drain_failures.append('Reader threads still alive after process-group cleanup')
+            # A bounded snapshot also preserves evidence when a reader cannot be stopped.
+            for _ in range(self.q.qsize()):
                 self.event(self.q.get_nowait())
+            if not original_failure and (self.reader_errors or self.drain_failures):
+                raise Failure('stream_error', 'Stream drain/cleanup failed: ' +
+                              json.dumps({'reader_errors': self.reader_errors, 'drain_failures': self.drain_failures}))
 
     def run(self):
         started = dt.datetime.now(dt.timezone.utc).isoformat()
@@ -386,6 +427,8 @@ class Validator:
                    'dll_sha256': hashlib.sha256(Path(self.args.dll).read_bytes()).hexdigest() if Path(self.args.dll).is_file() else None,
                    'protocol_version': self.args.protocol_version, 'expected_sample_tools': self.args.sample_tools,
                    'counts': counts, 'host_exit_code': self.proc.returncode if self.proc else None,
+                   'reader_errors': self.reader_errors, 'drained_streams': sorted(self.drained_streams),
+                   'drain_failures': self.drain_failures, 'readers_alive': [t.is_alive() for t in self.threads],
                    'transport_failures': self.transport_failures, 'checks': self.checks,
                    'limitations': ['No pagination traversal: baseline discovery is expected to fit one page.',
                                    'notifications/initialized is unacknowledged by protocol; later calls validate continued operation.',
@@ -397,6 +440,146 @@ class Validator:
 
 
 class HarnessTests(unittest.TestCase):
+    @unittest.skipUnless(os.name == 'posix', 'POSIX process groups required')
+    def test_descendant_pipe_holder_cannot_pass_shutdown_or_purity(self):
+        with tempfile.TemporaryDirectory(prefix='stdio-descendant-') as tmp:
+            root = Path(tmp)
+            pid_file = root / 'descendant.pid'
+            child = ('import os,signal,time; from pathlib import Path; '
+                     'signal.signal(signal.SIGTERM, signal.SIG_IGN); '
+                     f'Path({str(pid_file)!r}).write_text(str(os.getpid())); time.sleep(60)')
+            parent = ('import subprocess,sys; '
+                      f'subprocess.Popen([sys.executable,"-B","-c",{child!r}]); '
+                      'sys.stdin.buffer.read()')
+            validator = Validator(argparse.Namespace(output=str(root / 'evidence'), shutdown_timeout=0.2))
+            validator.proc = subprocess.Popen([sys.executable, '-B', '-c', parent], stdin=subprocess.PIPE,
+                                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+            pid = None
+            try:
+                for name in ('stdout', 'stderr'):
+                    thread = threading.Thread(target=validator.read_stream,
+                                              args=(getattr(validator.proc, name), name), daemon=True)
+                    validator.threads.append(thread)
+                    thread.start()
+                deadline = time.monotonic() + 5
+                while not pid_file.exists() and time.monotonic() < deadline:
+                    time.sleep(0.01)
+                self.assertTrue(pid_file.exists(), 'Descendant readiness was not acknowledged')
+                pid = int(pid_file.read_text())
+                started = time.monotonic()
+                validator.check('shutdown', validator.shutdown)
+                validator.check('purity', validator.stdout_purity)
+                elapsed = time.monotonic() - started
+                stat = Path(f'/proc/{pid}/stat')
+                descendant_state = stat.read_text().split()[2] if stat.exists() else 'gone'
+                proof = {'parent_pid': validator.proc.pid, 'descendant_pid': pid,
+                         'parent_exit': validator.proc.returncode, 'elapsed': elapsed,
+                         'descendant_state': descendant_state,
+                         'drained_streams': sorted(getattr(validator, 'drained_streams', set())),
+                         'reader_errors': getattr(validator, 'reader_errors', []),
+                         'readers_alive': [t.is_alive() for t in validator.threads],
+                         'checks': validator.checks}
+                print('descendant proof: ' + json.dumps(proof), file=sys.stderr)
+                self.assertEqual(validator.proc.returncode, 0)
+                self.assertEqual([c['status'] for c in validator.checks], ['failed', 'failed'])
+                self.assertFalse(any(t.is_alive() for t in validator.threads), 'Stream drains must complete')
+                self.assertLess(elapsed, 8, 'Cleanup must be bounded')
+                # A terminated orphan can remain a zombie until container PID 1 reaps it.
+                stat = Path(f'/proc/{pid}/stat')
+                if stat.exists():
+                    self.assertEqual(stat.read_text().split()[2], 'Z', 'Descendant still running')
+            finally:
+                try:
+                    os.killpg(validator.proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                validator.proc.wait(timeout=3)
+                for thread in validator.threads:
+                    thread.join(timeout=3)
+                validator.client.close()
+                state = 'unknown'
+                if pid is not None:
+                    stat = Path(f'/proc/{pid}/stat')
+                    state = stat.read_text().split()[2] if stat.exists() else 'gone'
+                print('descendant cleanup: ' + json.dumps({'descendant_pid': pid, 'state': state,
+                      'readers_alive': [t.is_alive() for t in validator.threads]}), file=sys.stderr)
+
+    def test_reader_exception_cannot_pass_purity(self):
+        class BrokenStream:
+            def readline(self):
+                raise OSError('controlled stream failure')
+
+            def close(self):
+                pass
+
+        with tempfile.TemporaryDirectory(prefix='stdio-reader-') as tmp:
+            validator = Validator(argparse.Namespace(output=str(Path(tmp) / 'evidence')))
+            try:
+                try:
+                    validator.read_stream(BrokenStream(), 'stdout')
+                except OSError:
+                    pass  # Old reader incorrectly lets the exception escape without recording it.
+                validator.check('purity', validator.stdout_purity)
+                self.assertEqual(validator.checks[0]['status'], 'failed')
+                self.assertIn('controlled stream failure', json.dumps(validator.reader_errors))
+            finally:
+                validator.client.close()
+
+    def test_notification_params_must_be_objects(self):
+        for value in (123, None, False, 'invalid', []):
+            with self.subTest(params=value):
+                raw = (json.dumps({'jsonrpc': '2.0', 'method': 'notifications/test', 'params': value}) + '\n').encode()
+                with self.assertRaises(Failure) as context:
+                    decode_line(raw)
+                self.assertEqual(context.exception.category, 'protocol_error')
+        for params in ({}, {'message': 'valid'}):
+            raw = (json.dumps({'jsonrpc': '2.0', 'method': 'notifications/test', 'params': params}) + '\n').encode()
+            self.assertEqual(decode_line(raw)['params'], params)
+        self.assertEqual(decode_line(b'{"jsonrpc":"2.0","method":"notifications/test"}\n')['method'], 'notifications/test')
+
+    def test_tool_is_error_requires_actual_boolean(self):
+        result = {'content': [{'type': 'text', 'text': '{"result":3.5}'}]}
+        for value in (0, 1, None, '', 'false', [], {}):
+            with self.subTest(isError=value):
+                with self.assertRaises(Failure) as context:
+                    tool_success({**result, 'isError': value})
+                self.assertEqual(context.exception.category, 'semantic_error')
+        self.assertEqual(tool_success(result), {'result': 3.5})
+        self.assertEqual(tool_success({**result, 'isError': False}), {'result': 3.5})
+        with self.assertRaises(Failure) as context:
+            tool_success({**result, 'isError': True})
+        self.assertEqual(context.exception.category, 'business_error')
+
+    def test_cli_rejects_nonfinite_timeouts_before_side_effects(self):
+        with tempfile.TemporaryDirectory(prefix='stdio-cli-') as tmp:
+            root = Path(tmp)
+            marker = root / 'launched'
+            host = root / 'host.py'
+            host.write_text(f'from pathlib import Path; Path({str(marker)!r}).touch()\n', encoding='utf-8')
+            base = [sys.executable, '-B', str(Path(__file__).resolve()), '--dll', str(host),
+                    '--cwd', str(root), '--dotnet', sys.executable]
+            for option in ('--timeout', '--shutdown-timeout'):
+                for index, value in enumerate(('nan', 'inf', '-inf', '0', '-1')):
+                    with self.subTest(option=option, value=value):
+                        marker.unlink(missing_ok=True)
+                        output = root / (option[2:] + str(index))
+                        result = subprocess.run(base + ['--output', str(output), option + '=' + value],
+                                                capture_output=True, text=True, timeout=10)
+                        print('CLI proof: ' + json.dumps({'option': option, 'value': value,
+                              'exit': result.returncode, 'output_created': output.exists(),
+                              'host_launched': marker.exists()}), file=sys.stderr)
+                        self.assertEqual(result.returncode, 2)
+                        self.assertIn('finite and positive', result.stderr)
+                        self.assertFalse(output.exists(), 'Invalid timeout created output directory')
+                        self.assertFalse(marker.exists(), 'Invalid timeout launched a process')
+            marker.unlink(missing_ok=True)
+            output = root / 'positive-control'
+            result = subprocess.run(base + ['--output', str(output), '--timeout=.2', '--shutdown-timeout=.2'],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 1)  # The controlled host is intentionally not an MCP server.
+            self.assertTrue(output.is_dir())
+            self.assertTrue(marker.exists(), 'Valid positive timeout did not reach process launch')
+
     def test_tools_capability_is_optional_when_samples_are_absent(self):
         caps = {'prompts': {}, 'resources': {}}
         self.assertEqual(capabilities_assert(caps, 'absent'), caps)
@@ -460,6 +643,8 @@ def main():
     parser.add_argument('--shutdown-timeout', type=float, default=5)
     parser.add_argument('--self-test', action='store_true')
     args = parser.parse_args()
+    if not all(math.isfinite(value) and value > 0 for value in (args.timeout, args.shutdown_timeout)):
+        parser.error('Timeouts must be finite and positive')
     if args.self_test:
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(HarnessTests)
         return int(not unittest.TextTestRunner(verbosity=2).run(suite).wasSuccessful())
@@ -467,8 +652,6 @@ def main():
         parser.error('Host validation currently requires Linux/macOS process groups')
     if not all((args.dll, args.cwd, args.output)):
         parser.error('--dll, --cwd and --output are required unless --self-test is used')
-    if args.timeout <= 0 or args.shutdown_timeout <= 0:
-        parser.error('Timeouts must be positive')
     repository = Path(__file__).resolve().parents[1]
     output = Path(args.output).resolve()
     if output == repository or output.is_relative_to(repository):
