@@ -34,6 +34,8 @@ The runner emitted a non-fatal `VSTEST_ARTIFACTS_DIRECTORY environment variable 
 
 ## Evidence and limits
 
+See the [expanded baseline](pre-migration-expanded.md) for the subsequent Docker, packed-template and real stdio checks, including reproduced failures. The limits below describe this original build/test run only.
+
 Raw restore/build/test logs, SDK information, machine-readable results and four TRX reports are retained outside the repository under execution ID `baseline-20261110T212101Z`.
 
 This validates the existing solution's build and test suite only. It does **not** validate:

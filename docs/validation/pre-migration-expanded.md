@@ -59,7 +59,33 @@ The harness's **9 unit/negative-control tests pass**. Their synthetic TRX inputs
 
 ## Stdio end-to-end status
 
-A separate strict stdin/stdout MCP validator is being exercised against the real unchanged host. Its protocol, invocation, resource/prompt and shutdown results are **PENDING**, not inferred from compilation or unit tests. Generated-host end-to-end results will be added separately.
+**FAIL, reproduced against the repository host and all eight generated stdio hosts.** The validator uses real newline-delimited JSON-RPC over child-process pipes, without redirecting host logs, replacing services or changing configuration.
+
+- Protocol 2025-11-25 initialization, advertised-capability discovery, French greeting prompt, both resource reads and bounded EOF shutdown work.
+- Repository host: **9 of 13 checks pass, 4 fail**. Both normal tool calls fail during activation, the zero-division check cannot reach the business logic, and stdout purity fails.
+- All four generated stdio hosts with sample tools reproduce the same four failures.
+- All four generated stdio hosts without sample tools pass **9 of 10 checks**, but still fail stdout purity. Optional tool capability absence is valid here; the validator does not require tools or issue `tools/list` when that capability was not advertised.
+- Every host process exits **0** on stdin EOF; every validator exits **1** because the required failures remain visible.
+
+Two distinct existing defects explain these results:
+
+1. `IMcpMetricsRecorder` is required by `EchoTool` and `CalcDivideTool` but is not registered by the stdio/shared startup path. Real host logs show the dependency-injection activation exception. HTTP registers the recorder separately.
+2. Ordinary hosting/SDK logs are written to stdout, which is the protocol stream. The repository execution contains **168 non-protocol lines** mixed with JSON-RPC responses. Even sample-free scaffolds have this transport defect.
+
+The validator continues past noise only to collect diagnostics; it still fails the run. Successful tool DTO semantics remain unverified against the real host because activation fails first. Synthetic positive DTO assertions are harness tests only, not application success evidence.
+
+Reproduce after building the unchanged solution:
+
+```bash
+python3 -B scripts/validate_stdio.py \
+  --dll src/McpServer.Template.Host.Stdio/bin/Release/net10.0/McpServer.Template.Host.Stdio.dll \
+  --cwd src/McpServer.Template.Host.Stdio \
+  --output /absolute/path/to/new-external-stdio-evidence \
+  --sample-tools present
+python3 -B scripts/validate_stdio.py --self-test
+```
+
+For a generated host, use its own DLL and host directory, and `--sample-tools absent` when samples were excluded. The script currently requires Linux/macOS for process-group cleanup. Its **8 self-tests pass**, including a negative control for the optional tools capability. Raw transcripts and per-host JSON reports remain external. Earlier exploratory harness runs are retained but are not authoritative; the final run corrects sample-free capability expectations without changing any host.
 
 ## Boundaries
 
