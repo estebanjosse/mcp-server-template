@@ -129,10 +129,14 @@ def zero_assert(result):
     require(isinstance(result, dict), 'Expected tool result object')
     require(result.get('isError') is True, 'Division by zero must be a tool business error')
     content = result.get('content')
+    # SDK 1.3.0 wraps McpException messages in its tool-specific error context.
+    # Accept only the exact business error, with or without that exact wrapper.
+    messages = {'Division by zero is not allowed',
+                "An error occurred invoking 'calc_divide': Division by zero is not allowed"}
     require(isinstance(content, list) and len(content) == 1
             and content[0].get('type') == 'text'
-            and content[0].get('text') == 'Division by zero is not allowed',
-            'Expected exact division-by-zero business message, not an unrelated activation failure')
+            and content[0].get('text') in messages,
+            'Expected exact division-by-zero business message, not an unrelated tool failure')
 
 
 def capabilities_assert(caps, sample_tools):
@@ -624,6 +628,16 @@ class HarnessTests(unittest.TestCase):
         validator.check('negative control', lambda: require(False, 'intentional test failure'))
         self.assertEqual(validator.checks[0]['status'], 'failed')
         self.assertEqual(validator.checks[0]['category'], 'semantic_error')
+
+    def test_sdk_wrapped_division_error_preserves_exact_business_message(self):
+        wrapped = "An error occurred invoking 'calc_divide': Division by zero is not allowed"
+        zero_assert({'isError': True, 'content': [{'type': 'text', 'text': wrapped}]})
+        for text in ("An error occurred invoking 'calc_divide'.",
+                     "An error occurred invoking 'calc_divide': Unable to activate tool",
+                     "An error occurred invoking 'other_tool': Division by zero is not allowed",
+                     wrapped + ' extra text'):
+            with self.subTest(text=text), self.assertRaises(Failure):
+                zero_assert({'isError': True, 'content': [{'type': 'text', 'text': text}]})
 
     def test_unrelated_error_not_zero_success(self):
         with self.assertRaises(Failure):
