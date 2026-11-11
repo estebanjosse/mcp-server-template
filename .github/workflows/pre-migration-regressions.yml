@@ -35,8 +35,6 @@ jobs:
       fail-fast: false
       matrix:
         suite: [StdioRegressions, TemplateRegressions]
-    env:
-      MCP_REGRESSION_OUTPUT: ${{ runner.temp }}/pre-migration-regressions
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -49,12 +47,14 @@ jobs:
         if: matrix.suite == 'StdioRegressions'
         run: dotnet build src/McpServer.Template.Host.Stdio --configuration Release --disable-build-servers
       - name: Run real regression tests
+        env:
+          MCP_REGRESSION_OUTPUT: ${{ runner.temp }}/pre-migration-regressions
         run: python3 -B scripts/integration_tests/test_pre_migration_regressions.py ${{ matrix.suite }} -v
       - name: Upload regression evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pre-migration-${{ matrix.suite }}
-          path: ${{ env.MCP_REGRESSION_OUTPUT }}
+          path: ${{ runner.temp }}/pre-migration-regressions
           if-no-files-found: warn
           retention-days: 14
