@@ -56,12 +56,20 @@ dotnet run --project src/MyCompany.McpServer.Host.Stdio
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
 | `--name` | `-n` | Project name (replaces `McpServer.Template`) | Directory name |
+| `--host` | | Select `http`, `stdio`, or `both`; required if neither host flag selects a host | No default |
 | `--http-host` | `-hh` | Include HTTP host project | `false` |
 | `--stdio-host` | `-sh` | Include Stdio host project | `false` |
 | `--include-tests` | `-it` | Include test projects | `false` |
 | `--include-sample-tools` | `-ist` | Include sample MCP tools | `false` |
 
-> **Note:** At least one host option (`--http-host` or `--stdio-host`) is required.
+> **Note:** Select at least one host using `--host http|stdio|both`, or the existing `--http-host` / `--stdio-host` flags. Both flag defaults remain `false`. With no host selected, the template engine reports `Missing mandatory option(s) ... '--host'` before writing files. Run `dotnet new mcp-server --help` to see the available choices.
+
+The selector is additive: `--http-host --host stdio` includes both hosts. A `false` flag does not disable a host selected through `--host`. Existing valid flag-only commands remain supported.
+
+```bash
+# Equivalent to --http-host --stdio-host
+dotnet new mcp-server --name Contoso.Mcp --host both
+```
 
 ### Examples
 

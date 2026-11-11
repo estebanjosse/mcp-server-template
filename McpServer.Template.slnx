@@ -7,17 +7,17 @@
   <Folder Name="/src/">
     <Project Path="src/McpServer.Template.Application/McpServer.Template.Application.csproj" />
     <Project Path="src/McpServer.Template.Contracts/McpServer.Template.Contracts.csproj" />
-<!--#if (http-host) -->
+<!--#if (httpHostEnabled) -->
     <Project Path="src/McpServer.Template.Host.Http/McpServer.Template.Host.Http.csproj" />
 <!--#endif -->
-<!--#if (stdio-host) -->
+<!--#if (stdioHostEnabled) -->
     <Project Path="src/McpServer.Template.Host.Stdio/McpServer.Template.Host.Stdio.csproj" />
 <!--#endif -->
     <Project Path="src/McpServer.Template.Infrastructure/McpServer.Template.Infrastructure.csproj" />
     <Project Path="src/McpServer.Template.Mcp/McpServer.Template.Mcp.csproj" />
 <!--#if (include-tests) -->
     <Project Path="tests/McpServer.Template.Application.Tests/McpServer.Template.Application.Tests.csproj" />
-<!--#if (http-host) -->
+<!--#if (httpHostEnabled) -->
     <Project Path="tests/McpServer.Template.Host.Http.Tests/McpServer.Template.Host.Http.Tests.csproj" />
 <!--#endif -->
     <Project Path="tests/McpServer.Template.Infrastructure.Tests/McpServer.Template.Infrastructure.Tests.csproj" />

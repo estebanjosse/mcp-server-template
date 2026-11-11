@@ -233,7 +233,7 @@ def main() -> int:
                      repo, output / "logs/no-host.log", args.timeout)
     text = (output / "logs/no-host.log").read_text(errors="replace").lower()
     rejected = (no_host["exitCode"] not in (0, 124) and "host" in text
-                and any(word in text for word in ("required", "at least", "constraint")))
+                and any(word in text for word in ("required", "mandatory", "at least", "constraint")))
     report["noHost"] = {**no_host, "expectedRejection": True, "passed": rejected}
     report["summary"] = {"validCases": len(report["cases"]),
                          "validPassed": sum(case["passed"] for case in report["cases"]),

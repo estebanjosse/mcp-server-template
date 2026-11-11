@@ -106,6 +106,57 @@ class TemplateRegressions(unittest.TestCase):
         if result["exitCode"] != 0:
             raise RuntimeError(f"Template install failed: {result}")
 
+    def test_default_options_require_a_host(self):
+        target = self.output / "generated-defaults"
+        result = validation.invoke([
+            "dotnet", "new", "mcp-server", "--name", "Regression.Defaults",
+            "--output", str(target), "--debug:custom-hive", str(self.hive)],
+            REPO, self.output / "defaults.log", 120)
+        self.assertNotEqual(124, result["exitCode"], "Generation timed out")
+        self.assertNotEqual(0, result["exitCode"], "Template defaults generated a solution without a host")
+        self.assertEqual([], [str(p) for p in target.rglob("*") if p.is_file()])
+
+    def test_valid_host_selections_still_generate_expected_projects(self):
+        cases = [
+            ("http-explicit", ["--http-host", "true", "--stdio-host", "false"], True, False),
+            ("stdio-explicit", ["--http-host", "false", "--stdio-host", "true"], False, True),
+            ("both-explicit", ["--http-host", "true", "--stdio-host", "true"], True, True),
+            ("http-bare", ["--http-host"], True, False),
+            ("stdio-bare", ["--stdio-host"], False, True),
+            ("both-bare", ["--http-host", "--stdio-host"], True, True),
+            ("http-choice", ["--host", "http"], True, False),
+            ("stdio-choice", ["--host", "stdio"], False, True),
+            ("both-choice", ["--host", "both"], True, True),
+            ("false-with-choice", ["--http-host", "false", "--stdio-host", "false", "--host", "http"], True, False),
+            ("combined-choice", ["--http-host", "--host", "stdio"], True, True),
+        ]
+        for case, flags, http, stdio in cases:
+            with self.subTest(case=case):
+                target = self.output / case
+                result = validation.invoke([
+                    "dotnet", "new", "mcp-server", "--name", "Regression.Valid",
+                    "--output", str(target), "--debug:custom-hive", str(self.hive),
+                    "--include-tests", "true", "--include-sample-tools", "true", *flags],
+                    REPO, self.output / f"{case}.log", 120)
+                self.assertEqual(0, result["exitCode"], result)
+                solutions = list(target.glob("*.slnx"))
+                self.assertEqual(1, len(solutions))
+                self.assertTrue(validation.solution_projects_match(solutions[0], list(target.rglob("*.csproj"))))
+                self.assertEqual(http, (target / "tests/Regression.Valid.Host.Http.Tests").is_dir())
+                self.assertEqual(http, (target / "src/Regression.Valid.Host.Http").is_dir())
+                self.assertEqual(stdio, (target / "src/Regression.Valid.Host.Stdio").is_dir())
+
+    def test_invalid_host_choice_is_rejected_before_writing_files(self):
+        for value in ("false", "none"):
+            with self.subTest(host=value):
+                target = self.output / f"invalid-host-{value}"
+                result = validation.invoke([
+                    "dotnet", "new", "mcp-server", "--name", "Regression.Invalid",
+                    "--output", str(target), "--debug:custom-hive", str(self.hive),
+                    "--host", value], REPO, self.output / f"invalid-host-{value}.log", 120)
+                self.assertNotIn(result["exitCode"], (0, 124))
+                self.assertEqual([], [str(p) for p in target.rglob("*") if p.is_file()])
+
     def test_no_host_is_rejected_without_partial_solution(self):
         target = self.output / "generated-no-host"
         result = validation.invoke([
@@ -119,7 +170,7 @@ class TemplateRegressions(unittest.TestCase):
         self.assertNotEqual(124, result["exitCode"], "Generation timed out rather than rejecting options")
         self.assertNotEqual(0, result["exitCode"], "Template accepted both hosts disabled; see no-host.log")
         self.assertIn("host", text)
-        self.assertTrue(any(word in text for word in ("required", "at least", "constraint")), text)
+        self.assertTrue(any(word in text for word in ("required", "mandatory", "at least", "constraint")), text)
         self.assertEqual([], evidence["partialSolutions"], "Rejected generation left a partial solution")
 
 
