@@ -20,8 +20,16 @@
 <!--#if (httpHostEnabled) -->
     <Project Path="tests/McpServer.Template.Host.Http.Tests/McpServer.Template.Host.Http.Tests.csproj" />
 <!--#endif -->
+<!--#if (stdioHostEnabled) -->
+    <Project Path="tests/McpServer.Template.Host.Stdio.Tests/McpServer.Template.Host.Stdio.Tests.csproj" />
+<!--#endif -->
     <Project Path="tests/McpServer.Template.Infrastructure.Tests/McpServer.Template.Infrastructure.Tests.csproj" />
     <Project Path="tests/McpServer.Template.Mcp.Tests/McpServer.Template.Mcp.Tests.csproj" />
 <!--#endif -->
   </Folder>
+<!--#if (false) -->
+  <Folder Name="/validation/">
+    <Project Path="validation/McpServer.Template.Template.Tests/McpServer.Template.Template.Tests.csproj" />
+  </Folder>
+<!--#endif -->
 </Solution>

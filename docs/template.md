@@ -197,15 +197,17 @@ Create a `nuget` environment in GitHub repository settings to add approval requi
 
 ## Verification
 
-Run the template verification script to test all flag combinations:
+Run the repository-only C#/xUnit template suite:
 
-```powershell
-./scripts/Test-Template.ps1
+```sh
+dotnet test validation/McpServer.Template.Template.Tests --configuration Release
 ```
 
-Options:
-- `-OutputPath <path>`: Custom output directory for test projects
-- `-SkipCleanup`: Keep test directories after the run
+It packs and installs the actual NuGet template into a private hive, checks host
+selection and generated project inventories, then builds and tests the 12
+host/tests/sample combinations. It does not change your normal template
+installation. See [Testing](testing.md) for the full solution command and
+diagnostic artifact locations.
 
 ## Uninstalling
 

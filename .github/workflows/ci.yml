@@ -46,7 +46,21 @@ jobs:
         run: dotnet build --configuration Release --no-restore
       
       - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
+        env:
+          MCP_TEST_ARTIFACTS: ${{ runner.temp }}/mcp-tests
+        run: dotnet test --configuration Release --no-build --verbosity normal --logger trx
+
+      - name: Upload test results and integration diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            tests/**/TestResults/**/*.trx
+            validation/**/TestResults/**/*.trx
+            ${{ runner.temp }}/mcp-tests
+          if-no-files-found: warn
+          retention-days: 14
 
   build:
     name: Build Docker Image

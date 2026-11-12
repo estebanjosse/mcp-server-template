@@ -74,6 +74,8 @@
             ".vscode/**",
             "**/bin/**",
             "**/obj/**",
+            "**/TestResults/**",
+            "validation/**",
             "openspec/**",
             "AGENTS.md",
             "scripts/**",
@@ -106,6 +108,7 @@
             "src/McpServer.Template.Mcp/Tools/EchoTool.cs",
             "src/McpServer.Template.Mcp/Tools/CalcDivideTool.cs",
             "tests/McpServer.Template.Mcp.Tests/Tools/**",
+            "tests/McpServer.Template.Host.Stdio.Tests/Tools/**",
             "docs/capabilities.md"
           ]
         },
@@ -113,6 +116,12 @@
           "condition": "(include-sample-tools)",
           "exclude": [
             "src/McpServer.Template.Mcp/Tools/.gitkeep"
+          ]
+        },
+        {
+          "condition": "(include-tests && !stdioHostEnabled)",
+          "exclude": [
+            "tests/McpServer.Template.Host.Stdio.Tests/**"
           ]
         },
         {
