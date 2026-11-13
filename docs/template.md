@@ -56,12 +56,20 @@ dotnet run --project src/MyCompany.McpServer.Host.Stdio
 | Option | Short | Description | Default |
 |--------|-------|-------------|---------|
 | `--name` | `-n` | Project name (replaces `McpServer.Template`) | Directory name |
+| `--host` | | Select `http`, `stdio`, or `both`; required if neither host flag selects a host | No default |
 | `--http-host` | `-hh` | Include HTTP host project | `false` |
 | `--stdio-host` | `-sh` | Include Stdio host project | `false` |
 | `--include-tests` | `-it` | Include test projects | `false` |
 | `--include-sample-tools` | `-ist` | Include sample MCP tools | `false` |
 
-> **Note:** At least one host option (`--http-host` or `--stdio-host`) is required.
+> **Note:** Select at least one host using `--host http|stdio|both`, or the existing `--http-host` / `--stdio-host` flags. Both flag defaults remain `false`. With no host selected, the template engine reports `Missing mandatory option(s) ... '--host'` before writing files. Run `dotnet new mcp-server --help` to see the available choices.
+
+The selector is additive: `--http-host --host stdio` includes both hosts. A `false` flag does not disable a host selected through `--host`. Existing valid flag-only commands remain supported.
+
+```bash
+# Equivalent to --http-host --stdio-host
+dotnet new mcp-server --name Contoso.Mcp --host both
+```
 
 ### Examples
 
@@ -189,15 +197,17 @@ Create a `nuget` environment in GitHub repository settings to add approval requi
 
 ## Verification
 
-Run the template verification script to test all flag combinations:
+Run the repository-only C#/xUnit template suite:
 
-```powershell
-./scripts/Test-Template.ps1
+```sh
+dotnet test validation/McpServer.Template.Template.Tests --configuration Release
 ```
 
-Options:
-- `-OutputPath <path>`: Custom output directory for test projects
-- `-SkipCleanup`: Keep test directories after the run
+It packs and installs the actual NuGet template into a private hive, checks host
+selection and generated project inventories, then builds and tests the 12
+host/tests/sample combinations. It does not change your normal template
+installation. See [Testing](testing.md) for the full solution command and
+diagnostic artifact locations.
 
 ## Uninstalling
 

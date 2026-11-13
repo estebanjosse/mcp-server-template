@@ -27,6 +27,18 @@
       "displayName": "Stdio Host",
       "description": "Include the Stdio host project"
     },
+    "host": {
+      "type": "parameter",
+      "datatype": "choice",
+      "displayName": "Host selection",
+      "description": "Select at least one host: http, stdio, or both. Existing --http-host and --stdio-host flags remain supported.",
+      "isRequired": "(!http-host && !stdio-host)",
+      "choices": [
+        { "choice": "http", "description": "Include the HTTP host" },
+        { "choice": "stdio", "description": "Include the stdio host" },
+        { "choice": "both", "description": "Include both hosts" }
+      ]
+    },
     "include-sample-tools": {
       "type": "parameter",
       "datatype": "bool",
@@ -41,9 +53,13 @@
       "displayName": "Include Tests",
       "description": "Include test projects"
     },
-    "hostSelected": {
+    "httpHostEnabled": {
       "type": "computed",
-      "value": "(http-host || stdio-host)"
+      "value": "(http-host || host == \"http\" || host == \"both\")"
+    },
+    "stdioHostEnabled": {
+      "type": "computed",
+      "value": "(stdio-host || host == \"stdio\" || host == \"both\")"
     }
   },
   "sources": [
@@ -58,6 +74,8 @@
             ".vscode/**",
             "**/bin/**",
             "**/obj/**",
+            "**/TestResults/**",
+            "validation/**",
             "openspec/**",
             "AGENTS.md",
             "scripts/**",
@@ -67,13 +85,13 @@
           ]
         },
         {
-          "condition": "(!http-host)",
+          "condition": "(!httpHostEnabled)",
           "exclude": [
             "src/McpServer.Template.Host.Http/**"
           ]
         },
         {
-          "condition": "(!stdio-host)",
+          "condition": "(!stdioHostEnabled)",
           "exclude": [
             "src/McpServer.Template.Host.Stdio/**"
           ]
@@ -90,6 +108,7 @@
             "src/McpServer.Template.Mcp/Tools/EchoTool.cs",
             "src/McpServer.Template.Mcp/Tools/CalcDivideTool.cs",
             "tests/McpServer.Template.Mcp.Tests/Tools/**",
+            "tests/McpServer.Template.Host.Stdio.Tests/Tools/**",
             "docs/capabilities.md"
           ]
         },
@@ -100,7 +119,13 @@
           ]
         },
         {
-          "condition": "(include-tests && !http-host)",
+          "condition": "(include-tests && !stdioHostEnabled)",
+          "exclude": [
+            "tests/McpServer.Template.Host.Stdio.Tests/**"
+          ]
+        },
+        {
+          "condition": "(include-tests && !httpHostEnabled)",
           "exclude": [
             "tests/McpServer.Template.Host.Http.Tests/**"
           ]

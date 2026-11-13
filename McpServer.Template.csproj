@@ -31,8 +31,7 @@
   <ItemGroup>
     <Content Include=".template.config\**\*" Exclude=".template.config\**\bin\**;.template.config\**\obj\**" />
     <Content Include="src\**\*" Exclude="**\bin\**;**\obj\**" />
-    <Content Include="tests\**\*" Exclude="**\bin\**;**\obj\**" />
-    <Content Include="scripts\**\*" Exclude="**\bin\**;**\obj\**" />
+    <Content Include="tests\**\*" Exclude="**\bin\**;**\obj\**;**\TestResults\**" />
     <Content Include="docs\**\*" />
     <Content Include="Directory.Build.props" />
     <Content Include="Directory.Build.targets" />

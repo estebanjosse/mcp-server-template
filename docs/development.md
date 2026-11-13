@@ -17,6 +17,10 @@ dotnet test
 dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
 ```
 
+See [Testing](testing.md) for integration-test coverage, isolated template-package
+validation and diagnostic artifacts. All suites use C#/xUnit and run through
+`dotnet test`; the template-package suite is repository-only.
+
 ## Running the sample hosts in this repo
 
 The repository includes sample hosts that exercise the template implementation.
@@ -27,6 +31,11 @@ The repository includes sample hosts that exercise the template implementation.
 # Run the stdio host
 dotnet run --project src/McpServer.Template.Host.Stdio
 ```
+
+Console diagnostics are written to stderr at their configured log levels.
+Stdout is reserved for MCP protocol messages; do not redirect console logs onto
+stdout when configuring this host. No file logging provider is configured by
+default. HTTP console logging is unchanged and uses stdout.
 
 To use MCP Inspector:
 
@@ -149,6 +158,11 @@ Generated projects typically include:
 - `*.Application.Tests` – business logic validation (services).
 - `*.Infrastructure.Tests` – technical provider tests (clock, app info, etc.).
 - `*.Mcp.Tests` – MCP adapter tests (tools, prompts, resources with mocked services).
+- `*.Host.Http.Tests` – HTTP host tests, when the HTTP host is selected.
+- `*.Host.Stdio.Tests` – real stdio protocol integration tests, when the stdio host is selected.
+
+Sample-tool tests require `--include-sample-tools`. Repository-only template
+package tests under `validation/` are not included in generated projects.
 
 Run tests from the root of a generated project:
 
