@@ -50,7 +50,7 @@ jobs:
           MCP_TEST_ARTIFACTS: ${{ runner.temp }}/mcp-tests
         run: dotnet test --configuration Release --no-build --verbosity normal --logger trx
 
-      - name: Upload test results and integration diagnostics
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -58,7 +58,26 @@ jobs:
           path: |
             tests/**/TestResults/**/*.trx
             validation/**/TestResults/**/*.trx
-            ${{ runner.temp }}/mcp-tests
+            ${{ runner.temp }}/mcp-tests/**/test-results/*.trx
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload integration diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-diagnostics
+          path: |
+            ${{ runner.temp }}/mcp-tests/**/stdout.log
+            ${{ runner.temp }}/mcp-tests/**/stderr.log
+            ${{ runner.temp }}/mcp-tests/**/exit.log
+            ${{ runner.temp }}/mcp-tests/**/client.jsonl
+            ${{ runner.temp }}/mcp-tests/**/logs/*.log
+            ${{ runner.temp }}/mcp-tests/**/logs/*.command.json
+            ${{ runner.temp }}/mcp-tests/template-tests-*/package.sha256
+            ${{ runner.temp }}/mcp-tests/template-tests-*/package-inventory.json
+            !${{ runner.temp }}/mcp-tests/**/bin/**
+            !${{ runner.temp }}/mcp-tests/**/obj/**
           if-no-files-found: warn
           retention-days: 14
 

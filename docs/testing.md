@@ -75,8 +75,12 @@ To collect standard .NET test reports as well:
 dotnet test --configuration Release --logger trx
 ```
 
-TRX files are written to each test project's `TestResults` directory. CI uploads
-test reports and integration diagnostics even on failure, with 14-day retention.
+TRX files are written to each test project's `TestResults` directory. CI retains
+repository and generated-project TRX reports even on failure. If the test job
+fails, a separate diagnostic artifact contains process logs, MCP request traces,
+command metadata and the template package hash/inventory. Generated source,
+build outputs and package binaries are not uploaded. Both artifacts have
+14-day retention.
 
 ## Tests in generated projects
 
