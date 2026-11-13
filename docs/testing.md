@@ -15,8 +15,9 @@ Docker image.
 
 - `tests/*.Application.Tests`, `*.Infrastructure.Tests` and `*.Mcp.Tests` test
   business logic, infrastructure and MCP adapters.
-- `tests/*.Host.Http.Tests` test the HTTP host's existing endpoint and
-  authentication behavior.
+- `tests/*.Host.Http.Tests` test endpoint and authentication behavior in-process.
+  Invalid authentication settings are also checked by launching the real HTTP
+  host and requiring a failed startup with the precise validation diagnostic.
 - `tests/*.Host.Stdio.Tests` start the actual stdio host as a child process.
   They check MCP initialization and discovery, prompts/resources, stdout purity
   and bounded shutdown. Sample-tool tests also verify echo data, division
@@ -28,13 +29,14 @@ Docker image.
 Run one integration suite while developing:
 
 ```sh
+dotnet test tests/McpServer.Template.Host.Http.Tests --configuration Release
 dotnet test tests/McpServer.Template.Host.Stdio.Tests --configuration Release
 dotnet test validation/McpServer.Template.Template.Tests --configuration Release
 ```
 
-The host tests launch the real compiled application, without test-only service
+The stdio tests launch the real compiled application, without test-only service
 registrations or logging overrides. A generic tool activation failure does not
-satisfy the expected business-error assertion. Host stdout must contain only
+satisfy the expected business-error assertion. Stdio stdout must contain only
 protocol frames; console diagnostics belong on stderr.
 
 ## What the template tests verify

@@ -59,38 +59,17 @@ public sealed class AuthenticationFoundationTests
     }
 
     [Fact]
-    public void InvalidMode_InConfig_ThrowsOnStartup()
+    public async Task InvalidMode_InConfig_ThrowsOnStartup()
     {
-        var act = () =>
-        {
-            using var factory = CreateFactory(new()
-            {
-                ["Authentication:Mode"] = "fancy"
-            });
-            // Force options resolution to trigger PostConfigure
-            _ = factory.Services
-                .GetRequiredService<IOptions<AuthenticationOptions>>().Value;
-        };
-
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*'fancy'*");
+        await HttpStartup.AssertRejectedAsync("fancy", null,
+            "Failed to convert configuration value 'fancy' at 'Authentication:Mode' to type 'McpServer.Template.Host.Http.Options.AuthenticationMode'.");
     }
 
     [Fact]
-    public void InvalidMode_InEnvVar_ThrowsOnStartup()
+    public async Task InvalidMode_InEnvVar_ThrowsOnStartup()
     {
-        var act = () =>
-        {
-            using var factory = CreateFactory(new()
-            {
-                ["MCP_AUTH_MODE"] = "unknown"
-            });
-            _ = factory.Services
-                .GetRequiredService<IOptions<AuthenticationOptions>>().Value;
-        };
-
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid authentication mode 'unknown'*MCP_AUTH_MODE*");
+        await HttpStartup.AssertRejectedAsync("none", "unknown",
+            "Invalid authentication mode 'unknown' from MCP_AUTH_MODE. Valid modes: none, simple, secure.");
     }
 
     [Fact]

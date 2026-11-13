@@ -25,4 +25,12 @@
     <ProjectReference Include="..\..\src\McpServer.Template.Host.Http\McpServer.Template.Host.Http.csproj" />
   </ItemGroup>
 
+  <!-- Keep WAF's project reference and copy the complete host for real startup validation. -->
+  <Target Name="CopyHttpHost" AfterTargets="Build">
+    <ItemGroup>
+      <HttpHostFiles Include="../../src/McpServer.Template.Host.Http/bin/$(Configuration)/$(TargetFramework)/**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HttpHostFiles)" DestinationFiles="@(HttpHostFiles->'$(OutDir)http/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="../../src/McpServer.Template.Host.Http/appsettings.json" DestinationFolder="$(OutDir)http" />
+  </Target>
 </Project>
