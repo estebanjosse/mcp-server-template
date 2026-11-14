@@ -25,4 +25,19 @@
     <ProjectReference Include="..\..\src\McpServer.Template.Host.Http\McpServer.Template.Host.Http.csproj" />
   </ItemGroup>
 
+  <!-- Keep WAF's project reference and copy the complete host for real startup validation. -->
+  <Target Name="CopyHttpHost" AfterTargets="Build">
+    <!-- Ask the referenced project so SDK artifacts paths and output overrides are respected. -->
+    <MSBuild Projects="../../src/McpServer.Template.Host.Http/McpServer.Template.Host.Http.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">
+      <Output TaskParameter="TargetOutputs" ItemName="HttpHostTargetPath" />
+    </MSBuild>
+    <PropertyGroup>
+      <HttpHostOutputDirectory>@(HttpHostTargetPath->'%(RootDir)%(Directory)')</HttpHostOutputDirectory>
+    </PropertyGroup>
+    <ItemGroup>
+      <HttpHostFiles Include="$(HttpHostOutputDirectory)**/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(HttpHostFiles)" DestinationFiles="@(HttpHostFiles->'$(OutDir)http/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="../../src/McpServer.Template.Host.Http/appsettings.json" DestinationFolder="$(OutDir)http" />
+  </Target>
 </Project>
