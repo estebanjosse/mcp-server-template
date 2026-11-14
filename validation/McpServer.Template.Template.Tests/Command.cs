@@ -21,6 +21,8 @@ internal static class Command
         foreach (var argument in arguments) start.ArgumentList.Add(argument);
         start.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
         start.Environment["DOTNET_NOLOGO"] = "1";
+        // Template rejection assertions use English CLI diagnostics, regardless of the runner's locale.
+        start.Environment["DOTNET_CLI_UI_LANGUAGE"] = "en-US";
         start.Environment["MSBUILDDISABLENODEREUSE"] = "1";
         // Repository/host overrides are opt-in for outer regression runs only.
         start.Environment.Remove("MCP_TEMPLATE_REPOSITORY");
