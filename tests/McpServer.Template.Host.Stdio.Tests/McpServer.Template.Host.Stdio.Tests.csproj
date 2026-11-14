@@ -15,8 +15,15 @@
   </ItemGroup>
   <!-- Run the real host with its own dependencies and unmodified configuration. -->
   <Target Name="CopyStdioHost" AfterTargets="Build">
+    <!-- Ask the referenced project so SDK artifacts paths and output overrides are respected. -->
+    <MSBuild Projects="../../src/McpServer.Template.Host.Stdio/McpServer.Template.Host.Stdio.csproj" Targets="GetTargetPath" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">
+      <Output TaskParameter="TargetOutputs" ItemName="StdioHostTargetPath" />
+    </MSBuild>
+    <PropertyGroup>
+      <StdioHostOutputDirectory>@(StdioHostTargetPath->'%(RootDir)%(Directory)')</StdioHostOutputDirectory>
+    </PropertyGroup>
     <ItemGroup>
-      <StdioHostFiles Include="../../src/McpServer.Template.Host.Stdio/bin/$(Configuration)/$(TargetFramework)/**/*" />
+      <StdioHostFiles Include="$(StdioHostOutputDirectory)**/*" />
     </ItemGroup>
     <Copy SourceFiles="@(StdioHostFiles)" DestinationFiles="@(StdioHostFiles->'$(OutDir)stdio/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
     <Copy SourceFiles="../../src/McpServer.Template.Host.Stdio/appsettings.json" DestinationFolder="$(OutDir)stdio" />
