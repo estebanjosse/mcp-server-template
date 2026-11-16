@@ -7,10 +7,10 @@
 
 ## 2. Authorized implementation only — blocked on 1.4
 
-Execute one task at a time, commit/push the coherent checkpoint, verify its remote SHA, and stop for user review. No subsequent task, merge or release is implied by a checkpoint push.
+Proposed task-specific workflow, pending explicit approval of checklist item 8: execute one task at a time, commit/push the coherent checkpoint, verify its remote SHA, and stop for user review. This deliberately overrides only the custom schema instruction to leave commits to the user; all other stop/approval gates remain. Do not begin implementation until this precedence is approved. No subsequent task, merge or release is implied by a checkpoint push.
 
 - [ ] 2.1 Record an exact-head SDK 1.3.0 baseline using the maintained C#/xUnit suites from #66, including real stdio semantics and the full packed-template matrix; report regressions separately from historical November 10 failures.
-- [ ] 2.2 Extend C# fixtures with modern/down-level cases and pin exact status/error/body expectations from versioned upstream contracts; document expected pre-upgrade failures without weakening existing coverage. Map replaced Python coverage before retiring its superseded scripts in this same validation checkpoint.
+- [ ] 2.2 Extend C# fixtures with modern/down-level cases and pin exact status/error/body expectations from versioned upstream contracts; document expected pre-upgrade failures without weakening existing coverage. Map replaced Python coverage without deleting the scripts yet; their retirement is gated on equivalent passing real-host coverage in 3.1, including generated hosts with tests excluded.
 - [ ] 2.3 Upgrade aligned MCP packages to 2.4.0, reconcile required direct/transitive floors and record resolved dependency diagnostics; do not upgrade unrelated packages or refactor registration without demonstrated need.
 - [ ] 2.4 Configure explicit stateless HTTP on /mcp and qualify modern discovery/direct requests plus 2025-11-25 and 2025-06-18 initialize/capability operations with exact wire assertions.
 - [ ] 2.5 Qualify real stdio modern/down-level operations, sample/no-sample capability handling, exact tool results/errors, cancellation, stdout purity and bounded shutdown/drains.
@@ -19,7 +19,7 @@ Execute one task at a time, commit/push the coherent checkpoint, verify its remo
 
 ## 3. Consumer and release qualification — no publication authorized
 
-- [ ] 3.1 Pack/install the candidate in an isolated hive; validate all 12 host/sample/test combinations, host-selector/rejection contracts, unique complete TRX reports and real generated-host operations including tests-off cases; retain minimal evidence outside the repository.
+- [ ] 3.1 Pack/install the candidate in an isolated hive; validate all 12 host/sample/test combinations, host-selector/rejection contracts, unique complete TRX reports and real generated-host operations including tests-off cases; retain minimal evidence outside the repository. Retire superseded Python scripts only after equivalent passing replacement coverage is demonstrated, including generated hosts with tests excluded.
 - [ ] 3.2 Rehearse the voluntary guide on published template 1.4.0 with customized business code, applying its stdio prerequisites and preserving user changes; test coherent rollback.
 - [ ] 3.3 Verify the agreed exact external clients and representative proxy/header/timeout/cancellation behavior; report unavailable scenarios as NOT RUN rather than broad compatibility.
 - [ ] 3.4 Finalize guides, compatibility matrix, breaking release notes, package inventory and third-party attribution; reconcile any additionally approved existing-capability deltas and leave unrelated packaging/Docker issues separately scoped.
