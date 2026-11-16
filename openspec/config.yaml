@@ -5,7 +5,8 @@ context: |
   All artifacts must be written in english.
   .NET 10 MCP server template (C# latest). Hexagonal architecture:
     Contracts → Infrastructure → Application → Mcp → Hosts (Stdio, Http)
-  Only McpServer.Template.Mcp may reference MCP SDK packages.
+  MCP adapter and transport hosts may reference MCP SDK packages.
+  Never introduce MCP SDK types or references into Application.
   Application layer is MCP/transport-agnostic — business logic lives there.
   DI via extension methods (AddMcpTemplateModules). Options pattern for config.
   Sealed classes for concrete services. File-scoped namespaces. Nullable enabled.

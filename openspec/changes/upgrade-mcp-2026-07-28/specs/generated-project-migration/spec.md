@@ -26,6 +26,18 @@ The project SHALL publish English migration guidance distinguishing template-pac
 - **THEN** they SHALL be instructed to checkpoint their application, inventory custom protocol features, align dependencies and choose a transport compatibility policy
 - **AND** preserve their own application code, with any fresh-scaffold comparison performed optionally in a separate directory rather than overwriting the application.
 
+#### Scenario: Published template predates prerequisite fixes
+- **GIVEN** an application was generated from published template 1.4.0 rather than current main
+- **WHEN** its owner follows the stdio migration steps
+- **THEN** the guide SHALL include the missing metrics-recorder registration and stderr console configuration when absent
+- **AND** the rehearsal SHALL verify real tool DTOs/business errors and protocol-only stdout without overwriting custom registrations.
+
+#### Scenario: Operator migrates metric queries
+- **GIVEN** an owner uses dashboards or alerts referencing `mcp_sessions_active`
+- **WHEN** they adopt the candidate's request-flow instrumentation
+- **THEN** the guide SHALL identify `mcp_requests_in_flight`, the removed metric and the admitted-request counting boundary
+- **AND** it SHALL NOT describe the new gauge as a backward-compatible session alias.
+
 ### Requirement: Compatibility and rollback instructions
 
 The simple guide SHALL cover validation, rollback and known validation limits. A linked advanced reference SHALL describe modern, hybrid and down-level-only trade-offs and conditional breaking changes for owners who need them. Hybrid mode SHALL NOT be presented as mandatory for all migrated applications.

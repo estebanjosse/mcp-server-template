@@ -1,7 +1,9 @@
 # Migration impact study: MCP 2026-07-28 / C# SDK 2.4.0
 
-**Assessment date:** November 10, 2026. **Status:** proposal, not an implemented or qualified migration.
-**Baseline:** repository `fc2b908280e530bf3bdc20bf3abe6ed346ed1d64`; published template `EasyMcp.McpServer.Template` 1.4.0.
+**Assessment date:** November 10, 2026; refreshed November 16, 2026. **Status:** proposal, not an implemented or qualified migration.
+**Current source baseline:** main `6436000dab2c56ae1d53e3299cf27ef526657181` (#66), merged into this study branch. **Historical/published baseline:** `fc2b908280e530bf3bdc20bf3abe6ed346ed1d64`, template `EasyMcp.McpServer.Template` 1.4.0. Do not conflate the two.
+
+The [approval checklist](approval.md) records pending decisions. The July SDK 2.0 proposal is superseded as an implementation plan; its explicit metrics delta is retained here. No runtime migration has been authorized.
 
 ## 1. Targets and evidence
 
@@ -17,7 +19,7 @@ The public NuGet template's embedded props and commit match the inspected baseli
 
 The baseline SDK's newest protocol revision is 2025-11-25.[41]
 
-The protocol `latest` endpoint resolves to 2026-07-28; GitHub's latest stable SDK release and NuGet's published version index agree on 2.4.0.[2][6][11]
+Rechecked November 16, 2026: protocol `latest` resolves to 2026-07-28; GitHub latest stable SDK release and both MCP/AspNetCore NuGet version indexes agree on 2.4.0.[2][6][11]
 
 Use the official C# SDK under `modelcontextprotocol/csharp-sdk`, not a different package or an unversioned draft.[42]
 
@@ -76,9 +78,9 @@ sequenceDiagram
     SDK-->>Host: Version-shaped response
     Host-->>Modern: Complete response
     Legacy->>Host: initialize with down-level revision
-    Host->>SDK: Hybrid path if approved
-    SDK-->>Legacy: Initialize response plus legacy session
-    Note over SDK: Stateless mode does not assign that legacy session
+    Host->>SDK: Explicit stateless compatibility path
+    SDK-->>Legacy: Version-shaped initialize response, no persistent session
+    Note over SDK: Hybrid sessions are optional consumer guidance, not the scaffold default
 ```
 
 ## 3. SDK changes and applicability
@@ -113,12 +115,12 @@ Plan to reconcile `MicrosoftExtensionsVersion`, `MicrosoftExtensionsHostingVersi
 ## 5. Repository impact map
 
 - **Dependencies:** `Directory.Build.props:29-40`; MCP and both hosts' package references; Application/Infrastructure direct Microsoft dependencies participate in resolution even though their business code should not change.
-- **HTTP:** explicit mode and discovery/protocol assertions; `Program.cs` metrics wrapper currently counts active requests under a session metric name. Clarify that metric when HTTP transport sessions disappear; do not silently relabel historical dashboards.
-- **Stdio:** `Host.Stdio/Program.cs`, adapter DI and protocol integration. Expanded baseline E2E reproduces missing metrics-recorder registration during both sample-tool invocations and non-protocol stdout logging. These are confirmed pre-migration defects, not SDK 2 regressions; see the expanded baseline receipt.
+- **HTTP/metrics:** explicitly select stateless mode. Replace `mcp_sessions_active` and session-named recorder methods with `mcp_requests_in_flight` and request-named methods, with no legacy alias. Keep instrumentation after authentication and before SDK dispatch; count admitted requests, including SDK rejections, but not credential rejections or monitoring routes. Decrement exactly once in `finally`, including errors/cancellation. The metrics delta specifies concurrency/cleanup checks and dashboard migration.
+- **Stdio:** #66 registers the no-op metrics recorder and sends console diagnostics to stderr. Preserve its real-host C#/xUnit checks for exact tool DTOs/business errors, optional capabilities, stdout purity and bounded stream drains/shutdown. The November 10 failures are historical, not outstanding migration blockers. Extend this maintained suite for the modern revision.
 - **Adapters:** `Mcp/Extensions/ServiceCollectionExtensions.cs`, sample tools, prompts/resources and exception handling. The tagged 2.4 builder still exposes the current assembly-registration and stdio-transport APIs; no wholesale registration rewrite is indicated by source inspection. Compilation and wire behavior remain unqualified.[48]
 - **Tests:** `Host.Http.Tests/McpProtocolBehaviorTests.cs` pins 2025-06-18, lacks a valid-session end-to-end path and uses broad status assertions. Retain meaningful legacy cases and add strict modern cases rather than merely changing constants. Supply a valid `Accept` header: the existing fixture omits it, so an observed rejection cannot safely be attributed to sessions alone.
-- **Generated deliverable:** `.template.config/template.json`, `scripts/Test-Template.ps1`, `McpServer.Template.csproj`, both workflows and Docker. CI currently tests the sample solution/container, and the NuGet workflow packs/publishes on release; neither workflow runs the generated-project script. A release is not the right first opportunity to discover an invalid scaffold.
-- **Published package gaps:** inspected template 1.4.0 contains the HTTP Dockerfile but no `.github` workflows or `THIRD_PARTY_NOTICES.md`, despite related documentation claims. Validate the actual candidate inventory and avoid promising generated CI. Independently scope fixes for no-host validation, stdio-only Docker output and sample-free welcome text if reproduced; these are pre-existing template concerns, not proven SDK regressions.[44]
+- **Generated deliverable:** #66 replaces `scripts/Test-Template.ps1` with repository-only `validation/McpServer.Template.Template.Tests`, integrated into the solution and existing CI. It packs/installs in a private hive, builds all 12 flag combinations and validates expected generated test assemblies/TRX reports. Preserve host-choice/legacy-flag compatibility and no-host rejection. Extend C# acceptance instead of maintaining the study's superseded Python scripts; retire them only after replacement coverage is established. See `docs/testing.md` for current commands.
+- **Published package gaps:** inspected template 1.4.0 contains the HTTP Dockerfile but no `.github` workflows or `THIRD_PARTY_NOTICES.md`.[44] #66 corrects the generated-CI documentation and fixes no-host validation in source; it does not retroactively patch 1.4.0. Validate candidate inventory/attribution. Stdio-only Docker output and sample-free welcome content remain separately scoped; do not infer generated Docker execution from source/build inspection.
 - **Docs/context:** README, `docs/architecture.md`, `docs/configuration.md`, `docs/development.md`, `docs/operations.md`, `docs/capabilities.md`, `docs/template.md`, `openspec/config.yaml` and `openspec/project.md`. Correct “HTTP/SSE” ambiguity, outdated versions/defaults and over-broad SDK-isolation wording within approved scope. Review third-party attribution for the actual release assets.
 
 ## 6. Existing proposal reconciliation
@@ -129,21 +131,22 @@ Plan to reconcile `MicrosoftExtensionsVersion`, `MicrosoftExtensionsHostingVersi
 - `add-resilience-operations`: coordinate stream interruption/retry guidance; avoid promising resumability removed from modern MCP.
 - `add-secure-configuration-governance`: coordinate new mode/config documentation if a public configuration surface is approved.
 
-This proposal adds migration-specific capabilities. Before implementation, any actual changes to existing capability requirements require explicit delta specs; this study does not silently amend them.
+This proposal adds migration-specific capabilities and an explicit `metrics-observability` delta. Other canonical requirements remain unchanged; introduce further delta specs before changing their guarantees. Keep the existing service-registration shape unless compilation or reproduced behavior demonstrates a necessary adaptation; the July proposal's single-builder refactor is not a prerequisite by assumption.
 
 ## 7. Proposed acceptance matrix
 
-The initial study had no local .NET SDK. A private SDK has since been installed, and the unchanged pre-migration solution now passes restore, Release build (0 warnings/errors) and all 84 existing tests. See the [baseline receipt](../../../docs/validation/pre-migration-baseline.md) for the exact tested commit, tooling notice and limits. Subsequent [expanded baseline checks](../../../docs/validation/pre-migration-expanded.md) also validate the repository Docker image in CI and all 12 generated-project build combinations, and reproduce pre-existing stdio invocation/stdout failures. These are baseline results only: no migrated candidate binary exists, and migration acceptance remains **NOT RUN**.
+The [original baseline](../../../docs/validation/pre-migration-baseline.md) and [expanded receipt](../../../docs/validation/pre-migration-expanded.md) describe November 10 execution, including defects fixed by #66. They do not qualify this refreshed head. Current validation is the C#/xUnit workflow documented in [testing](../../../docs/testing.md). Record fresh exact-head evidence and resolved diagnostics before the dependency change; do not reuse old test counts or Docker results as current proof. No SDK 2 candidate exists, so migration acceptance remains **NOT RUN**.
 
 1. Restore/build/test the old baseline and candidate; inspect downgrade warnings and new diagnostics separately.
 2. Modern HTTP: discovery, correct headers/metadata, lists, tool calls, prompt/resource reads, no session ID, GET/DELETE behavior, unsupported-version and header-mismatch errors.
-3. Legacy HTTP 2025-11-25 and 2025-06-18: successful initialize + normal calls, correct stateless/hybrid behavior, version-shaped responses; hybrid session lifecycle and owner boundaries where applicable.
+3. Legacy HTTP 2025-11-25 and 2025-06-18: initialize + normal calls on the default stateless host, no persistent session requirement and version-shaped responses. Hybrid lifecycle/owner-boundary fixtures are conditional on separately approving that runtime surface.
 4. Stdio: modern discovery, down-level initialize fallback, two tool invocations, prompt/resource operations, clean stdout, cancellation and graceful shutdown. Exercise the actual client SDK, not only methods directly.
 5. Serialization/cache: output schemas, object/scalar custom fixtures, resultType, TTL/scope defaults and dynamic status freshness, deterministic lists, missing-resource errors.
-6. Authentication/configuration: none/simple guard continuity, custom header, invalid credentials and monitoring endpoints; secure remains explicitly unimplemented. For authenticated legacy sessions, test missing/empty identifiers, owner/issuer mismatches and valid owner continuation. Real OAuth only if a separately scoped consumer fixture exists.
-7. Pack/install the candidate template in an isolated template engine; generate HTTP-only/stdio-only/both, samples on/off and tests on/off. Enumerate valid combinations and separately test no-host rejection; build, run tests where present and exercise generated hosts.
+6. Authentication/configuration: none/simple guard continuity, custom header, invalid credentials and monitoring endpoints; secure remains explicitly unimplemented. Authenticated legacy-session ownership and real OAuth tests belong only to separately approved consumer/runtime fixtures, not the default stateless migration.
+7. Pack/install in an isolated hive; build all 12 HTTP-only/stdio-only/both × samples on/off × tests on/off combinations, execute every expected test assembly and verify unique complete nonzero TRX reports. Preserve host-selector/rejection contracts. Exercise generated hosts with external fixtures even when tests are excluded; no recursive validator in generated projects.
 8. Rehearse the guide using the published 1.4.0 package, not only a copy of main; verify a customized fixture retains user logic. Include proxy/header/timeout behavior and rollback to a previously qualified immutable deployment.
-9. Do not claim broad client compatibility from one SDK integration. Record exact external client versions as available, plus untested clients.
+9. Pin official C# client integration and ask Esteban to select exact additional external clients/versions. Do not claim broad compatibility from one SDK; unavailable clients/proxies remain NOT RUN.
+10. Metrics: prove concurrent in-flight values, decrement on error/cancellation, absence of the old gauge, disabled-mode no-op behavior and authentication/monitoring boundaries. Document the breaking dashboard/query change.
 
 ## 8. Consumer migration and release boundary
 
@@ -164,7 +167,7 @@ Track separately after the core migration is qualified:
 
 ## Verification receipt
 
-Official revisions/releases, versioned SDK source and published NuGet metadata were retrieved; the published template baseline was inspected. Static analysis and documentation/OpenSpec validation were completed. The subsequent [pre-migration baseline](../../../docs/validation/pre-migration-baseline.md) also establishes a successful Release build and 84 passing existing tests with SDK 1.3.0 unchanged. Migrated-candidate compilation, runtime protocol conformance, generated-project execution, external-client interoperability and deployment remain unqualified.
+Official target endpoints and versioned transport/version APIs were rechecked November 16. Source now includes #66; historical validation remains attached to its original commits, not this refreshed head. This checkpoint updates specs/docs only; consult the PR and exact-head test reports for current baseline checks. Migrated-candidate compilation, modern protocol conformance, external-client interoperability and deployment remain unqualified.
 
 ## Sources
 

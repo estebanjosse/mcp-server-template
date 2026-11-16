@@ -1,5 +1,7 @@
 # Expanded pre-migration validation
 
+> **Historical receipt, not the current acceptance path.** PR #66, merged into main on November 14, 2026 (`6436000`), fixes the stdio registration/stdout and no-host defects described below. Durable C#/xUnit host and packed-template tests now replace these Python checks; use [current testing instructions](../testing.md). The results and commands below describe the November 10 baseline only. They are not evidence for the rebased study head or an SDK 2 candidate. Other inventory limits remain separate.
+
 ## Scope and reference
 
 This is pre-migration characterization, not implementation approval. Application code and the MCP SDK **1.3.0** remain unchanged from `9bccf55b056dc122dd1649bb88c1bcb62cad90b1` (and the original inspected source baseline). The new Python scripts validate that existing behavior without repairing it.

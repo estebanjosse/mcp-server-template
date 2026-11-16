@@ -90,6 +90,21 @@ Modern peers use the stateless path; initialize-handshake peers retain sessions.
 
 Legacy `/sse` transport is a separate compatibility choice, disabled by default. This was already the SDK 1.3.0 default, not a newly introduced default break.[46] Migrate those client URLs to your Streamable HTTP endpoint, commonly `/mcp`. If a temporary legacy opt-in is required, follow upstream guidance and test it explicitly; do not enable it merely because an older client uses a 2025 protocol revision.[12]
 
+### Stdio prerequisites for published template 1.4.0
+
+Source main now includes #66, but published template 1.4.0 does not. Before building the stdio host, preserve custom registrations and add the no-op recorder and stderr console configuration if absent:
+
+```csharp
+using McpServer.Template.Mcp.Instrumentation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+builder.Services.AddSingleton<IMcpMetricsRecorder, NoopMcpMetricsRecorder>();
+```
+
+Replace the template namespace with your generated application namespace. Inspect custom logging providers too: none may write diagnostics to stdout. These fix pre-existing defects rather than new SDK 2 behavior. The guide rehearsal must exercise exact sample DTOs/business errors and stdout purity; building alone is insufficient.
+
 ## 4. Update client-facing assumptions
 
 - **Modern bootstrap:** use an updated client SDK or correctly implement discovery/per-request metadata. Replacing the string in an old `initialize` request with `2026-07-28` is not a migration. Keep dedicated legacy initialize tests.[1][8]
@@ -101,6 +116,10 @@ Legacy `/sse` transport is a separate compatibility choice, disabled by default.
 - **Cache policy:** validate dynamic status freshness and private/public scope. Do not cache user-specific results publicly; do not treat a cache hint as access control.[1]
 - **Errors:** modern missing resources map to Invalid Params. Adapt exact error assertions, and do not convert every HTTP 400 into a legacy-negotiation fallback.[1][18]
 - **Custom interactions:** use the supported MRTR flow for modern client input; notifications use the new subscription mechanism. Do not silently enable optional functionality in order to complete the package upgrade.[1][14]
+
+### Operational metric migration
+
+The proposed template implementation removes `mcp_sessions_active` and its session-labelled recorder API, and publishes `mcp_requests_in_flight` instead. Apply the reviewed recorder/interface/middleware diff when voluntarily updating a generated application; changing only a dashboard query does not change its instrumentation. Preserve `mcp_requests_total` and tool counters. Count `/mcp` HTTP requests admitted past the existing authentication guard, including discovery and SDK rejections, but not rejected credentials or monitoring routes. Each request releases its gauge increment on success, error or cancellation. Update dashboards/alerts to the new name and request-concurrency meaning; there is no backward-compatible session alias. The final guide must rehearse these changes after the implementation exists.
 
 ## 5. Audit conditional SDK breaks in custom applications
 
