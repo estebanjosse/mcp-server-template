@@ -54,6 +54,7 @@ Configuration is managed via `appsettings*.json` files and environment variables
 ## 📚 Documentation
 
 - Template usage and options: see [docs/template.md](docs/template.md).
+- Running tests and understanding integration coverage: see [docs/testing.md](docs/testing.md).
 - Architecture and project layout: see [docs/architecture.md](docs/architecture.md).
 - Built-in tools, prompts, and resources: see [docs/capabilities.md](docs/capabilities.md).
 - Running in development, health checks, metrics, Docker, GHCR: see [docs/operations.md](docs/operations.md).
