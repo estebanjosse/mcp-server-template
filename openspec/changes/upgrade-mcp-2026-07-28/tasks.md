@@ -5,11 +5,11 @@
 - [x] 1.3 Draft compatibility decisions, migration guides, explicit metrics delta and deferred showcase scope in English.
 - [ ] 1.4 Obtain Esteban's decisions from approval.md, exact external client targets and explicit authorization for the first implementation task.
 
-## 2. Authorized implementation only — blocked on 1.4
+## 2. Baseline authorized; migration implementation still gated
 
-Proposed task-specific workflow, pending explicit approval of checklist item 8: execute one task at a time, commit/push the coherent checkpoint, verify its remote SHA, and stop for user review. This deliberately overrides only the custom schema instruction to leave commits to the user; all other stop/approval gates remain. Do not begin implementation until this precedence is approved. No subsequent task, merge or release is implied by a checkpoint push.
+Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push its checkpoint instead of leaving the commit to the user. This limited exception preserves the one-task stop and all remaining approval gates. Do not start task 2.2 or later work without explicit authorization.
 
-- [ ] 2.1 Record an exact-head SDK 1.3.0 baseline using the maintained C#/xUnit suites from #66, including real stdio semantics and the full packed-template matrix; report regressions separately from historical November 10 failures.
+- [x] 2.1 Record an exact-head SDK 1.3.0 baseline using the maintained C#/xUnit suites from #66, including real stdio semantics and the full packed-template matrix; [evidence and limits](baseline.md).
 - [ ] 2.2 Extend C# fixtures with modern/down-level cases and pin exact status/error/body expectations from versioned upstream contracts; document expected pre-upgrade failures without weakening existing coverage. Map replaced Python coverage without deleting the scripts yet; their retirement is gated on equivalent passing real-host coverage in 3.1, including generated hosts with tests excluded.
 - [ ] 2.3 Upgrade aligned MCP packages to 2.4.0, reconcile required direct/transitive floors and record resolved dependency diagnostics; do not upgrade unrelated packages or refactor registration without demonstrated need.
 - [ ] 2.4 Configure explicit stateless HTTP on /mcp and qualify modern discovery/direct requests plus 2025-11-25 and 2025-06-18 initialize/capability operations with exact wire assertions.
