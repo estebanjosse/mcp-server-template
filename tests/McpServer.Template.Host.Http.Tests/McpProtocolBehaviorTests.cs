@@ -174,7 +174,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
             Available Resources:
             - resource://welcome: This welcome message
             - resource://status: Dynamic server status information
-            """);
+            """.ReplaceLineEndings("\n"));
 
         // dotnet new substitutes the flag; the repository itself always includes samples.
         var samplesExpected = !string.Equals("__MCP_EXPECT_SAMPLE_TOOLS__", "false", StringComparison.OrdinalIgnoreCase);
