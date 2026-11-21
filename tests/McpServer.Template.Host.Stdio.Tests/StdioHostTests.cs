@@ -5,6 +5,43 @@ using Xunit;
 
 namespace McpServer.Template.Host.Stdio.Tests;
 
+public sealed class StdioProtocolVersionTests
+{
+    [Theory]
+    [InlineData("2025-06-18")]
+    [InlineData("2025-11-25")]
+    public async Task Initialize_OnHistoricalRevision_NegotiatesExactVersionAndListsPrompts(string version)
+    {
+        await using var host = new StdioSession(nameof(StdioProtocolVersionTests));
+        await host.InitializeAsync(version);
+        host.Initialization.GetProperty("protocolVersion").GetString().Should().Be(version);
+        var result = await host.RequestAsync("prompts/list");
+        result.TryGetProperty("resultType", out _).Should().BeFalse();
+        result.GetProperty("prompts").EnumerateArray().Select(p => p.GetProperty("name").GetString()).Should().Contain("greeting");
+    }
+
+    [Fact]
+    public async Task Discover_OnModernRevision_AdvertisesVersionWithoutInitialize()
+    {
+        await using var host = new StdioSession(nameof(StdioProtocolVersionTests));
+        const string version = "2026-07-28";
+        var parameters = new
+        {
+            _meta = new Dictionary<string, object>
+            {
+                ["io.modelcontextprotocol/protocolVersion"] = version,
+                ["io.modelcontextprotocol/clientInfo"] = new { name = "stdio-integration-tests", version = "1.0" },
+                ["io.modelcontextprotocol/clientCapabilities"] = new { }
+            }
+        };
+        var discovery = await host.RequestAsync("server/discover", parameters);
+        discovery.GetProperty("supportedVersions").EnumerateArray().Select(v => v.GetString()).Should().Contain(version);
+        var result = await host.RequestAsync("prompts/list", parameters);
+        result.GetProperty("resultType").GetString().Should().Be("complete");
+        result.GetProperty("prompts").EnumerateArray().Select(p => p.GetProperty("name").GetString()).Should().Contain("greeting");
+    }
+}
+
 public abstract class StdioHostTestBase : IAsyncLifetime
 {
     private protected StdioSession Host { get; private set; } = null!;

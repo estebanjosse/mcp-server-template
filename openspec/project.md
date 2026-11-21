@@ -11,13 +11,13 @@ A clean, scalable, production-ready template for building Model Context Protocol
 
 ## Tech Stack
 - **.NET 10.0** - Target framework with C# latest language version
-- **Model Context Protocol SDK 0.9.0-preview.1** - Official MCP C# SDK
+- **Model Context Protocol SDK 1.3.0** - Official MCP C# SDK
 - **ASP.NET Core** - HTTP/SSE transport host
-- **Microsoft.Extensions** (v10.0.0) - Dependency injection, configuration, hosting, logging
-- **xUnit 2.9.2** - Unit testing framework
-- **FluentAssertions 6.12.1** - Assertion library for readable test assertions
+- **Microsoft.Extensions** (v10.0.7) - Dependency injection, configuration, hosting, logging
+- **xUnit 2.9.3** - Unit testing framework
+- **FluentAssertions 8.9.0** - Assertion library for readable test assertions
 - **NSubstitute 5.3.0** - Mocking framework for test doubles
-- **Coverlet 6.0.2** - Code coverage tool
+- **Coverlet 10.0.0** - Code coverage tool
 
 ## Project Conventions
 
@@ -50,7 +50,7 @@ Presentation → MCP Adapter → Application → Infrastructure/Contracts
 5. **Hosts** (`Host.Stdio`, `Host.Http`): Transport-specific entry points
 
 **Key Principles**:
-- Only the MCP project references MCP SDK packages
+- MCP adapter and transport hosts reference MCP SDK packages; Application remains MCP-agnostic
 - Application layer is transport-agnostic and fully testable
 - Ports and Adapters pattern: Application defines interfaces (ports), MCP layer implements adapters
 - Dependency Injection: Register services via extension methods (`AddMcpTemplateModules()`)
@@ -58,7 +58,7 @@ Presentation → MCP Adapter → Application → Infrastructure/Contracts
 
 ### Testing Strategy
 - **Framework**: xUnit with FluentAssertions and NSubstitute
-- **Coverage**: Unit tests for all services, tools, prompts, and resources
+- **Coverage**: Unit tests for services/adapters; real HTTP/stdio host tests and repository-only packed-template generation tests. See `docs/testing.md`.
 - **Test Structure**: Arrange-Act-Assert (AAA) pattern
 - **Test Naming**: `MethodName_Scenario_ExpectedResult` (e.g., `DivideAsync_WhenDivisorIsZero_ShouldThrowInvalidOperationException`)
 - **Assertions**: Use FluentAssertions for readable assertions (`.Should().Be()`, `.Should().ThrowAsync<>()`)
@@ -85,7 +85,7 @@ Presentation → MCP Adapter → Application → Infrastructure/Contracts
 This template demonstrates how to build MCP servers that work with both transports while sharing the same business logic.
 
 ## Important Constraints
-- **MCP SDK Isolation**: Only `McpServer.Template.Mcp` project may reference MCP SDK packages
+- **MCP SDK Isolation**: MCP adapter and transport hosts may reference MCP SDK packages; Application must not
 - **No Warnings as Errors**: `TreatWarningsAsErrors` is set to `false` in Directory.Build.props
 - **Documentation**: XML documentation generation is disabled (`GenerateDocumentationFile=false`)
 - **.NET 10 Minimum**: Project requires .NET 10 SDK or later

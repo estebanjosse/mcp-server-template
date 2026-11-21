@@ -4,6 +4,10 @@ EasyMcp.McpServer.Template is a `dotnet new` template for quickly scaffolding cl
 
 This package is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions (HTTP and/or stdio hosts, application layer, tests, and more).
 
+## Existing-project migration
+
+Updating the installed template does not update previously generated application source. The [MCP 2026-07-28 migration guide](migrations/mcp-2026-07-28.md) is currently a **draft impact-study deliverable**, not a released or runtime-qualified upgrade. It covers the proposed SDK 1.3.0 to 2.4.0 transition, HTTP compatibility choices, validation and rollback.
+
 ## Installation
 
 ### From NuGet (recommended)
