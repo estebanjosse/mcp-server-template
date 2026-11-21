@@ -151,11 +151,37 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         var resource = await Call("resources/read", welcome, new() { ["uri"] = welcome });
         var contents = resource.GetProperty("contents").EnumerateArray().Should().ContainSingle().Subject;
         contents.GetProperty("uri").GetString().Should().Be(welcome);
-        contents.GetProperty("text").GetString().Should().StartWith("Welcome to McpServer.Template!");
+        contents.GetProperty("mimeType").GetString().Should().Be("text/plain");
+        contents.GetProperty("text").GetString()!.ReplaceLineEndings("\n").Should().Be($"""
+            Welcome to McpServer.Template!
 
-        // Generated projects without sample tools legitimately do not advertise this capability.
-        if (capabilities.TryGetProperty("tools", out var tools) && tools.ValueKind == JsonValueKind.Object)
+            This is a demonstration of a clean, scalable Model Context Protocol (MCP) server{" "}
+            built with .NET 10 and proper architecture.
+
+            Features:
+            - Shared business logic between stdio and HTTP transports
+            - Strict separation of concerns (Contracts / Application / Infrastructure / MCP Adapter / Hosts)
+            - Easy addition of tools, prompts, and resources
+            - Testable, idiomatic .NET code with DI and Options pattern
+
+            Available Tools:
+            - echo: Echoes back your message with a timestamp
+            - calc_divide: Divides two numbers
+
+            Available Prompts:
+            - greeting: Generates a multilingual greeting message
+
+            Available Resources:
+            - resource://welcome: This welcome message
+            - resource://status: Dynamic server status information
+            """);
+
+        // dotnet new substitutes the flag; the repository itself always includes samples.
+        var samplesExpected = !string.Equals("__MCP_EXPECT_SAMPLE_TOOLS__", "false", StringComparison.OrdinalIgnoreCase);
+        capabilities.TryGetProperty("tools", out var tools).Should().Be(samplesExpected);
+        if (samplesExpected)
         {
+            tools.ValueKind.Should().Be(JsonValueKind.Object);
             var tool = await Call("tools/call", "calc_divide", new() { ["name"] = "calc_divide", ["arguments"] = new { a = 7, b = 2 } });
             (tool.TryGetProperty("isError", out var isError) && isError.GetBoolean()).Should().BeFalse();
             var item = tool.GetProperty("content").EnumerateArray().Should().ContainSingle().Subject;
