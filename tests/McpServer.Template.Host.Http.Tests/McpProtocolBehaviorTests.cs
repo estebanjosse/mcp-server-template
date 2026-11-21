@@ -35,6 +35,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         var prompts = (await ReadReply(listed, 2)).GetProperty("result");
         prompts.TryGetProperty("resultType", out _).Should().BeFalse("legacy replies must keep their legacy shape");
         PromptNames(prompts).Should().Contain("greeting");
+        await AssertCapabilityCalls(client, version, result.GetProperty("capabilities"));
     }
 
     [Fact]
@@ -45,8 +46,10 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         using var response = await client.SendAsync(request);
         var result = (await ReadReply(response, 1)).GetProperty("result");
         result.GetProperty("supportedVersions").EnumerateArray().Select(v => v.GetString()).Should().Contain(ModernVersion);
-        result.GetProperty("capabilities").GetProperty("prompts").ValueKind.Should().Be(JsonValueKind.Object);
+        var capabilities = result.GetProperty("capabilities");
+        capabilities.GetProperty("prompts").ValueKind.Should().Be(JsonValueKind.Object);
         response.Headers.Contains("Mcp-Session-Id").Should().BeFalse();
+        await AssertCapabilityCalls(client, ModernVersion, capabilities);
     }
 
     [Fact]
@@ -109,6 +112,56 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         response.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
         response.Content.Headers.Allow.Should().Equal("POST");
         (await response.Content.ReadAsStringAsync()).Should().BeEmpty("stateless endpoint routing does not map GET or DELETE");
+    }
+
+    [Theory]
+    [InlineData("GET", "/mcp/sse")]
+    [InlineData("POST", "/mcp/message")]
+    public async Task LegacySseEndpoints_AreNotMapped(string method, string path)
+    {
+        using var client = _factory.CreateClient();
+        using var request = new HttpRequestMessage(new HttpMethod(method), path);
+        using var response = await client.SendAsync(request);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    private static async Task AssertCapabilityCalls(HttpClient client, string version, JsonElement capabilities)
+    {
+        var modern = version == ModernVersion;
+        var id = 10;
+        async Task<JsonElement> Call(string method, string name, Dictionary<string, object> parameters)
+        {
+            if (modern) parameters["_meta"] = ModernMetadata();
+            using var request = CreateRequest(++id, method, parameters, version, modern ? method : null);
+            if (modern) request.Headers.Add("Mcp-Name", name);
+            using var response = await client.SendAsync(request);
+            response.Headers.Contains("Mcp-Session-Id").Should().BeFalse();
+            var result = (await ReadReply(response, id)).GetProperty("result");
+            if (modern) result.GetProperty("resultType").GetString().Should().Be("complete");
+            else result.TryGetProperty("resultType", out _).Should().BeFalse();
+            return result;
+        }
+
+        var prompt = await Call("prompts/get", "greeting", new() { ["name"] = "greeting", ["arguments"] = new { language = "fr" } });
+        var message = prompt.GetProperty("messages").EnumerateArray().Should().ContainSingle().Subject;
+        message.GetProperty("content").GetProperty("text").GetString().Should().Be(
+            "Bonjour ! Bienvenue sur le modèle de serveur MCP.\n\nYou can use the available tools to interact with the server.");
+
+        const string welcome = "resource://welcome";
+        var resource = await Call("resources/read", welcome, new() { ["uri"] = welcome });
+        var contents = resource.GetProperty("contents").EnumerateArray().Should().ContainSingle().Subject;
+        contents.GetProperty("uri").GetString().Should().Be(welcome);
+        contents.GetProperty("text").GetString().Should().StartWith("Welcome to McpServer.Template!");
+
+        // Generated projects without sample tools legitimately do not advertise this capability.
+        if (capabilities.TryGetProperty("tools", out var tools) && tools.ValueKind == JsonValueKind.Object)
+        {
+            var tool = await Call("tools/call", "calc_divide", new() { ["name"] = "calc_divide", ["arguments"] = new { a = 7, b = 2 } });
+            (tool.TryGetProperty("isError", out var isError) && isError.GetBoolean()).Should().BeFalse();
+            var item = tool.GetProperty("content").EnumerateArray().Should().ContainSingle().Subject;
+            using var dto = JsonDocument.Parse(item.GetProperty("text").GetString()!);
+            dto.RootElement.GetProperty("result").GetDouble().Should().Be(3.5);
+        }
     }
 
     private static HttpRequestMessage CreateInitializeRequest(string version, string? header = null) =>

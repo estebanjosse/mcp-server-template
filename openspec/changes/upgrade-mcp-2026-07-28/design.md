@@ -35,7 +35,7 @@ Modern MCP removes `initialize` / `notifications/initialized` and uses per-reque
 
 Protocol 2026-07-28 removes transport sessions, `Mcp-Session-Id`, standalone GET/DELETE and resumability through `Last-Event-ID`. SSE can still carry the response to a POST: this is not removal of all SSE streaming. An interrupted request may need a new request ID; applications with side effects need their own deduplication/authorization policy rather than blind retries.[1][12]
 
-The HTTP host currently calls `.WithHttpTransport()` without selecting a policy (`src/McpServer.Template.Host.Http/Program.cs:17-18`). SDK 2 changes that default from stateful to stateless. Choose explicitly:
+The HTTP host explicitly selects `HttpServerSessionMode.Stateless` at `/mcp` rather than relying on the SDK 2 default:
 
 | SDK 2.4 mode | Modern 2026-07-28 | Initialize-handshake peers | Intended use |
 | --- | --- | --- | --- |

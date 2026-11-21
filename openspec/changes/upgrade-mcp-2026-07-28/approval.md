@@ -1,6 +1,6 @@
 # Implementation approval checklist
 
-**Review date:** November 16, 2026. **Status:** migration scope accepted in principle with the PR #65 review correction below. Tasks 2.1 and 2.2 were authorized; task 2.3 was authorized after a successful review of 2.2. Task 2.4 onward requires separate approval.
+**Review date:** November 16, 2026. **Status:** migration scope accepted in principle with the PR #65 review correction below. Tasks 2.1 and 2.2 were authorized; task 2.3 was authorized after a successful review of 2.2. Task 2.4 was separately authorized. Task 2.5 onward requires separate approval.
 
 The study branch incorporates `main` at `6436000dab2c56ae1d53e3299cf27ef526657181` (PR #66). The published template 1.4.0 and the pre-upgrade baseline use SDK 1.3.0. This branch now uses SDK 2.4.0 after task 2.3. The July proposal on `spec/upgrade-to-new-mcp-protocol-spec` is reference material, not a second implementation plan. Its metrics contract is incorporated here; its unconditional builder refactor is not.
 
