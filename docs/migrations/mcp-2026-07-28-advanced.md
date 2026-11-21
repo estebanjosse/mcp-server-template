@@ -1,6 +1,6 @@
 # Advanced migration notes: MCP 2026-07-28
 
-> **Draft migration plan — not a released upgrade.** Assessed November 10, 2026 against the official C# SDK 2.4.0. The template runtime still uses SDK 1.3.0 in this documentation checkpoint. Snippets reflect inspected upstream APIs, but have not been compiled or exercised here. Do not roll out this guide without the implementation and acceptance checks described below.
+> **Draft migration plan — not a released upgrade.** Assessed November 10, 2026 against the official C# SDK 2.4.0. The study branch has upgraded to SDK 2.4.0; published template 1.4.0 and the pre-upgrade baseline use SDK 1.3.0. Snippets reflect inspected upstream APIs, but have not been compiled or exercised here. Do not roll out this guide without the implementation and acceptance checks described below.
 
 ## Read this only when needed
 

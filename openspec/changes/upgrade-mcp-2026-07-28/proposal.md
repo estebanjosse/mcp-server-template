@@ -2,7 +2,7 @@
 
 ## Status
 
-Impact study and documentation draft only. Runtime implementation, merge, release and deployment are not authorized. Targets were rechecked on November 16, 2026. The branch incorporates main at `6436000` (PR #66); the SDK remains 1.3.0. Read the [approval checklist](approval.md) before authorizing implementation. See [design](design.md) and the [draft user migration guide](../../../docs/migrations/mcp-2026-07-28.md).
+Unreleased migration checkpoint. This branch incorporates main at `6436000` (PR #66) and now uses SDK 2.4.0; the published template 1.4.0 still embeds SDK 1.3.0. Task 2.4 onward, merge, release and deployment are not authorized. Read the [approval checklist](approval.md) before authorizing implementation. See [design](design.md) and the [draft user migration guide](../../../docs/migrations/mcp-2026-07-28.md).
 
 ## Why
 
@@ -37,4 +37,4 @@ Affected areas: `Directory.Build.props`, the HTTP/stdio hosts, MCP adapter seria
 
 ## Approval Questions
 
-See [approval.md](approval.md) for the numbered decisions: target/dependency scope, explicit stateless default, supported historical revisions, breaking metric rename, acceptance coverage, exclusions, exact external clients and one-task checkpoint cadence. The scope was accepted in principle with the PR #65 correction; task 2.2 and later execution remain unauthorized. The old stdio registration/stdout blockers were fixed by #66; they do not need fresh implementation approval. Additional demonstrated blockers require a scoped decision.
+See [approval.md](approval.md) for the numbered decisions: target/dependency scope, explicit stateless default, supported historical revisions, breaking metric rename, acceptance coverage, exclusions, exact external clients and one-task checkpoint cadence. The scope was accepted in principle with the PR #65 correction; tasks 2.2 and 2.3 have been completed; task 2.4 onward requires separate approval. The old stdio registration/stdout blockers were fixed by #66; they do not need fresh implementation approval. Additional demonstrated blockers require a scoped decision.

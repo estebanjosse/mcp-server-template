@@ -14,4 +14,4 @@ The real stdio suite checks initialization and advertised capabilities, sample t
 
 ## Limits
 
-This is a C# SDK 1.3.0 baseline, not qualification of the SDK 2 migration, MCP Inspector, generated Docker images, or live invocation against generated scaffolds with tests disabled. Inspector 2.13.0 is selected for later task 3.3 and was not run. Task 2.2 and all later work remain unauthorized.
+This is a C# SDK 1.3.0 baseline, not qualification of the SDK 2 migration, MCP Inspector, generated Docker images, or live invocation against generated scaffolds with tests disabled. Inspector 2.13.0 is selected for later task 3.3 and was not run. This receipt covers task 2.1 only; see [tasks.md](tasks.md) for subsequent status.
