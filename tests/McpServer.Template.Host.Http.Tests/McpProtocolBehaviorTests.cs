@@ -21,12 +21,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
     public async Task Initialize_OnHistoricalRevision_NegotiatesExactVersionWithoutSession(string version)
     {
         using var client = _factory.CreateClient();
-        using var initialize = CreateRequest(1, "initialize", new
-        {
-            protocolVersion = version,
-            capabilities = new { },
-            clientInfo = new { name = "template-tests", version = "1.0" }
-        });
+        using var initialize = CreateInitializeRequest(version);
         using var initialized = await client.SendAsync(initialize);
         var result = (await ReadReply(initialized, 1)).GetProperty("result");
         result.GetProperty("protocolVersion").GetString().Should().Be(version);
@@ -66,30 +61,74 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         response.Headers.Contains("Mcp-Session-Id").Should().BeFalse();
     }
 
-    [Theory]
-    [InlineData("2099-12-31", "server/discover", -32022)]
-    [InlineData(ModernVersion, "prompts/list", -32020)]
-    public async Task Discover_WithInvalidHeader_ReturnsCorrelatedProtocolError(string version, string methodHeader, int code)
+    [Fact]
+    public async Task Discover_WithUnsupportedVersion_ReturnsSupportedModernRevisions()
+    {
+        const string unsupportedVersion = "2099-12-31";
+        using var client = _factory.CreateClient();
+        using var request = CreateRequest(1, "server/discover", new { _meta = ModernMetadata() }, unsupportedVersion, "server/discover");
+        using var response = await client.SendAsync(request);
+        await AssertUnsupportedVersion(response, unsupportedVersion);
+    }
+
+    [Fact]
+    public async Task Initialize_WithMalformedVersionHeader_ReturnsUnsupportedVersion()
+    {
+        const string malformedVersion = "invalid-version";
+        using var client = _factory.CreateClient();
+        using var request = CreateInitializeRequest("2025-06-18", malformedVersion);
+        using var response = await client.SendAsync(request);
+        await AssertUnsupportedVersion(response, malformedVersion);
+    }
+
+    [Fact]
+    public async Task Discover_WithMismatchedMethodHeader_ReturnsCorrelatedHeaderMismatch()
     {
         using var client = _factory.CreateClient();
-        using var request = CreateRequest(1, "server/discover", new { _meta = ModernMetadata() }, version, methodHeader);
+        using var request = CreateRequest(1, "server/discover", new { _meta = ModernMetadata() }, ModernVersion, "prompts/list");
         using var response = await client.SendAsync(request);
         var body = await ReadReply(response, 1, HttpStatusCode.BadRequest);
         body.TryGetProperty("result", out _).Should().BeFalse();
-        body.GetProperty("error").GetProperty("code").GetInt32().Should().Be(code);
+        var error = body.GetProperty("error");
+        error.GetProperty("code").GetInt32().Should().Be(-32020);
+        error.GetProperty("message").GetString().Should().Be("Header mismatch: Mcp-Method header value 'prompts/list' does not match body value 'server/discover'.");
     }
 
     [Theory]
-    [InlineData("GET")]
-    [InlineData("DELETE")]
-    public async Task McpEndpoint_OnModernRevision_AllowsOnlyPost(string method)
+    [InlineData("GET", ModernVersion)]
+    [InlineData("DELETE", ModernVersion)]
+    [InlineData("GET", "2025-11-25")]
+    [InlineData("DELETE", "2025-11-25")]
+    public async Task McpEndpoint_OnStatelessHost_AllowsOnlyPost(string method, string version)
     {
         using var client = _factory.CreateClient();
         using var request = new HttpRequestMessage(new HttpMethod(method), "/mcp");
-        request.Headers.Add("MCP-Protocol-Version", ModernVersion);
+        request.Headers.Add("MCP-Protocol-Version", version);
+        request.Headers.Accept.ParseAdd("application/json, text/event-stream");
         using var response = await client.SendAsync(request);
         response.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
         response.Content.Headers.Allow.Should().Equal("POST");
+        (await response.Content.ReadAsStringAsync()).Should().BeEmpty("stateless endpoint routing does not map GET or DELETE");
+    }
+
+    private static HttpRequestMessage CreateInitializeRequest(string version, string? header = null) =>
+        CreateRequest(1, "initialize", new
+        {
+            protocolVersion = version,
+            capabilities = new { },
+            clientInfo = new { name = "template-tests", version = "1.0" }
+        }, header);
+
+    private static async Task AssertUnsupportedVersion(HttpResponseMessage response, string version)
+    {
+        var body = await ReadReply(response, 1, HttpStatusCode.BadRequest);
+        body.TryGetProperty("result", out _).Should().BeFalse();
+        var error = body.GetProperty("error");
+        error.GetProperty("code").GetInt32().Should().Be(-32022);
+        error.GetProperty("message").GetString().Should().Be($"Bad Request: The MCP-Protocol-Version header value '{version}' is not supported.");
+        var data = error.GetProperty("data");
+        data.GetProperty("requested").GetString().Should().Be(version);
+        data.GetProperty("supported").EnumerateArray().Select(v => v.GetString()).Should().Equal(ModernVersion);
     }
 
     private static Dictionary<string, object> ModernMetadata() => new()
