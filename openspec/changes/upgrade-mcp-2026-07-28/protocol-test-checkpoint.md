@@ -1,0 +1,11 @@
+# Task 2.2 — Pre-upgrade protocol expectations
+
+The existing C#/xUnit host suites now exercise precise protocol expectations against the application rather than replacing its transport or configuring a test-only session policy. Wire expectations are pinned to [the SDK v2.4.0 HTTP conformance tests](https://github.com/modelcontextprotocol/csharp-sdk/blob/v2.4.0/tests/ModelContextProtocol.AspNetCore.Tests/July2026ProtocolHttpHandlerTests.cs), its Streamable HTTP handler, and its `DiscoverResult` and `McpServerImpl` implementations.
+
+On SDK 1.3.0 the focused host suites produced the intentional RED checkpoint: HTTP 37 passed and 8 failed; stdio 49 passed and 1 failed. HTTP rejected modern headers without the new correlated error shape, issued session IDs for legacy initialization, and rejected GET/DELETE before reaching modern method handling. Stdio negotiated both historical revisions and returned the legacy prompt-list shape, but returned method-not-found for modern discovery. This is deliberately not a green CI or a completed upgrade.
+
+## Characterization coverage map
+
+- Python generation and TRX checks map to the maintained packed-template, command and TRX suites under `validation/`; they cover isolated installation, host flags, project membership, builds and complete per-assembly reports.
+- Python stdio wire and process checks map to `StdioHostTests`, `StdioSession`, `WireFormatTests`, `StreamDrainTests` and the sample-tool tests: initialization, capabilities, prompts/resources, exact tool payloads and errors, stdout purity and EOF cleanup.
+- Keep the Python scripts until task 3.1 proves equivalent real-host coverage for generated configurations with tests excluded. Generated Docker execution is not inferred from inventory. Broader wire cases, real client interoperability and explicit HTTP configuration are later checkpoints.

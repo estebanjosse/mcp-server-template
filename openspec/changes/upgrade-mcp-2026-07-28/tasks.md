@@ -3,11 +3,11 @@
 - [x] 1.1 Verify dated stable protocol/SDK targets against official sources and published package metadata; rechecked November 16, 2026.
 - [x] 1.2 Inspect source and map behavioral, dependency and generated-project impact, incorporating main `6436000` and #66.
 - [x] 1.3 Draft compatibility decisions, migration guides, explicit metrics delta and deferred showcase scope in English.
-- [ ] 1.4 Obtain separate execution approval before task 2.2. The scope decision and client selection are recorded in approval.md.
+- [x] 1.4 Obtain execution approval for task 2.2 and conditional approval for task 2.3 after a successful review.
 
 ## 2. Baseline completed; migration implementation still gated
 
-Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push its checkpoint instead of leaving the commit to the user. This limited exception preserves the one-task stop and all remaining approval gates. Do not start task 2.2 or later work without explicit authorization.
+Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push its checkpoint instead of leaving the commit to the user. This limited exception preserves the one-task stop and all remaining approval gates. Esteban subsequently authorized task 2.2 and allowed task 2.3 after a successful review of 2.2. Do not start task 2.4 or later without separate approval.
 
 - [x] 2.1 Record an exact-head SDK 1.3.0 baseline using the maintained C#/xUnit suites from #66, including real stdio semantics and the full packed-template matrix; [evidence and limits](baseline.md).
 - [ ] 2.2 Extend C# fixtures with modern/down-level cases and pin exact status/error/body expectations from versioned upstream contracts; document expected pre-upgrade failures without weakening existing coverage. Map replaced Python coverage without deleting the scripts yet; their retirement is gated on equivalent passing real-host coverage in 3.1, including generated hosts with tests excluded.

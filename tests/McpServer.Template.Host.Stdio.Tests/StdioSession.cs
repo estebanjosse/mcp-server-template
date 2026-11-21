@@ -55,11 +55,11 @@ internal sealed class StdioSession : IAsyncDisposable
         stderrDrain = DrainAsync(process.StandardError, stderr, null, violations, readersCancellation.Token);
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(string version = "2025-11-25")
     {
         Initialization = await RequestAsync("initialize", new
         {
-            protocolVersion = "2025-11-25", capabilities = new { },
+            protocolVersion = version, capabilities = new { },
             clientInfo = new { name = "stdio-integration-tests", version = "1.0" }
         });
         using var timeout = new CancellationTokenSource(RequestTimeout);
