@@ -108,9 +108,9 @@ SDK 2.3.1 hardens authenticated stateful HTTP/legacy SSE sessions: authenticated
 
 ## 4. Dependency impact from published packages
 
-Inspect actual `.nuspec` files, not just upstream test dependencies. SDK 2.4.0 still supplies `net10.0` assets, so no target-framework migration is required. Its package graph pins matching MCP components to 2.4.0. For net10.0, Core requires AI abstractions 10.11.0 and Logging abstractions 10.0.14; the hosting package requires Caching/Hosting abstractions 10.0.14. Current shared Microsoft versions are 10.0.7.[35][37][39]
+Inspect actual `.nuspec` files, not just upstream test dependencies. SDK 2.4.0 still supplies `net10.0` assets, so no target-framework migration is required. Its package graph pins matching MCP components to 2.4.0. For net10.0, Core requires AI abstractions 10.11.0 and Logging abstractions 10.0.14; the hosting package requires Caching/Hosting abstractions 10.0.14. The source baseline used 10.0.7. Task 2.3 raises only the shared `MicrosoftExtensionsVersion` property to 10.0.14 to resolve the detected DI abstractions downgrade; other direct pins remain unchanged.[35][37][39]
 
-Plan to reconcile `MicrosoftExtensionsVersion`, `MicrosoftExtensionsHostingVersion`, `MicrosoftExtensionsConfigVersion` and the HTTP test framework coherently with the resolved graph. Direct versions below transitive requirements risk downgrade/restore errors: the precise resolution is NOT established without `dotnet restore`. Keep .NET runtime/container servicing and unrelated test-library upgrades separate from assumptions about SDK protocol support. Open dependency PRs must be reconciled rather than merged opportunistically.
+The resolved repository graph builds without changing `MicrosoftExtensionsHostingVersion`, `MicrosoftExtensionsConfigVersion` or the HTTP test framework. Customized projects must check their own restore graph. Keep .NET runtime/container servicing and unrelated test-library upgrades separate from assumptions about SDK protocol support. Open dependency PRs must be reconciled rather than merged opportunistically.
 
 ## 5. Repository impact map
 

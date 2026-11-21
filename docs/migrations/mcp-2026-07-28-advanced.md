@@ -36,8 +36,6 @@ In the generated project's `Directory.Build.props`, propose the following aligne
 ```xml
 <ModelContextProtocolVersion>2.4.0</ModelContextProtocolVersion>
 <MicrosoftExtensionsVersion>10.0.14</MicrosoftExtensionsVersion>
-<MicrosoftExtensionsHostingVersion>10.0.14</MicrosoftExtensionsHostingVersion>
-<MicrosoftExtensionsConfigVersion>10.0.14</MicrosoftExtensionsConfigVersion>
 ```
 
 Keep direct `ModelContextProtocol`, `.AspNetCore` and any `.Core` versions aligned. The published 2.4.0 packages pin MCP dependencies to matching versions and require Microsoft abstractions 10.0.14 and AI abstractions 10.11.0 for the .NET 10 assets. Reconcile other direct pins, central package management and lockfiles against the resolved graph; do not suppress downgrade errors or assume all test/deployment dependencies were updated by this snippet. .NET 10 remains supported.[35][37][39]

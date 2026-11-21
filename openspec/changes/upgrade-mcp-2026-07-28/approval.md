@@ -1,6 +1,6 @@
 # Implementation approval checklist
 
-**Review date:** November 16, 2026. **Status:** migration scope accepted in principle with the PR #65 review correction below. Task 2.1 was authorized and completed; task 2.2 and later work still require explicit execution approval.
+**Review date:** November 16, 2026. **Status:** migration scope accepted in principle with the PR #65 review correction below. Tasks 2.1 and 2.2 were authorized; task 2.3 was authorized after a successful review of 2.2. Task 2.4 onward requires separate approval.
 
 The study branch incorporates `main` at `6436000dab2c56ae1d53e3299cf27ef526657181` (PR #66). The SDK remains 1.3.0; this checkpoint only updates planning and documentation. The July proposal on `spec/upgrade-to-new-mcp-protocol-spec` is reference material, not a second implementation plan. Its metrics contract is incorporated here; its unconditional builder refactor is not.
 
@@ -13,7 +13,7 @@ The study branch incorporates `main` at `6436000dab2c56ae1d53e3299cf27ef52665718
 5. **Acceptance scope:** retain and extend C#/xUnit validation from #66, run the full 12-case packed-template matrix, exercise real modern/down-level hosts, and rehearse the voluntary guide on published template 1.4.0 with customized business code. Retire superseded Python characterization scripts at task 3.1 only after equivalent passing replacement coverage is demonstrated, including generated hosts with tests excluded; no second maintained test workflow.
 6. **Scope exclusions:** no business-layer redesign, unconditional MCP builder refactor, OAuth/JWT implementation, auth-mode expansion, Tasks/Apps/Skills/MRTR showcases, positive caching feature, unrelated Docker/package fixes, merge, release or deployment. Preserve the current authentication gate and its documented limitations. A demonstrated additional blocker requires a separate scoped decision.
 7. **Client evidence — selected:** MCP Inspector 2.13.0, in addition to the official C# SDK. Qualification belongs to task 3.3 and remains NOT RUN. No paid service or external credentials are authorized.
-8. **Execution cadence — approved for task 2.1:** Esteban allowed the agent to commit and push this checkpoint instead of leaving the commit to the user as specified by `custom-spec-driven/schema.yaml`. The one-task stop rule remains. A push is not authorization to start task 2.2, merge or publish.
+8. **Execution cadence — approved for task 2.1:** Esteban allowed the agent to commit and push this checkpoint instead of leaving the commit to the user as specified by `custom-spec-driven/schema.yaml`. The one-task stop rule remains. Esteban separately authorized the reviewed sequence through task 2.3. A push is not authorization to start task 2.4, merge or publish.
 
 ## Later decisions, not prerequisites to the first implementation task
 
