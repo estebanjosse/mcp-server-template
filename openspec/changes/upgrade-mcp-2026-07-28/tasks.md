@@ -3,9 +3,9 @@
 - [x] 1.1 Verify dated stable protocol/SDK targets against official sources and published package metadata; rechecked November 16, 2026.
 - [x] 1.2 Inspect source and map behavioral, dependency and generated-project impact, incorporating main `6436000` and #66.
 - [x] 1.3 Draft compatibility decisions, migration guides, explicit metrics delta and deferred showcase scope in English.
-- [ ] 1.4 Obtain Esteban's decisions from approval.md, exact external client targets and explicit authorization for the first implementation task.
+- [ ] 1.4 Obtain separate execution approval before task 2.2. The scope decision and client selection are recorded in approval.md.
 
-## 2. Baseline authorized; migration implementation still gated
+## 2. Baseline completed; migration implementation still gated
 
 Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push its checkpoint instead of leaving the commit to the user. This limited exception preserves the one-task stop and all remaining approval gates. Do not start task 2.2 or later work without explicit authorization.
 
@@ -27,4 +27,4 @@ Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push
 
 ## 4. Separate future work
 
-- [ ] 4.1 Obtain separate approval for feature showcases, optional hybrid runtime/configuration, expanded authentication or other extensions; none is authorized by this plan.
+- [ ] 4.1 Obtain separate approval for feature showcases, expanded authentication or other extensions; none is authorized by this plan.

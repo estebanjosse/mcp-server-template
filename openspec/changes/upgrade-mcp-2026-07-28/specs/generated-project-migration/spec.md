@@ -40,12 +40,12 @@ The project SHALL publish English migration guidance distinguishing template-pac
 
 ### Requirement: Compatibility and rollback instructions
 
-The simple guide SHALL cover validation, rollback and known validation limits. A linked advanced reference SHALL describe modern, hybrid and down-level-only trade-offs and conditional breaking changes for owners who need them. Hybrid mode SHALL NOT be presented as mandatory for all migrated applications.
+The simple guide SHALL cover validation, rollback and known validation limits. A linked advanced reference SHALL explain conditional breaking changes and how to migrate clients and application assumptions that require HTTP sessions. It SHALL NOT offer hybrid or stateful compatibility as a migration path.
 
 #### Scenario: Session-dependent deployment
-- **GIVEN** an owner voluntarily migrates a deployment and chooses to retain clients depending on legacy HTTP sessions
+- **GIVEN** an owner plans to upgrade a deployment that depends on legacy HTTP sessions
 - **WHEN** they consult the optional advanced compatibility guidance
-- **THEN** the guide SHALL distinguish hybrid compatibility from stateful-only operation
+- **THEN** the guide SHALL require replacing session-dependent behavior before adopting the upgraded host
 - **AND** require testing the owner's actual client/proxy/authentication configuration before rollout.
 
 ### Requirement: Deferred feature showcases

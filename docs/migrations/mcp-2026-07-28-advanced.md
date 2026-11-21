@@ -4,7 +4,7 @@
 
 ## Read this only when needed
 
-Start with the [simple migration guide](mcp-2026-07-28.md). Migration is optional. This reference covers customized servers and client compatibility choices; it does not require existing projects to upgrade or require migrated projects to retain legacy sessions.
+Start with the [simple migration guide](mcp-2026-07-28.md). Migration is optional. This reference covers customized servers and client migration. Existing applications are not updated in place by the template; applications that adopt the upgrade must migrate away from any dependency on persistent HTTP sessions.
 
 ## Who this is for
 
@@ -50,45 +50,11 @@ dotnet test --configuration Release --no-build
 
 These are commands to execute in your application, not results reported by this draft. Inspect new diagnostics and package resolution before continuing. For applications unable to adopt SDK 2 immediately, upstream 1.4.2 is a separate security-maintenance option; it does not provide protocol 2026-07-28. Assess its changes and qualify it independently.[5][8]
 
-## 3. Select an explicit HTTP compatibility policy
+## 3. Migrate HTTP to stateless operation
 
-The SDK's default changes to stateless. Choose intentionally inside the existing HTTP host registration; preserve your own module and tool registration.[3][12]
+Set `SessionMode = HttpServerSessionMode.Stateless` in the existing HTTP registration as shown in the [main migration guide](mcp-2026-07-28.md#3-update-http-configuration-if-you-use-http). Preserve your module and tool registration.[3][12]
 
-### A. No persistent protocol sessions needed
-
-Recommended for newly generated projects and applications exposing independent tools/resources:
-
-```csharp
-using ModelContextProtocol.AspNetCore;
-
-builder.Services.AddMcpServer()
-    .WithHttpTransport(options =>
-    {
-        options.SessionMode = HttpServerSessionMode.Stateless;
-    });
-```
-
-Modern requests use no HTTP protocol session. Older initialize-handshake peers can still make ordinary calls, but cannot rely on session-dependent features on this mode.[12][19]
-
-### B. Optional: retain clients that depend on legacy sessions
-
-Only use this path if you choose to migrate and also choose to keep those clients working. Hybrid mode is not required for the standard migration. Use the SDK 2.4 hybrid mode as a transition:
-
-```csharp
-builder.Services.AddMcpServer()
-    .WithHttpTransport(options =>
-    {
-        options.SessionMode = HttpServerSessionMode.StatefulForInitializeClients;
-    });
-```
-
-Modern peers use the stateless path; initialize-handshake peers retain sessions. Existing per-session callbacks can therefore run per request on the modern path. Move business state to explicitly scoped, authorized application handles where necessary; a protocol session ID is not an authorization boundary.[12][19][31]
-
-### C. Down-level-only operation
-
-`HttpServerSessionMode.Stateful` (or `Stateless = false`) retains old session behavior but refuses native 2026-07-28 HTTP. A capable client may fall back to an older revision; that is not proof it is using the new protocol. Do not configure both `SessionMode` and `Stateless`, since the last assignment wins.[12][19]
-
-Legacy `/sse` transport is a separate compatibility choice, disabled by default. This was already the SDK 1.3.0 default, not a newly introduced default break.[46] Migrate those client URLs to your Streamable HTTP endpoint, commonly `/mcp`. If a temporary legacy opt-in is required, follow upstream guidance and test it explicitly; do not enable it merely because an older client uses a 2025 protocol revision.[12]
+Modern requests use no persistent HTTP protocol session. Older initialize-handshake clients can make ordinary calls only if they work without one. If a client depends on session IDs, standalone GET/DELETE, legacy `/sse`, or stream resumption, update or replace it before deploying the upgrade. Move application state out of transport sessions into explicitly scoped application state with its own authorization where needed. Test using the actual client and proxy configuration. Hybrid and stateful compatibility modes are not supported migration paths.[12][19][31]
 
 ### Stdio prerequisites for published template 1.4.0
 

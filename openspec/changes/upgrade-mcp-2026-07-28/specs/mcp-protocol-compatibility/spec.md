@@ -2,7 +2,7 @@
 
 ### Requirement: Explicit protocol and SDK compatibility
 
-The template SHALL target protocol 2026-07-28 and aligned official C# SDK 2.4.0 packages on .NET 10, reconcile required dependency floors and record exact tested client versions. The HTTP host SHALL explicitly select `HttpServerSessionMode.Stateless` at `/mcp`, without a public mode-selection flag or default legacy SSE endpoints. These are proposed implementation requirements pending the approval checklist.
+The template SHALL target protocol 2026-07-28 and aligned official C# SDK 2.4.0 packages on .NET 10, reconcile required dependency floors and record exact tested client versions. The HTTP host SHALL explicitly select `HttpServerSessionMode.Stateless` at `/mcp`, without a public mode-selection flag or default legacy SSE endpoints. Execution remains subject to the approval checklist.
 
 #### Scenario: Modern HTTP requests without a handshake
 - **GIVEN** a generated HTTP host using the approved target and valid authentication

@@ -11,7 +11,7 @@ The published template 1.4.0 embeds SDK 1.3.0, whose newest protocol revision is
 ## What Changes
 
 - Propose SDK 2.4.0 for all MCP packages and reconcile its actual published dependency floors while retaining .NET 10.
-- **BREAKING**: make HTTP session policy explicit for the upgraded template. Recommend stateless for newly generated projects. Document hybrid mode only as an optional advanced case for owners who choose to migrate while retaining session-dependent clients; it is not a general requirement to preserve existing deployments.
+- **BREAKING**: make HTTP session policy explicit for the upgraded template. Recommend stateless for newly generated projects. Do not implement or document hybrid compatibility as a migration path. Existing deployments that depend on sessions must migrate before adopting the upgraded host.
 - Qualify modern discovery/per-request metadata and down-level initialize flows separately over HTTP and stdio.
 - Update transport/error/schema/cache assertions, SDK-dependent examples, protocol documentation and packaging checks.
 - **BREAKING**: replace the misleading active-session metric with request-in-flight telemetry and document dashboard/alert migration. Preserve and extend the C#/xUnit host and packed-template tests added by #66; retire superseded characterization scripts within the approved validation task.
@@ -37,4 +37,4 @@ Affected areas: `Directory.Build.props`, the HTTP/stdio hosts, MCP adapter seria
 
 ## Approval Questions
 
-See [approval.md](approval.md) for the numbered decisions: target/dependency scope, explicit stateless default, supported historical revisions, breaking metric rename, acceptance coverage, exclusions, exact external clients and one-task checkpoint cadence. These decisions are pending. The old stdio registration/stdout blockers were fixed by #66; they do not need fresh implementation approval. Additional demonstrated blockers require a scoped decision.
+See [approval.md](approval.md) for the numbered decisions: target/dependency scope, explicit stateless default, supported historical revisions, breaking metric rename, acceptance coverage, exclusions, exact external clients and one-task checkpoint cadence. The scope was accepted in principle with the PR #65 correction; task 2.2 and later execution remain unauthorized. The old stdio registration/stdout blockers were fixed by #66; they do not need fresh implementation approval. Additional demonstrated blockers require a scoped decision.
