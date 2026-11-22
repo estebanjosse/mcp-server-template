@@ -76,6 +76,8 @@ When enabled, the `/metrics` endpoint exposes Prometheus-formatted metrics such 
 **Breaking rename:** update dashboards and alerts from `mcp_sessions_active` to
 `mcp_requests_in_flight`. There is no alias. Discovery and SDK rejections count;
 rejected credentials and monitoring requests do not.
+Tool invocation counters count completed handlers, including those that return
+business errors. Requests rejected before a tool handler runs are not invocations.
 
 Review [src/McpServer.Template.Host.Http/appsettings.json](../src/McpServer.Template.Host.Http/appsettings.json) for configuration examples.
 

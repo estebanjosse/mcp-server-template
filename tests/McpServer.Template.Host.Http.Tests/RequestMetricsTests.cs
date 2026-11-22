@@ -59,6 +59,46 @@ public sealed class RequestMetricsTests
     }
 
     [Fact]
+    public async Task Gauge_ReleasesWhenClientClosesAnOpenResponseStream()
+    {
+        var gate = new Gate();
+        using var factory = Host(handler: async (context, token) =>
+        {
+            await context.Server.NotifyProgressAsync(new ProgressNotificationParams
+            {
+                ProgressToken = new ProgressToken("metrics-stream"),
+                Progress = new() { Progress = 1 }
+            }, token);
+            return await gate.WaitAsync(token);
+        });
+        using var client = factory.CreateClient();
+        using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        var token = deadline.Token;
+        using var request = Request("prompts/list", progressToken: "metrics-stream");
+        try
+        {
+            using (var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token))
+            {
+                response.EnsureSuccessStatusCode();
+                response.Content.Headers.ContentType?.MediaType.Should().Be("text/event-stream");
+                using var reader = new StreamReader(await response.Content.ReadAsStreamAsync(token));
+                string? line;
+                do { line = await reader.ReadLineAsync(token); }
+                while (line is not null && !line.StartsWith("data:", StringComparison.Ordinal));
+                line.Should().Contain("notifications/progress");
+                await gate.Entered.Task.WaitAsync(token);
+                Read(await Scrape(client, token), Gauge).Should().Be(1);
+            }
+            await gate.Cancelled.Task.WaitAsync(token);
+            await WaitForGauge(client, 0, token);
+        }
+        finally
+        {
+            gate.Release.TrySetResult();
+        }
+    }
+
+    [Fact]
     public async Task Metrics_CountAdmittedDiscoveryAndFailuresButNotAuthRejectionsOrMonitoring()
     {
         using var factory = Host(handler: (_, _) => throw new InvalidOperationException("Metrics fixture failure"));
@@ -130,8 +170,8 @@ public sealed class RequestMetricsTests
         if (enabled)
         {
             var payload = await Scrape(client, timeout.Token);
-            Read(payload, toolCounter).Should().Be(before + 1);
-            Read(payload, "mcp_tool_invocations_by_tool_total{tool=\"calc_divide\"}").Should().Be(1);
+            Read(payload, toolCounter).Should().Be(before + 2);
+            Read(payload, "mcp_tool_invocations_by_tool_total{tool=\"calc_divide\"}").Should().Be(2);
         }
     }
 
@@ -163,7 +203,7 @@ public sealed class RequestMetricsTests
     }
 
     private static HttpRequestMessage Request(string method, string? cursor = null, bool authorized = true,
-        string versionHeader = "2026-07-28", object? toolArguments = null)
+        string versionHeader = "2026-07-28", object? toolArguments = null, string? progressToken = null)
     {
         var parameters = new Dictionary<string, object>
         {
@@ -174,6 +214,8 @@ public sealed class RequestMetricsTests
                 ["io.modelcontextprotocol/clientCapabilities"] = new { }
             }
         };
+        if (progressToken is not null)
+            ((Dictionary<string, object>)parameters["_meta"])["progressToken"] = progressToken;
         if (cursor is not null) parameters["cursor"] = cursor;
         if (toolArguments is not null)
         {
