@@ -83,7 +83,7 @@ Replace the template namespace with your generated application namespace. Inspec
 
 ### Operational metric migration
 
-The proposed template implementation removes `mcp_sessions_active` and its session-labelled recorder API, and publishes `mcp_requests_in_flight` instead. Apply the reviewed recorder/interface/middleware diff when voluntarily updating a generated application; changing only a dashboard query does not change its instrumentation. Preserve `mcp_requests_total` and tool counters. Count `/mcp` HTTP requests admitted past the existing authentication guard, including discovery and SDK rejections, but not rejected credentials or monitoring routes. Each request releases its gauge increment on success, error or cancellation. Update dashboards/alerts to the new name and request-concurrency meaning; there is no backward-compatible session alias. The final guide must rehearse these changes after the implementation exists.
+The updated template removes `mcp_sessions_active` and its session-labelled recorder API, and publishes `mcp_requests_in_flight` instead. Apply the reviewed recorder/interface/middleware diff when voluntarily updating a generated application; changing only a dashboard query does not change its instrumentation. Preserve `mcp_requests_total` and tool counters. Count `/mcp` HTTP requests admitted past the existing authentication guard, including discovery and SDK rejections, but not rejected credentials or monitoring routes. Each request releases its gauge increment on success, error or cancellation. Update dashboards/alerts to the new name and request-concurrency meaning; there is no backward-compatible session alias.
 
 ## 5. Audit conditional SDK breaks in custom applications
 

@@ -6,11 +6,11 @@ public sealed class NoopMcpMetricsRecorder : IMcpMetricsRecorder
     {
     }
 
-    public void IncrementActiveSessions()
+    public void IncrementRequestsInFlight()
     {
     }
 
-    public void DecrementActiveSessions()
+    public void DecrementRequestsInFlight()
     {
     }
 

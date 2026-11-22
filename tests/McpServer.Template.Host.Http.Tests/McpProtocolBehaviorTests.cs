@@ -231,7 +231,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         return request;
     }
 
-    private static async Task<JsonElement> ReadReply(HttpResponseMessage response, int id, HttpStatusCode expected = HttpStatusCode.OK)
+    internal static async Task<JsonElement> ReadReply(HttpResponseMessage response, int id, HttpStatusCode expected = HttpStatusCode.OK)
     {
         var text = await response.Content.ReadAsStringAsync();
         response.StatusCode.Should().Be(expected, $"the MCP reply for request {id} was {text}");

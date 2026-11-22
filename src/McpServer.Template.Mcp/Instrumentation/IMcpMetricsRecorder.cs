@@ -4,9 +4,9 @@ public interface IMcpMetricsRecorder
 {
     void RecordRequest();
 
-    void IncrementActiveSessions();
+    void IncrementRequestsInFlight();
 
-    void DecrementActiveSessions();
+    void DecrementRequestsInFlight();
 
     void RecordToolInvocation(string toolName);
 }

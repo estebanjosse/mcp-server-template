@@ -71,7 +71,11 @@ When enabled, the `/metrics` endpoint exposes Prometheus-formatted metrics such 
 - `mcp_requests_total`
 - `mcp_tool_invocations_total`
 - `mcp_tool_invocations_by_tool_total` (labelled by `tool`)
-- `mcp_sessions_active`
+- `mcp_requests_in_flight`: concurrent HTTP `/mcp` requests admitted by the authentication guard, not sessions.
+
+**Breaking rename:** update dashboards and alerts from `mcp_sessions_active` to
+`mcp_requests_in_flight`. There is no alias. Discovery and SDK rejections count;
+rejected credentials and monitoring requests do not.
 
 Review [src/McpServer.Template.Host.Http/appsettings.json](../src/McpServer.Template.Host.Http/appsettings.json) for configuration examples.
 

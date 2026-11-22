@@ -62,7 +62,7 @@ if (metricsEnabled)
         branch.Use(async (context, next) =>
         {
             metricsRecorder.RecordRequest();
-            metricsRecorder.IncrementActiveSessions();
+            metricsRecorder.IncrementRequestsInFlight();
 
             try
             {
@@ -70,7 +70,7 @@ if (metricsEnabled)
             }
             finally
             {
-                metricsRecorder.DecrementActiveSessions();
+                metricsRecorder.DecrementRequestsInFlight();
             }
         });
     });

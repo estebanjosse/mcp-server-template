@@ -1,4 +1,3 @@
-using System.Threading;
 using Prometheus;
 
 namespace McpServer.Template.Mcp.Instrumentation;
@@ -23,34 +22,18 @@ public sealed class PrometheusMcpMetricsRecorder(IMetricFactory metricFactory) :
             LabelNames = ["tool"]
         });
 
-    private readonly Gauge _activeSessionsGauge = metricFactory.CreateGauge(
-        "mcp_sessions_active",
-        "Number of active MCP sessions handled by the host.");
-
-    private long _activeSessions;
+    private readonly Gauge _requestsInFlightGauge = metricFactory.CreateGauge(
+        "mcp_requests_in_flight",
+        "Number of admitted MCP HTTP requests currently in flight.");
 
     public void RecordRequest()
     {
         _requestsCounter.Inc();
     }
 
-    public void IncrementActiveSessions()
-    {
-        var current = Interlocked.Increment(ref _activeSessions);
-        _activeSessionsGauge.Set(current);
-    }
+    public void IncrementRequestsInFlight() => _requestsInFlightGauge.Inc();
 
-    public void DecrementActiveSessions()
-    {
-        var current = Interlocked.Decrement(ref _activeSessions);
-        if (current < 0)
-        {
-            Interlocked.Exchange(ref _activeSessions, 0);
-            current = 0;
-        }
-
-        _activeSessionsGauge.Set(current);
-    }
+    public void DecrementRequestsInFlight() => _requestsInFlightGauge.Dec();
 
     public void RecordToolInvocation(string toolName)
     {
