@@ -279,7 +279,7 @@ The CI system MUST publish the dotnet template package to nuget.org only after t
 **And** the solution tests have passed for that commit  
 **When** the template publishing workflow runs  
 **Then** the workflow MUST pack the template into a `.nupkg`  
-**And** the workflow MUST push the package to nuget.org using the `NUGET_API_KEY` secret
+**And** the workflow MUST push the package to nuget.org using a short-lived API key obtained via OIDC Trusted Publishing
 
 #### Scenario: Skip publishing outside release triggers
 **Given** a pull request or branch push runs CI  
