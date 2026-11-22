@@ -190,7 +190,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         }
     }
 
-    private static HttpRequestMessage CreateInitializeRequest(string version, string? header = null) =>
+    internal static HttpRequestMessage CreateInitializeRequest(string version, string? header = null) =>
         CreateRequest(1, "initialize", new
         {
             protocolVersion = version,
@@ -210,7 +210,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
         data.GetProperty("supported").EnumerateArray().Select(v => v.GetString()).Should().Equal(ModernVersion);
     }
 
-    private static Dictionary<string, object> ModernMetadata() => new()
+    internal static Dictionary<string, object> ModernMetadata() => new()
     {
         ["io.modelcontextprotocol/protocolVersion"] = ModernVersion,
         ["io.modelcontextprotocol/clientInfo"] = new { name = "template-tests", version = "1.0" },
@@ -220,7 +220,7 @@ public sealed class McpProtocolBehaviorTests : IDisposable
     private static IEnumerable<string?> PromptNames(JsonElement result) =>
         result.GetProperty("prompts").EnumerateArray().Select(p => p.GetProperty("name").GetString());
 
-    private static HttpRequestMessage CreateRequest(int? id, string method, object parameters, string? version = null, string? methodHeader = null)
+    internal static HttpRequestMessage CreateRequest(int? id, string method, object parameters, string? version = null, string? methodHeader = null)
     {
         var message = new Dictionary<string, object> { ["jsonrpc"] = "2.0", ["method"] = method, ["params"] = parameters };
         if (id is { } requestId) message["id"] = requestId;

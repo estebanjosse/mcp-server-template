@@ -73,29 +73,39 @@ internal sealed class StdioSession : IAsyncDisposable
         await SendAsync(new { jsonrpc = "2.0", method = "notifications/initialized" }, timeout.Token);
     }
 
-    public async Task<JsonElement> RequestCapabilityAsync(string version, string method, object? parameters = null)
+    private static object? CapabilityParameters(string version, object? parameters)
     {
-        if (version == ModernVersion)
+        if (version != ModernVersion) return parameters;
+        var modern = parameters is null ? new Dictionary<string, object>() : JsonSerializer.SerializeToElement(parameters)
+            .EnumerateObject().ToDictionary(p => p.Name, p => (object)p.Value);
+        modern.Add("_meta", new Dictionary<string, object>
         {
-            var modern = parameters is null ? new Dictionary<string, object>() : JsonSerializer.SerializeToElement(parameters)
-                .EnumerateObject().ToDictionary(p => p.Name, p => (object)p.Value);
-            modern.Add("_meta", new Dictionary<string, object>
-            {
-                ["io.modelcontextprotocol/protocolVersion"] = version,
-                ["io.modelcontextprotocol/clientInfo"] = new { name = "stdio-integration-tests", version = "1.0" },
-                ["io.modelcontextprotocol/clientCapabilities"] = new { }
-            });
-            var result = await RequestAsync(method, modern);
-            result.GetProperty("resultType").GetString().Should().Be("complete");
-            return result;
-        }
-
-        var legacy = await RequestAsync(method, parameters);
-        legacy.TryGetProperty("resultType", out _).Should().BeFalse("historical replies must retain their legacy shape");
-        return legacy;
+            ["io.modelcontextprotocol/protocolVersion"] = version,
+            ["io.modelcontextprotocol/clientInfo"] = new { name = "stdio-integration-tests", version = "1.0" },
+            ["io.modelcontextprotocol/clientCapabilities"] = new { }
+        });
+        return modern;
     }
 
+    public async Task<JsonElement> RequestCapabilityAsync(string version, string method, object? parameters = null)
+    {
+        var result = await RequestAsync(method, CapabilityParameters(version, parameters));
+        if (version == ModernVersion) result.GetProperty("resultType").GetString().Should().Be("complete");
+        else result.TryGetProperty("resultType", out _).Should().BeFalse("historical replies must retain their legacy shape");
+        return result;
+    }
+
+    public async Task<JsonElement> RequestCapabilityErrorAsync(string version, string method, object parameters)
+        => (await ReadReplyAsync(method, CapabilityParameters(version, parameters))).GetProperty("error");
+
     public async Task<JsonElement> RequestAsync(string method, object? parameters = null)
+    {
+        var frame = await ReadReplyAsync(method, parameters);
+        frame.TryGetProperty("error", out var error).Should().BeFalse($"{method} must succeed: {error}");
+        return frame.GetProperty("result");
+    }
+
+    private async Task<JsonElement> ReadReplyAsync(string method, object? parameters)
     {
         var id = ++nextId;
         using var timeout = new CancellationTokenSource(RequestTimeout);
@@ -109,8 +119,7 @@ internal sealed class StdioSession : IAsyncDisposable
                 var responseId = frame.GetProperty("id").GetInt32();
                 responseId.Should().Be(id, "responses must correlate to the outstanding request");
                 responses.Add(responseId).Should().BeTrue("duplicate response IDs are forbidden");
-                frame.TryGetProperty("error", out var error).Should().BeFalse($"{method} must succeed: {error}");
-                return frame.GetProperty("result");
+                return frame;
             }
         }
         catch (Exception exception) when (exception is OperationCanceledException or ChannelClosedException)

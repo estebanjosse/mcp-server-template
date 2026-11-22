@@ -15,7 +15,7 @@ Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push
 - [x] 2.4 Configure explicit stateless HTTP on /mcp and qualify modern discovery/direct requests plus 2025-11-25 and 2025-06-18 initialize/capability operations with exact wire assertions.
 - [x] 2.5 Qualify real stdio modern/down-level operations, sample/no-sample capability handling, exact tool results/errors, cancellation, stdout purity and bounded shutdown/drains.
 - [x] 2.6 Implement the metrics-observability delta, testing concurrency, error/cancellation cleanup, disabled mode and authentication/monitoring boundaries; document the breaking gauge rename.
-- [ ] 2.7 Qualify revision-aware schema/result/cache/resource-error fixtures and HTTP authentication continuity, without adding OAuth, positive caching or new runtime features.
+- [x] 2.7 Qualify revision-aware schema/result/cache/resource-error fixtures and HTTP authentication continuity, without adding OAuth, positive caching or new runtime features.
 
 ## 3. Consumer and release qualification — no publication authorized
 

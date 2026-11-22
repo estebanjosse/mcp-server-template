@@ -26,6 +26,16 @@ public abstract class StdioHostTestBase : IAsyncLifetime
 public abstract class StdioHostTests : StdioHostTestBase
 {
     [Fact]
+    public async Task ResourceRead_WhenUriIsUnknown_ReturnsRevisionSpecificError()
+    {
+        const string uri = "resource://missing-fixture";
+        var error = await Host.RequestCapabilityErrorAsync(ProtocolVersion, "resources/read", new { uri });
+        error.GetProperty("code").GetInt32().Should().Be(ProtocolVersion == StdioSession.ModernVersion ? -32602 : -32002);
+        error.GetProperty("message").GetString().Should().Be($"Unknown resource URI: '{uri}'");
+        error.TryGetProperty("data", out _).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Negotiation_ReportsExactRevisionAndAdvertisedCapabilities()
     {
         var handshake = ProtocolVersion == StdioSession.ModernVersion ? await CallAsync("server/discover") : Host.Initialization;
@@ -149,6 +159,16 @@ public abstract class StdioHostTests : StdioHostTestBase
     private async Task<string> ReadResourceAsync(string uri, string mimeType)
     {
         var result = await CallAsync("resources/read", new { uri });
+        if (ProtocolVersion == StdioSession.ModernVersion)
+        {
+            result.GetProperty("ttlMs").GetInt32().Should().Be(0);
+            result.GetProperty("cacheScope").GetString().Should().Be("private");
+        }
+        else
+        {
+            result.TryGetProperty("ttlMs", out _).Should().BeFalse();
+            result.TryGetProperty("cacheScope", out _).Should().BeFalse();
+        }
         var content = result.GetProperty("contents").EnumerateArray().Should().ContainSingle().Subject;
         content.GetProperty("uri").GetString().Should().Be(uri);
         content.GetProperty("mimeType").GetString().Should().Be(mimeType);
