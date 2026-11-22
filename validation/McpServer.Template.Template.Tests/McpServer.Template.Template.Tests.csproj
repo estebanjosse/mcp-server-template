@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="ProcessProbe/**/*.cs" />
+    <ProjectReference Include="ProcessProbe/ProcessProbe.csproj" />
     <AssemblyMetadata Include="ProcessProbeProject" Value="$(MSBuildProjectDirectory)/ProcessProbe/ProcessProbe.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
     <PackageReference Include="ModelContextProtocol.Core" Version="$(ModelContextProtocolVersion)" />

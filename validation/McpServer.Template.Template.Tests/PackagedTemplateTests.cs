@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Xml.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -81,16 +82,51 @@ public sealed class PackagedTemplateTests : IClassFixture<TemplatePackage>
             "--maxcpucount:1", "-p:UseSharedCompilation=false")).EnsureSuccess();
         var expected = projects.Where(IsTestProject).ToArray();
         Assert.Equal(tests, expected.Length > 0);
-        if (!tests) return;
         var reports = Path.Combine(target, "test-results");
-        foreach (var project in expected)
+        var testedAssemblies = expected.Select(p => Path.GetFileNameWithoutExtension(p) + ".dll").ToArray();
+        var probedHosts = new List<string>();
+        if (tests)
         {
-            var name = Path.GetFileNameWithoutExtension(project);
-            (await package.Run(target, $"test-{name}", "test", project, "-c", "Release", "--no-build", "--no-restore",
-                "--logger", $"trx;LogFileName={name}.trx", "--results-directory", reports,
-                "--disable-build-servers", "--maxcpucount:1")).EnsureSuccess();
+            foreach (var project in expected)
+            {
+                var name = Path.GetFileNameWithoutExtension(project);
+                (await package.Run(target, $"test-{name}", "test", project, "-c", "Release", "--no-build", "--no-restore",
+                    "--logger", $"trx;LogFileName={name}.trx", "--results-directory", reports,
+                    "--disable-build-servers", "--maxcpucount:1")).EnsureSuccess();
+            }
+            TrxReports.Verify(reports, testedAssemblies);
         }
-        TrxReports.Verify(reports, expected.Select(p => Path.GetFileNameWithoutExtension(p) + ".dll").ToArray());
+        else
+        {
+            Assert.False(Directory.Exists(Path.Combine(target, "tests")));
+            if (host != "stdio")
+            {
+                var dll = await GetHostDll(target, projects, "Http");
+                await GeneratedHttpProbe.VerifyAsync(dll, Path.Combine(target, "host-probes", "http"), samples);
+                probedHosts.Add("http");
+            }
+            if (host != "http")
+            {
+                var dll = await GetHostDll(target, projects, "Stdio");
+                await GeneratedStdioProbe.VerifyAsync(dll, Path.Combine(target, "host-probes", "stdio"), samples);
+                probedHosts.Add("stdio");
+            }
+        }
+        File.WriteAllText(Path.Combine(target, "qualification.json"), JsonSerializer.Serialize(new
+        {
+            host, tests, samples, testedAssemblies, probedHosts
+        }));
+    }
+
+    private async Task<string> GetHostDll(string target, string[] projects, string transport)
+    {
+        var project = Assert.Single(projects.Where(p => Path.GetFileNameWithoutExtension(p).EndsWith(".Host." + transport, StringComparison.Ordinal)));
+        var result = await package.Run(target, "target-" + transport, "msbuild", project,
+            "-nologo", "-getProperty:TargetPath", "-property:Configuration=Release");
+        result.EnsureSuccess();
+        var dll = Assert.Single(File.ReadAllLines(result.Log + ".stdout.log").Where(line => !string.IsNullOrWhiteSpace(line)));
+        Assert.True(Path.IsPathFullyQualified(dll) && File.Exists(dll), $"Missing built host: {dll}");
+        return dll;
     }
 
     private static bool IsTestProject(string path) => XDocument.Load(path).Descendants("IsTestProject")

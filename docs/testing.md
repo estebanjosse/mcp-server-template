@@ -54,7 +54,9 @@ Tests cover:
 - the 12 combinations of HTTP/stdio/both hosts, tests on/off and sample tools
   on/off;
 - building each valid combination and executing every expected generated test
-  assembly when tests are included.
+  assembly when tests are included;
+- starting the compiled HTTP and stdio hosts when tests are excluded and
+  exercising modern and legacy MCP operations from outside the scaffold.
 
 Generated test reports must be present, unique and contain executed tests with
 no failures or skipped tests. A successful command with no tests is not enough.
