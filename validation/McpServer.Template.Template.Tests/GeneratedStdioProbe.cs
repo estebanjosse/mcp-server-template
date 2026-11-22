@@ -1,7 +1,5 @@
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -19,8 +17,6 @@ internal static class GeneratedStdioProbe
     private static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds(5);
     private static readonly UTF8Encoding Utf8 = new(false, true);
     private static readonly object ClientInfo = new { name = "generated-stdio-probe", version = "1.0" };
-    internal static bool SupportsProcessGroups => OperatingSystem.IsLinux() || OperatingSystem.IsMacOS();
-    internal static string LauncherDll => Path.Combine(AppContext.BaseDirectory, "ProcessProbe.dll");
 
     public static async Task VerifyAsync(string hostDll, string artifacts, bool samples)
     {
@@ -49,59 +45,59 @@ internal static class GeneratedStdioProbe
         Func<Wire, Task> verifyOperations, params string[] arguments)
     {
         Directory.CreateDirectory(artifacts);
-        var executable = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet";
-        var start = new ProcessStartInfo(executable)
-        {
-            WorkingDirectory = cwd, UseShellExecute = false,
-            RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
-            StandardInputEncoding = Utf8
-        };
+        await using var owned = new OwnedProcess(OwnedProcess.Dotnet, [dll, .. arguments]);
+        var start = owned.StartInfo;
+        start.WorkingDirectory = cwd;
+        start.RedirectStandardInput = true;
+        start.RedirectStandardOutput = true;
+        start.RedirectStandardError = true;
+        start.StandardInputEncoding = Utf8;
         // The status resource formats UTC using the host's calendar. Scope the Gregorian locale to this child.
         const string locale = "C";
         start.Environment["LC_ALL"] = locale;
-        if (SupportsProcessGroups)
-        {
-            start.ArgumentList.Add(LauncherDll);
-            start.ArgumentList.Add("launch-in-session");
-        }
-        start.ArgumentList.Add(dll);
-        foreach (var argument in arguments) start.ArgumentList.Add(argument);
+
         await using var stdout = OpenEvidence("stdout.log");
         await using var stderr = OpenEvidence("stderr.log");
         await using var client = OpenEvidence("client.jsonl");
         await using (var command = OpenEvidence("command.json"))
             await JsonSerializer.SerializeAsync(command, new
             {
-                executable, arguments = start.ArgumentList, cwd, revision, samples,
-                environmentOverrides = new { LC_ALL = locale }, isolatedProcessGroup = SupportsProcessGroups
+                executable = start.FileName, arguments = start.ArgumentList, cwd, revision, samples,
+                environmentOverrides = new { LC_ALL = locale }, isolatedProcessGroup = OwnedProcess.SupportsProcessGroups
             });
 
         using var readers = new CancellationTokenSource();
-        using var process = Process.Start(start) ?? throw new InvalidOperationException($"Failed to start {dll}");
+        owned.Start();
+        var process = owned.Process;
         var wire = new Wire(process, stdout, client, readers.Token);
         var stderrDrain = process.StandardError.BaseStream.CopyToAsync(stderr, readers.Token);
-        var processExit = process.WaitForExitAsync();
+        var processExit = owned.RunTargetAsync();
         var completed = Task.WhenAll(processExit, wire.Drain, stderrDrain);
         try
         {
             await verifyOperations(wire);
-            Assert.False(process.HasExited, "The generated host must remain alive until stdin EOF.");
+            Assert.False(processExit.IsCompleted, "The generated host must remain alive until stdin EOF.");
             process.StandardInput.Close();
-            await completed.WaitAsync(ShutdownTimeout);
-            Assert.Equal(0, process.ExitCode);
+            try { await completed.WaitAsync(ShutdownTimeout); }
+            catch (TimeoutException) when (processExit.IsCompletedSuccessfully && processExit.Result is int exitCode)
+            {
+                throw new TimeoutException($"Generated host exited with code {exitCode}, but its output pipes did not reach EOF.");
+            }
+            Assert.Equal(0, await processExit);
             wire.AssertComplete();
             Assert.True(stderr.Length > 0, "Normal host diagnostics must remain on stderr.");
+            // EOF proves the pipes closed, not that every process in the session exited.
+            await owned.StopAsync();
         }
         catch (Exception probeFailure)
         {
+            var stopped = owned.StopAsync();
             Exception? cleanupFailure = null;
-            try { Terminate(process); }
-            catch (Exception failure) { cleanupFailure = failure; }
             // Let termination close the pipes and preserve trailing evidence. Cancellation is a fallback, not EOF.
             try { await completed.WaitAsync(ShutdownTimeout); }
             catch (Exception failure)
             {
-                cleanupFailure = cleanupFailure is null ? failure : new AggregateException(cleanupFailure, failure);
+                cleanupFailure = failure;
                 if (!completed.IsCompleted)
                 {
                     readers.Cancel();
@@ -110,6 +106,12 @@ internal static class GeneratedStdioProbe
                     catch (Exception drainFailure) { cleanupFailure = new AggregateException(cleanupFailure, drainFailure); }
                 }
             }
+            try { await stopped; }
+            catch (Exception failure) when (!ReferenceEquals(failure, probeFailure))
+            {
+                cleanupFailure = cleanupFailure is null ? failure : new AggregateException(cleanupFailure, failure);
+            }
+            catch (Exception) { } // The normal-path stop failure is already the primary error.
             throw new InvalidOperationException($"Generated stdio qualification failed for {revision}. Evidence: {artifacts}",
                 cleanupFailure is null ? probeFailure : new AggregateException(probeFailure, cleanupFailure));
         }
@@ -117,39 +119,6 @@ internal static class GeneratedStdioProbe
         FileStream OpenEvidence(string name) => new(Path.Combine(artifacts, name), FileMode.CreateNew,
             FileAccess.Write, FileShare.Read, 4096, FileOptions.Asynchronous);
     }
-
-    private static void Terminate(Process process)
-    {
-        if (SupportsProcessGroups)
-        {
-            // The launcher calls setsid before exec, so its PID is the owned PGID even after leader exit.
-            var groupId = process.Id;
-            if (KillGroup(groupId) || process.HasExited) return;
-
-            // Failure can precede setsid. Stop the launcher and check the group again in case it just formed.
-            try { process.Kill(); }
-            catch (InvalidOperationException) when (process.HasExited) { }
-            KillGroup(groupId);
-        }
-        else if (!process.HasExited)
-        {
-            // Best effort only where this harness cannot own a POSIX process group.
-            try { process.Kill(entireProcessTree: true); }
-            catch (InvalidOperationException) when (process.HasExited) { }
-        }
-    }
-
-    private static bool KillGroup(int groupId)
-    {
-        const int sigkill = 9, esrch = 3;
-        if (kill(-groupId, sigkill) == 0) return true;
-        var error = Marshal.GetLastPInvokeError();
-        if (error == esrch) return false; // No such process group.
-        throw new Win32Exception(error, $"Cannot terminate owned stdio process group {groupId}.");
-    }
-
-    [DllImport("libc", SetLastError = true)]
-    private static extern int kill(int pid, int signal);
 
     private static async Task VerifyOperationsAsync(Wire wire, string projectName, string revision, bool samples)
     {

@@ -14,11 +14,11 @@ internal static class Command
     public static async Task<CommandResult> Run(string executable, string[] arguments, string cwd, string log, TimeSpan timeout)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(log)!);
-        var start = new ProcessStartInfo(executable)
-        {
-            WorkingDirectory = cwd, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false
-        };
-        foreach (var argument in arguments) start.ArgumentList.Add(argument);
+        await using var owned = new OwnedProcess(executable, arguments);
+        var start = owned.StartInfo;
+        start.WorkingDirectory = cwd;
+        start.RedirectStandardOutput = true;
+        start.RedirectStandardError = true;
         start.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
         start.Environment["DOTNET_NOLOGO"] = "1";
         // Template rejection assertions use English CLI diagnostics, regardless of the runner's locale.
@@ -31,35 +31,59 @@ internal static class Command
         // Keep generated-host diagnostics with this command's external evidence.
         start.Environment["MCP_TEST_ARTIFACTS"] = Path.Combine(Path.GetDirectoryName(log)!, "host-diagnostics");
         File.WriteAllText(log + ".command.json", JsonSerializer.Serialize(new { executable, arguments, cwd, timeout }));
-        using var process = new Process { StartInfo = start };
+        var process = owned.Process;
         await using var stdout = new FileStream(log + ".stdout.log", FileMode.CreateNew, FileAccess.Write, FileShare.Read);
         await using var stderr = new FileStream(log + ".stderr.log", FileMode.CreateNew, FileAccess.Write, FileShare.Read);
-        process.Start();
+        owned.Start();
         using var drains = new CancellationTokenSource();
         var output = process.StandardOutput.BaseStream.CopyToAsync(stdout, drains.Token);
         var error = process.StandardError.BaseStream.CopyToAsync(stderr, drains.Token);
+        var targetExit = owned.RunTargetAsync();
+        var completed = Task.WhenAll(targetExit, output, error);
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            await Task.WhenAll(process.WaitForExitAsync(), output, error).WaitAsync(timeout);
+            await completed.WaitAsync(timeout);
         }
-        catch (TimeoutException)
+        catch (Exception commandFailure)
         {
-            // Kill the owned tree, then bound both exit acknowledgement and inherited pipe drains.
-            try { process.Kill(entireProcessTree: true); }
-            catch (InvalidOperationException) { }
-            catch (System.ComponentModel.Win32Exception) { }
-            drains.Cancel();
-            try { await Task.WhenAll(process.WaitForExitAsync(), output, error).WaitAsync(TimeSpan.FromSeconds(5)); }
-            catch (Exception cleanup) when (cleanup is TimeoutException or OperationCanceledException or IOException) { }
-            File.WriteAllText(log + ".timeout.txt", $"Timed out after {stopwatch.Elapsed}. Owned process tree cleanup requested.");
-            throw new TimeoutException($"Command timed out, not a template rejection. Logs: {log}");
+            var exitAtFailure = targetExit.IsCompletedSuccessfully ? targetExit.Result : null;
+            var stopped = owned.StopAsync();
+            Exception? cleanupFailure = null;
+            // Preserve trailing evidence by waiting for real EOF before cancelling stuck drains.
+            try { await completed.WaitAsync(TimeSpan.FromSeconds(5)); }
+            catch (Exception failure)
+            {
+                if (!ReferenceEquals(failure, commandFailure)) cleanupFailure = failure;
+                if (!completed.IsCompleted)
+                {
+                    drains.Cancel();
+                    try { await completed.WaitAsync(TimeSpan.FromSeconds(5)); }
+                    catch (OperationCanceledException) when (drains.IsCancellationRequested) { }
+                    catch (Exception drainFailure)
+                    {
+                        cleanupFailure = cleanupFailure is null ? drainFailure : new AggregateException(cleanupFailure, drainFailure);
+                    }
+                }
+            }
+            try { await stopped; }
+            catch (Exception failure) { cleanupFailure = cleanupFailure is null ? failure : new AggregateException(cleanupFailure, failure); }
+            if (commandFailure is TimeoutException)
+            {
+                File.WriteAllText(log + ".timeout.txt", $"Timed out after {stopwatch.Elapsed}. Target exit before cleanup: {exitAtFailure?.ToString() ?? "not observed"}. Owned process cleanup requested.\n{cleanupFailure}");
+                throw new TimeoutException($"Command timed out, not a template rejection. Logs: {log}", cleanupFailure);
+            }
+            if (cleanupFailure is not null)
+                throw new InvalidOperationException($"Command and cleanup failed. Logs: {log}", new AggregateException(commandFailure, cleanupFailure));
+            throw;
         }
+        await owned.StopAsync();
+        int exitCode = await targetExit ?? throw new InvalidOperationException($"Command did not report its exit code. Logs: {log}");
         await stdout.FlushAsync();
         await stderr.FlushAsync();
-        File.WriteAllText(log + ".result.json", JsonSerializer.Serialize(new { process.ExitCode, seconds = stopwatch.Elapsed.TotalSeconds }));
+        File.WriteAllText(log + ".result.json", JsonSerializer.Serialize(new { ExitCode = exitCode, seconds = stopwatch.Elapsed.TotalSeconds }));
         // Streams are drained directly to disk; only bounded tails are included in assertion diagnostics.
-        return new CommandResult(process.ExitCode, ReadTail(log + ".stdout.log") + "\n" + ReadTail(log + ".stderr.log"), log);
+        return new CommandResult(exitCode, ReadTail(log + ".stdout.log") + "\n" + ReadTail(log + ".stderr.log"), log);
     }
 
     private static string ReadTail(string path)
