@@ -5,15 +5,30 @@ using Xunit;
 
 namespace McpServer.Template.Host.Stdio.Tests.Tools;
 
-public sealed class SampleToolTests : StdioHostTestBase
+public sealed class ModernSampleToolTests : SampleToolTests
+{
+    protected override string ProtocolVersion => StdioSession.ModernVersion;
+}
+
+public sealed class November2025SampleToolTests : SampleToolTests
+{
+    protected override string ProtocolVersion => "2025-11-25";
+}
+
+public sealed class June2025SampleToolTests : SampleToolTests
+{
+    protected override string ProtocolVersion => "2025-06-18";
+}
+
+public abstract class SampleToolTests : StdioHostTestBase
 {
     [Theory]
     [InlineData("echo", new[] { "message" }, new[] { "string" })]
     [InlineData("calc_divide", new[] { "a", "b" }, new[] { "number", "number" })]
     public async Task ToolDiscovery_ExposesRequiredInputSchema(string name, string[] parameters, string[] types)
     {
-        Host.Initialization.GetProperty("capabilities").GetProperty("tools").ValueKind.Should().Be(JsonValueKind.Object);
-        var tools = (await Host.RequestAsync("tools/list")).GetProperty("tools").EnumerateArray().ToArray();
+        var tools = (await CallAsync("tools/list")).GetProperty("tools").EnumerateArray().ToArray();
+        tools.Select(t => t.GetProperty("name").GetString()).Should().BeEquivalentTo("echo", "calc_divide");
         var schema = tools.Single(t => t.GetProperty("name").GetString() == name).GetProperty("inputSchema");
         schema.GetProperty("type").GetString().Should().Be("object");
         schema.GetProperty("required").EnumerateArray().Select(p => p.GetString()).Should().BeEquivalentTo(parameters);
@@ -27,7 +42,7 @@ public sealed class SampleToolTests : StdioHostTestBase
     {
         const string message = "stdio E2E: quote \" slash \\ Unicode café ☃ 🚀\nsecond line";
         var before = DateTimeOffset.UtcNow;
-        var dto = SuccessfulDto(await Host.RequestAsync("tools/call", new { name = "echo", arguments = new { message } }));
+        var dto = SuccessfulDto(await CallAsync("tools/call", new { name = "echo", arguments = new { message } }));
         var after = DateTimeOffset.UtcNow;
         dto.EnumerateObject().Select(p => p.Name).Should().BeEquivalentTo("message", "timestamp");
         dto.GetProperty("message").GetString().Should().Be(message);
@@ -39,14 +54,14 @@ public sealed class SampleToolTests : StdioHostTestBase
     [Fact]
     public async Task Divide_ActivatesRealToolAndReturnsExactlyThreePointFive()
     {
-        var dto = SuccessfulDto(await Host.RequestAsync("tools/call", new { name = "calc_divide", arguments = new { a = 7, b = 2 } }));
+        var dto = SuccessfulDto(await CallAsync("tools/call", new { name = "calc_divide", arguments = new { a = 7, b = 2 } }));
         dto.EnumerateObject().Select(p => p.Name).Should().Equal("result");
         dto.GetProperty("result").GetDouble().Should().Be(3.5);
     }
 
     [Fact]
     public async Task DivideByZero_ReturnsExactBusinessErrorNotActivationFailure()
-        => AssertDivisionByZero(await Host.RequestAsync("tools/call", new { name = "calc_divide", arguments = new { a = 7, b = 0 } }));
+        => AssertDivisionByZero(await CallAsync("tools/call", new { name = "calc_divide", arguments = new { a = 7, b = 0 } }));
 
     internal static JsonElement SuccessfulDto(JsonElement result)
     {
@@ -67,8 +82,6 @@ public sealed class SampleToolTests : StdioHostTestBase
         result.GetProperty("isError").ValueKind.Should().Be(JsonValueKind.True);
         var block = result.GetProperty("content").EnumerateArray().Should().ContainSingle().Subject;
         block.GetProperty("type").GetString().Should().Be("text");
-        block.GetProperty("text").GetString().Should().BeOneOf(
-            "Division by zero is not allowed",
-            "An error occurred invoking 'calc_divide': Division by zero is not allowed");
+        block.GetProperty("text").GetString().Should().Be("An error occurred invoking 'calc_divide': Division by zero is not allowed");
     }
 }

@@ -12,6 +12,7 @@ namespace McpServer.Template.Host.Stdio.Tests;
 /// </summary>
 internal sealed class StdioSession : IAsyncDisposable
 {
+    internal const string ModernVersion = "2026-07-28";
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ShutdownTimeout = TimeSpan.FromSeconds(5);
     private readonly Process process;
@@ -34,13 +35,10 @@ internal sealed class StdioSession : IAsyncDisposable
         artifacts = Path.Combine(Environment.GetEnvironmentVariable("MCP_TEST_ARTIFACTS") ?? Path.GetTempPath(),
             $"stdio-{testName}-{Guid.NewGuid():N}");
         Directory.CreateDirectory(artifacts);
-        var dll = Environment.GetEnvironmentVariable("MCP_STDIO_HOST_DLL")
-            ?? Path.Combine(AppContext.BaseDirectory, "stdio", "McpServer.Template.Host.Stdio.dll");
-        dll = Path.GetFullPath(dll);
-        if (!File.Exists(dll)) throw new FileNotFoundException("Build the stdio host before running its integration tests.", dll);
-        var start = new ProcessStartInfo(Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet")
+        var (command, dll, directory) = ResolveHost();
+        var start = new ProcessStartInfo(command)
         {
-            WorkingDirectory = Environment.GetEnvironmentVariable("MCP_STDIO_HOST_CWD") ?? Path.GetDirectoryName(dll)!,
+            WorkingDirectory = directory,
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -55,6 +53,15 @@ internal sealed class StdioSession : IAsyncDisposable
         stderrDrain = DrainAsync(process.StandardError, stderr, null, violations, readersCancellation.Token);
     }
 
+    internal static (string Command, string Dll, string WorkingDirectory) ResolveHost()
+    {
+        var dll = Path.GetFullPath(Environment.GetEnvironmentVariable("MCP_STDIO_HOST_DLL")
+            ?? Path.Combine(AppContext.BaseDirectory, "stdio", "McpServer.Template.Host.Stdio.dll"));
+        if (!File.Exists(dll)) throw new FileNotFoundException("Build the stdio host before running its integration tests.", dll);
+        return (Environment.GetEnvironmentVariable("DOTNET_HOST_PATH") ?? "dotnet", dll,
+            Environment.GetEnvironmentVariable("MCP_STDIO_HOST_CWD") ?? Path.GetDirectoryName(dll)!);
+    }
+
     public async Task InitializeAsync(string version = "2025-11-25")
     {
         Initialization = await RequestAsync("initialize", new
@@ -64,6 +71,28 @@ internal sealed class StdioSession : IAsyncDisposable
         });
         using var timeout = new CancellationTokenSource(RequestTimeout);
         await SendAsync(new { jsonrpc = "2.0", method = "notifications/initialized" }, timeout.Token);
+    }
+
+    public async Task<JsonElement> RequestCapabilityAsync(string version, string method, object? parameters = null)
+    {
+        if (version == ModernVersion)
+        {
+            var modern = parameters is null ? new Dictionary<string, object>() : JsonSerializer.SerializeToElement(parameters)
+                .EnumerateObject().ToDictionary(p => p.Name, p => (object)p.Value);
+            modern.Add("_meta", new Dictionary<string, object>
+            {
+                ["io.modelcontextprotocol/protocolVersion"] = version,
+                ["io.modelcontextprotocol/clientInfo"] = new { name = "stdio-integration-tests", version = "1.0" },
+                ["io.modelcontextprotocol/clientCapabilities"] = new { }
+            });
+            var result = await RequestAsync(method, modern);
+            result.GetProperty("resultType").GetString().Should().Be("complete");
+            return result;
+        }
+
+        var legacy = await RequestAsync(method, parameters);
+        legacy.TryGetProperty("resultType", out _).Should().BeFalse("historical replies must retain their legacy shape");
+        return legacy;
     }
 
     public async Task<JsonElement> RequestAsync(string method, object? parameters = null)
