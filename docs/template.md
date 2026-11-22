@@ -175,14 +175,16 @@ This workflow is **excluded from generated projects** (template-specific).
 
 ### Trusted Publishing Setup
 
-Before publishing a release:
+Complete these required steps before publishing a release. The NuGet policy matches the repository, workflow filename, and environment, but does not restrict the Git ref.
 
 1. On nuget.org, create a [Trusted Publishing policy](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing) under the owner of [`EasyMcp.McpServer.Template`](https://www.nuget.org/packages/EasyMcp.McpServer.Template), currently `esteban.josse`. Allow publishing new versions and scope the policy to that package. Use these GitHub settings:
    - **Repository Owner:** `estebanjosse`
    - **Repository:** `mcp-server-template`
    - **Workflow File:** `nuget-publish.yml` (filename only)
    - **Environment:** `nuget`
-2. In the GitHub repository settings, create or reuse the `nuget` environment and add an environment secret named `NUGET_USER`. Set it to the nuget.org profile username of the account that created the policy, not its email address or an organization name. If you configure deployment protection rules, make sure they allow the release tags.
+2. In **Settings → Environments → nuget**, set **Deployment branches and tags** to **Selected branches and tags**. Add a rule of type **Tag** with the pattern `v*` and leave no branch rules or other tag rules. See [managing environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).
+3. In **Settings → Rules → Rulesets**, create an **Active** [tag ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository) targeting the same `v*` tag pattern. Enable **Restrict creations** and **Restrict updates**, and grant bypass access only to release maintainers.
+4. Add an environment secret named `NUGET_USER` to `nuget`. Set it to the nuget.org profile username of the account that created the policy, not its email address or an organization name.
 
 `NUGET_USER` identifies the account; it is not an API key. The workflow no longer reads the old `NUGET_API_KEY` secret. Once the OIDC release succeeds, remove that secret and revoke the old API key if no other workflow or publisher uses it.
 
