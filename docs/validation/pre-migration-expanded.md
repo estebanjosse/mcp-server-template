@@ -46,7 +46,9 @@ This is a locally packed pre-migration candidate, not a new NuGet release and no
 
 No application, template-definition or Dockerfile fixes were made during characterization.
 
-## Reproduce generation checks
+## Reproduce the historical generation checks
+
+These commands apply to the historical checkout at `1e1edda2e18692e696a044eebf950f817aef20df`, which still contains the Python harness. To reproduce the original baseline, use that harness with the pre-migration sources identified above. For the current acceptance checks, use [the C#/xUnit suite](../testing.md) instead.
 
 With .NET 10 and Python 3.11+ available:
 
@@ -76,7 +78,7 @@ Two distinct existing defects explain these results:
 
 The validator continues past noise only to collect diagnostics; it still fails the run. Successful tool DTO semantics remain unverified against the real host because activation fails first. Synthetic positive DTO assertions are harness tests only, not application success evidence.
 
-Reproduce after building the unchanged solution:
+In the historical checkout, reproduce after building the unchanged baseline solution:
 
 ```bash
 python3 -B scripts/validate_stdio.py \
