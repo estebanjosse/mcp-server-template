@@ -274,12 +274,15 @@ The CI pipeline SHALL manage concurrent workflow executions to prevent resource 
 
 The CI system MUST publish the dotnet template package to nuget.org only after tests succeed for the release commit.
 
-#### Scenario: Publish template on version tag
-**Given** a semantic version tag (e.g., `v1.3.0`) is pushed  
-**And** the solution tests have passed for that commit  
-**When** the template publishing workflow runs  
-**Then** the workflow MUST pack the template into a `.nupkg`  
-**And** the workflow MUST push the package to nuget.org using the `NUGET_API_KEY` secret
+#### Scenario: Publish template on a release with a protected version tag
+**Given** a GitHub Release is published for a semantic version tag (e.g., `v1.3.0`)\
+**And** the solution tests have passed for that commit\
+**And** the `nuget` environment allows only `v*` tags and no branches\
+**And** an active tag ruleset restricts creation and updates of those tags to release maintainers\
+**When** the template publishing workflow runs\
+**Then** the workflow MUST pack the template into a `.nupkg`\
+**And** the workflow MUST push the package to nuget.org using a short-lived API key obtained via OIDC Trusted Publishing\
+**And** all actions in the OIDC-enabled publish job MUST be pinned to verified full commit SHAs
 
 #### Scenario: Skip publishing outside release triggers
 **Given** a pull request or branch push runs CI  

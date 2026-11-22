@@ -139,7 +139,9 @@ dotnet new install ./bin/Release/EasyMcp.McpServer.Template.1.0.0.nupkg
 dotnet new list mcp-server
 ```
 
-### Publishing to NuGet
+### Publishing to NuGet manually
+
+This example uses a manual API key. The release workflow uses OIDC instead.
 
 ```bash
 dotnet nuget push ./bin/Release/EasyMcp.McpServer.Template.0.0.2-preview.nupkg \
@@ -167,9 +169,24 @@ Runs when a GitHub Release is published with a version tag (e.g., `v1.0.0`):
 
 1. **Extract Version** - Reads version from release tag (`refs/tags/v*.*.*`)
 2. **Pack** - Creates the `.nupkg` template package with version from tag
-3. **Publish** - Pushes to nuget.org using `NUGET_API_KEY` secret
+3. **Publish** - Exchanges a GitHub OIDC token for a short-lived NuGet API key and pushes the package to nuget.org
 
 This workflow is **excluded from generated projects** (template-specific).
+
+### Trusted Publishing Setup
+
+Complete these required steps before publishing a release. The NuGet policy matches the repository, workflow filename, and environment, but does not restrict the Git ref.
+
+1. On nuget.org, create a [Trusted Publishing policy](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing) under the owner of [`EasyMcp.McpServer.Template`](https://www.nuget.org/packages/EasyMcp.McpServer.Template), currently `esteban.josse`. Allow publishing new versions and scope the policy to that package. Use these GitHub settings:
+   - **Repository Owner:** `estebanjosse`
+   - **Repository:** `mcp-server-template`
+   - **Workflow File:** `nuget-publish.yml` (filename only)
+   - **Environment:** `nuget`
+2. In **Settings → Environments → nuget**, set **Deployment branches and tags** to **Selected branches and tags**. Add a rule of type **Tag** with the pattern `v*` and leave no branch rules or other tag rules. See [managing environments](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).
+3. In **Settings → Rules → Rulesets**, create an **Active** [tag ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/creating-rulesets-for-a-repository) targeting the same `v*` tag pattern. Enable **Restrict creations** and **Restrict updates**, and grant bypass access only to release maintainers.
+4. Add an environment secret named `NUGET_USER` to `nuget`. Set it to the nuget.org profile username of the account that created the policy, not its email address or an organization name.
+
+`NUGET_USER` identifies the account; it is not an API key. The workflow no longer reads the old `NUGET_API_KEY` secret. Once the OIDC release succeeds, remove that secret and revoke the old API key if no other workflow or publisher uses it.
 
 ### Publishing a New Version
 
@@ -184,16 +201,6 @@ This workflow is **excluded from generated projects** (template-specific).
 
 > Note: `McpServer.Template.csproj` uses a local placeholder version (`0.0.0-local`).
 > CI overrides it at pack time with the version extracted from the release tag.
-
-### Required Secrets
-
-| Secret | Description |
-|--------|-------------|
-| `NUGET_API_KEY` | API key for nuget.org publishing |
-
-### Optional: Environment Protection
-
-Create a `nuget` environment in GitHub repository settings to add approval requirements before publishing.
 
 ## Verification
 
