@@ -6,7 +6,7 @@ This package is a **template**, not a runtime library: installing it adds a `mcp
 
 ## Existing-project migration
 
-Updating the installed template does not update previously generated application source. The [MCP 2026-07-28 migration guide](migrations/mcp-2026-07-28.md) is currently a **draft impact-study deliverable**, not a released or runtime-qualified upgrade. It covers the proposed SDK 1.3.0 to 2.4.0 transition, HTTP compatibility choices, validation and rollback.
+Updating the installed template does not update previously generated application source. The [MCP 2026-07-28 migration guide](migrations/mcp-2026-07-28.md) covers the optional SDK 1.3.0 to 2.4.0 transition, validation and rollback. See the [compatibility matrix](migrations/mcp-2026-07-28-compatibility.md) and [unreleased release notes](migrations/mcp-2026-07-28-release-notes.md) for tested paths and breaking changes.
 
 ## Installation
 

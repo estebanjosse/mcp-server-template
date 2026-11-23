@@ -153,6 +153,8 @@ public sealed class PackagedTemplateTests : IClassFixture<TemplatePackage>
         Assert.Equal(projects.Order(), references.Order());
         Assert.All(references, p => Assert.True(File.Exists(p), p));
         Assert.False(Directory.Exists(Path.Combine(target, "validation")), "Repository-only validators must not be generated.");
+        Assert.Equal(File.ReadAllText(Path.Combine(package.Repository, "THIRD_PARTY_NOTICES.md")),
+            File.ReadAllText(Path.Combine(target, "THIRD_PARTY_NOTICES.md")));
         foreach (var tool in new[] { "EchoTool.cs", "CalcDivideTool.cs" })
             Assert.Equal(samples, File.Exists(Path.Combine(target, "src", name + ".Mcp", "Tools", tool)));
         Assert.Equal(samples && tests, Directory.Exists(Path.Combine(target, "tests", name + ".Mcp.Tests", "Tools")));

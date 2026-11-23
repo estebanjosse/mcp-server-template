@@ -80,7 +80,7 @@ McpServer.Template/
 │   ├── McpServer.Template.Infrastructure     # Technical providers (ISystemClock, IAppInfoProvider)
 │   ├── McpServer.Template.Mcp                # MCP adapter (Tools, Prompts, Resources)
 │   ├── McpServer.Template.Host.Stdio         # Console host with stdio transport
-│   └── McpServer.Template.Host.Http          # ASP.NET Core host with HTTP/SSE transport
+│   └── McpServer.Template.Host.Http          # ASP.NET Core host with stateless Streamable HTTP
 ├── tests/
 │   ├── McpServer.Template.Application.Tests  # Service unit tests
 │   ├── McpServer.Template.Infrastructure.Tests # Infrastructure unit tests

@@ -1,6 +1,6 @@
 # Advanced migration notes: MCP 2026-07-28
 
-> **Draft migration plan — not a released upgrade.** Assessed November 10, 2026 against the official C# SDK 2.4.0. The study branch has upgraded to SDK 2.4.0; published template 1.4.0 and the pre-upgrade baseline use SDK 1.3.0. Snippets reflect inspected upstream APIs, but have not been compiled or exercised here. Do not roll out this guide without the implementation and acceptance checks described below.
+> **Unreleased template candidate.** This reference targets C# SDK 2.4.0; template 1.4.0 uses SDK 1.3.0. See the [compatibility matrix](mcp-2026-07-28-compatibility.md) for the locally exercised paths and limits.
 
 ## Read this only when needed
 
@@ -31,7 +31,7 @@ Run your existing restore/build/test workflow first. A pre-existing failure must
 
 ## 2. Align packages, not just one version string
 
-In the generated project's `Directory.Build.props`, propose the following aligned baseline:
+In the generated project's `Directory.Build.props`, use the following aligned baseline:
 
 ```xml
 <ModelContextProtocolVersion>2.4.0</ModelContextProtocolVersion>
@@ -46,7 +46,7 @@ dotnet build --configuration Release --no-restore
 dotnet test --configuration Release --no-build
 ```
 
-These are commands to execute in your application, not results reported by this draft. Inspect new diagnostics and package resolution before continuing. For applications unable to adopt SDK 2 immediately, upstream 1.4.2 is a separate security-maintenance option; it does not provide protocol 2026-07-28. Assess its changes and qualify it independently.[5][8]
+Inspect new diagnostics and package resolution in your application before continuing. If you cannot adopt SDK 2 immediately, assess applicable 1.x security releases separately; they do not provide protocol 2026-07-28.[5][8]
 
 ## 3. Migrate HTTP to stateless operation
 
@@ -76,6 +76,7 @@ Replace the template namespace with your generated application namespace. Inspec
 - **Reconnect/retry:** plan for reissuing interrupted requests with new request IDs. Guard side effects against duplicate execution using application-level idempotency; do not assume a dropped connection means the operation did not happen.[1]
 - **Results:** check advertised schemas instead of assuming object-shaped structured output or a scalar `result` wrapper. The SDK preserves legacy wrapping on down-level connections, rather than sending modern scalar output to every old client.[49]
 - **Raw fixtures:** include `inputSchema` in custom tool definitions. Expect modern result discrimination/cache fields only where the negotiated revision requires them.[1][3][8]
+- **HTTP test fixtures:** use valid POST `Accept` and `Content-Type` values unless that is what you are testing. See the [guide's test step](mcp-2026-07-28.md#4-build-and-check-your-application) for the `406` versus invalid-version `400` control and how to replace session assumptions.
 - **Resources/cache:** the SDK supplies zero-TTL/private defaults for unset modern cache hints; positive TTLs are a separate optimization.[47]
 - **Cache policy:** validate dynamic status freshness and private/public scope. Do not cache user-specific results publicly; do not treat a cache hint as access control.[1]
 - **Errors:** modern missing resources map to Invalid Params. Adapt exact error assertions, and do not convert every HTTP 400 into a legacy-negotiation fallback.[1][18]
@@ -112,7 +113,7 @@ Review differences selectively: shared dependency props, host bootstrap/registra
 - Test a packed fresh scaffold and rehearse this guide on an application generated from template 1.4.0, with representative customization.
 - Record exact package versions, application commit, client versions and results, including unrun scenarios.
 
-This draft has no runtime acceptance evidence. A passing source build alone is not evidence of protocol interoperability.
+The [compatibility matrix](mcp-2026-07-28-compatibility.md) distinguishes tested paths from untested ones. Neither a passing source build nor one loopback proxy test qualifies a production deployment.
 
 ## 8. Rollback
 

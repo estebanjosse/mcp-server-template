@@ -3,7 +3,7 @@
 ## Purpose
 A clean, scalable, production-ready template for building Model Context Protocol (MCP) servers using the official C# SDK (.NET 10). This template demonstrates best practices for:
 - Strict separation of concerns with MCP SDK isolation
-- Shared business logic that works across multiple transport mechanisms (stdio and HTTP/SSE)
+- Shared business logic that works across stdio and stateless Streamable HTTP
 - Full testability with unit tests for all layers
 - Idiomatic .NET patterns (DI, Options pattern, async/await)
 
@@ -11,9 +11,9 @@ A clean, scalable, production-ready template for building Model Context Protocol
 
 ## Tech Stack
 - **.NET 10.0** - Target framework with C# latest language version
-- **Model Context Protocol SDK 1.3.0** - Official MCP C# SDK
-- **ASP.NET Core** - HTTP/SSE transport host
-- **Microsoft.Extensions** (v10.0.7) - Dependency injection, configuration, hosting, logging
+- **Model Context Protocol C# SDK 2.4.0** - Targets MCP revision 2026-07-28
+- **ASP.NET Core** - Stateless Streamable HTTP host
+- **Microsoft.Extensions** - Direct package versions are pinned in `Directory.Build.props`, including the 10.0.14 MCP SDK dependency floor.
 - **xUnit 2.9.3** - Unit testing framework
 - **FluentAssertions 8.9.0** - Assertion library for readable test assertions
 - **NSubstitute 5.3.0** - Mocking framework for test doubles
@@ -80,7 +80,7 @@ Presentation → MCP Adapter → Application → Infrastructure/Contracts
 
 **Transports**: MCP supports multiple transport mechanisms:
 - **stdio**: Standard input/output (for Claude Desktop, CLI tools)
-- **HTTP/SSE**: HTTP with Server-Sent Events (for web applications)
+- **Streamable HTTP**: Stateless MCP at `/mcp`; POST responses can use Server-Sent Events
 
 This template demonstrates how to build MCP servers that work with both transports while sharing the same business logic.
 
@@ -94,7 +94,7 @@ This template demonstrates how to build MCP servers that work with both transpor
 - **Async Throughout**: All public service methods must be async with CancellationToken support
 
 ## External Dependencies
-- **Model Context Protocol SDK**: Official C# SDK from Anthropic/ModelContextProtocol organization
+- **Model Context Protocol SDK**: Official C# SDK maintained by the Model Context Protocol project
   - Version managed via `$(ModelContextProtocolVersion)` in Directory.Build.props
   - Packages: `ModelContextProtocol`, `ModelContextProtocol.AspNetCore`
 - **Microsoft.Extensions**: Dependency injection, configuration, hosting abstractions

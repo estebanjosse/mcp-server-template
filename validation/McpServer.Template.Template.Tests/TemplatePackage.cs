@@ -36,6 +36,8 @@ public sealed class TemplatePackage : IAsyncLifetime
         using (var archive = ZipFile.OpenRead(package)) PackageInventory = archive.Entries.Select(e => e.FullName).Order().ToArray();
         File.WriteAllText(Path.Combine(Artifacts, "package-inventory.json"), JsonSerializer.Serialize(PackageInventory));
         Assert.DoesNotContain(PackageInventory, p => p.StartsWith("content/validation/", StringComparison.Ordinal));
+        Assert.Contains("THIRD_PARTY_NOTICES.md", PackageInventory);
+        Assert.Contains("content/THIRD_PARTY_NOTICES.md", PackageInventory);
         (await Run(Repository, "install", "new", "install", package, "--debug:custom-hive", Hive)).EnsureSuccess();
     }
 

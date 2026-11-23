@@ -302,7 +302,7 @@ When redistributing binaries or container images generated from this template, i
 
 For MCP SDK dependencies specifically:
 
-- See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for current transition context (Apache-2.0 for new upstream contributions and historical MIT portions).
+- See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the pinned SDK attribution and guidance for checking the artifacts you redistribute.
 - If upstream introduces or updates a dedicated `NOTICE` requirement, propagate that notice into your binary/container distribution artifacts.
 
 Operational recommendation:

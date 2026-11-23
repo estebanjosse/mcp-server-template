@@ -20,9 +20,10 @@ Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push
 ## 3. Consumer and release qualification — no publication authorized
 
 - [x] 3.1 Pack/install the candidate in an isolated hive; validate all 12 host/sample/test combinations, host-selector/rejection contracts, unique complete TRX reports and real generated-host operations including tests-off cases; retain minimal evidence outside the repository. Retire superseded Python scripts only after equivalent passing replacement coverage is demonstrated, including generated hosts with tests excluded.
-- [ ] 3.2 Rehearse the voluntary guide on published template 1.4.0 with customized business code, applying its stdio prerequisites and preserving user changes; test coherent rollback.
-- [ ] 3.3 Verify the agreed exact external clients and representative proxy/header/timeout/cancellation behavior; report unavailable scenarios as NOT RUN rather than broad compatibility.
-- [ ] 3.4 Finalize guides, compatibility matrix, breaking release notes, package inventory and third-party attribution; reconcile any additionally approved existing-capability deltas and leave unrelated packaging/Docker issues separately scoped.
+- [x] 3.2 Rehearse the voluntary guide on published template 1.4.0 with customized business code, applying its stdio prerequisites and preserving user changes; test coherent rollback.
+- [x] 3.3 Verify the agreed exact external clients and representative proxy/header/timeout/cancellation behavior; report unavailable scenarios as NOT RUN rather than broad compatibility.
+  - Verified on `72a39206`: official C# SDK 2.4.0 and MCP Inspector CLI 2.13.0 over loopback HTTP, directly and through NGINX 1.26.3. Header forwarding, pre-response timeout, and server-side request cancellation were exercised. NOT RUN: Inspector stdio or browser UI, TLS/HTTP2, production topology, other proxies, and timeout after SSE response headers.
+- [x] 3.4 Finalize guides, compatibility matrix, breaking release notes, package inventory and third-party attribution; reconcile any additionally approved existing-capability deltas and leave unrelated packaging/Docker issues separately scoped.
 - [ ] 3.5 Independently review the exact candidate head and verify its CI; obtain separate merge/release/archival authorization and choose the template release number before publication.
 
 ## 4. Separate future work
