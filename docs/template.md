@@ -178,13 +178,14 @@ This workflow is **excluded from generated projects** (template-specific).
 ### Publishing a New Version
 
 1. Confirm merge and image publication are authorized before putting changes on `main`.
-2. After separate release approval, confirm required CI passed on the exact commit you intend to tag. The NuGet workflow itself does not wait for the CI workflow. Create the release against that verified commit rather than the moving branch:
+2. After separate release approval, confirm required CI passed on the exact commit you intend to tag. The NuGet workflow itself does not wait for the CI workflow. Create and push the approved tag for that commit without force. Before publishing, read back the remote tag and verify that it resolves to that exact commit (use the peeled commit for an annotated tag). Stop if the tag is missing or points elsewhere; do not retarget an existing release tag.
+3. Publish using that verified tag. `--verify-tag` prevents the CLI from creating a missing tag; it does not check the tag's commit:
    ```bash
     gh release create "$APPROVED_RELEASE_TAG" \
-      --target "$VERIFIED_RELEASE_SHA" \
+      --verify-tag \
       --generate-notes
    ```
-3. The NuGet Publish workflow runs automatically on `release: published`, then packs and publishes
+4. The NuGet Publish workflow runs automatically on `release: published`, then packs and publishes.
 
 > Note: `McpServer.Template.csproj` uses a local placeholder version (`0.0.0-local`).
 > CI overrides it at pack time with the version extracted from the release tag.
