@@ -157,13 +157,13 @@ The repository uses two separate GitHub Actions workflows:
 
 ### CI Workflow (`.github/workflows/ci.yml`)
 
-Runs on every push to `main` and pull requests:
+Runs on pushes to `main`, pull requests targeting `main`, and published releases:
 
 1. **Test** - Restores, builds, and runs all tests
 2. **Build Docker Image** - Builds the Docker image (no push on PRs)
-3. **Publish to GHCR** - Pushes Docker image to GitHub Container Registry (main branch only)
+3. **Publish to GHCR** - Pushes Docker images after the test and build jobs pass on `main` or on published version tags. This job does not run on pull requests. Merging into `main` triggers publication, including an update to `latest`.
 
-This workflow is **included in generated projects** from the template.
+The NuGet template does not include repository GitHub Actions workflows. Add your own CI to the generated application if needed.
 
 ### NuGet Publish Workflow (`.github/workflows/nuget-publish.yml`)
 
@@ -177,11 +177,11 @@ This workflow is **excluded from generated projects** (template-specific).
 
 ### Publishing a New Version
 
-1. Ensure all changes are committed and pushed to `main`
-2. Create a GitHub Release (this creates the tag and notes in one step):
+1. Confirm merge and image publication are authorized before putting changes on `main`.
+2. After separate release approval, confirm required CI passed on the exact commit you intend to tag. The NuGet workflow itself does not wait for the CI workflow. Create the release against that verified commit rather than the moving branch:
    ```bash
-    gh release create v1.2.0 \
-      --target main \
+    gh release create "$APPROVED_RELEASE_TAG" \
+      --target "$VERIFIED_RELEASE_SHA" \
       --generate-notes
    ```
 3. The NuGet Publish workflow runs automatically on `release: published`, then packs and publishes
