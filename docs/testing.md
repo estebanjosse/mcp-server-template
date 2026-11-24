@@ -7,9 +7,10 @@ Install the .NET 10 SDK, then run from the repository root:
 dotnet test --configuration Release
 ```
 
-No Python, PowerShell or globally installed template is required. The existing
-CI workflow runs the same solution tests before building and smoke-testing the
-Docker image.
+No Python, PowerShell or globally installed template is required. CI runs the
+tests in `tests/` before building and smoke-testing the Docker image. It runs
+the template-package tests in `validation/` only when the workflow ref is
+`refs/heads/main`, not on pull requests targeting `main` or on tagged releases.
 
 ## Test projects
 

@@ -48,7 +48,18 @@ jobs:
       - name: Run tests
         env:
           MCP_TEST_ARTIFACTS: ${{ runner.temp }}/mcp-tests
-        run: dotnet test --configuration Release --no-build --verbosity normal --logger trx
+        run: |
+          status=0
+          for project in tests/*/*.csproj; do
+            dotnet test "$project" --configuration Release --no-build --verbosity normal --logger trx || status=1
+          done
+          exit "$status"
+
+      - name: Run template validation tests
+        if: github.ref == 'refs/heads/main'
+        env:
+          MCP_TEST_ARTIFACTS: ${{ runner.temp }}/mcp-tests
+        run: dotnet test validation/McpServer.Template.Template.Tests --configuration Release --no-build --verbosity normal --logger trx
 
       - name: Upload test results
         if: always()
