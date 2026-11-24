@@ -25,6 +25,8 @@ Esteban authorized task 2.1 only and explicitly allowed the agent to commit/push
   - Verified on `72a39206`: official C# SDK 2.4.0 and MCP Inspector CLI 2.13.0 over loopback HTTP, directly and through NGINX 1.26.3. Header forwarding, pre-response timeout, and server-side request cancellation were exercised. NOT RUN: Inspector stdio or browser UI, TLS/HTTP2, production topology, other proxies, and timeout after SSE response headers.
 - [x] 3.4 Finalize guides, compatibility matrix, breaking release notes, package inventory and third-party attribution; reconcile any additionally approved existing-capability deltas and leave unrelated packaging/Docker issues separately scoped.
 - [ ] 3.5 Independently review the exact candidate head and verify its CI; obtain separate merge/release/archival authorization and choose the template release number before publication.
+  - Archive handoff: independent review, corrective reviews, and PR CI run `45257420799` verified candidate `4e3f0a56f6d476d813a1193daa4fb58ea8343471`. CI passed tests and Docker build/smoke checks; GHCR publication was skipped. These results do not cover the later archive commit.
+  - Archival is authorized before maintainer review. Maintainer review, merge, and publication remain pending. The maintainer plans to publish template `v2.0` after merge. Before merge, check notices in the image intended for GHCR and account for the `main` workflow updating `latest`; before publication, verify CI and the remote tag against the exact release commit.
 
 ## 4. Separate future work
 
