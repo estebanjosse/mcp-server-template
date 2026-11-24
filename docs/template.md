@@ -159,7 +159,7 @@ The repository uses two separate GitHub Actions workflows:
 
 Runs on pushes to `main`, pull requests targeting `main`, and published releases:
 
-1. **Test** - Restores, builds, and runs all tests
+1. **Test** - Restores and builds the solution, runs the standard tests on every CI run, and runs the template validation tests only on `refs/heads/main`.
 2. **Build Docker Image** - Builds the Docker image (no push on PRs)
 3. **Publish to GHCR** - Pushes Docker images after the test and build jobs pass on `main` or on published version tags. This job does not run on pull requests. Merging into `main` triggers publication, including an update to `latest`.
 
@@ -178,7 +178,8 @@ This workflow is **excluded from generated projects** (template-specific).
 ### Publishing a New Version
 
 1. Confirm merge and image publication are authorized before putting changes on `main`.
-2. After separate release approval, confirm required CI passed on the exact commit you intend to tag. The NuGet workflow itself does not wait for the CI workflow. Create and push the approved tag for that commit without force. Before publishing, read back the remote tag and verify that it resolves to that exact commit (use the peeled commit for an annotated tag). Stop if the tag is missing or points elsewhere; do not retarget an existing release tag.
+2. After separate release approval, confirm that CI succeeded on `main` for the exact commit you intend to tag and that the **Run template validation tests** step ran and succeeded. A successful pull request or release-tag CI run does not substitute for this check: those runs skip template validation, and NuGet Publish does not wait for CI.
+   Once verified, create and push the approved tag for that commit without force. Before publishing, read back the remote tag and verify that it resolves to that exact commit (use the peeled commit for an annotated tag). Stop if the tag is missing or points elsewhere; do not retarget an existing release tag.
 3. Publish using that verified tag. `--verify-tag` prevents the CLI from creating a missing tag; it does not check the tag's commit:
    ```bash
     gh release create "$APPROVED_RELEASE_TAG" \
