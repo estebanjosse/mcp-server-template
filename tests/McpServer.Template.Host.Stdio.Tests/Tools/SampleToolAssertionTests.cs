@@ -6,6 +6,7 @@ namespace McpServer.Template.Host.Stdio.Tests.Tools;
 public sealed class SampleToolAssertionTests
 {
     [Theory]
+    [InlineData("Division by zero is not allowed")]
     [InlineData("Unable to activate tool")]
     [InlineData("An error occurred invoking 'calc_divide'.")]
     [InlineData("An error occurred invoking 'calc_divide': Unable to activate tool")]
@@ -20,11 +21,10 @@ public sealed class SampleToolAssertionTests
         Assert.ThrowsAny<Exception>(() => SampleToolTests.AssertDivisionByZero(document.RootElement));
     }
 
-    [Theory]
-    [InlineData("Division by zero is not allowed")]
-    [InlineData("An error occurred invoking 'calc_divide': Division by zero is not allowed")]
-    public void DivisionByZeroAssertion_AcceptsOnlyExactBusinessMessages(string message)
+    [Fact]
+    public void DivisionByZeroAssertion_AcceptsExactSdkBusinessMessage()
     {
+        const string message = "An error occurred invoking 'calc_divide': Division by zero is not allowed";
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(new
         {
             isError = true, content = new[] { new { type = "text", text = message } }

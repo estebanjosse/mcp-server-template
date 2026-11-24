@@ -8,9 +8,9 @@ From top to bottom, the solution is organized into four main layers:
 
 1. **Presentation layer (hosts)**
    - `McpServer.Template.Host.Stdio`: console host that exposes the MCP server over stdio.
-   - `McpServer.Template.Host.Http`: ASP.NET Core host that exposes the MCP server over HTTP/SSE.
+   - `McpServer.Template.Host.Http`: ASP.NET Core host that exposes MCP at `/mcp` using stateless Streamable HTTP. POST responses may stream SSE; the host does not expose a legacy SSE endpoint.
 2. **MCP adapter layer**
-   - `McpServer.Template.Mcp`: the only project that references MCP SDK packages.
+   - `McpServer.Template.Mcp`: integrates the MCP SDK. Transport hosts can also reference the SDK to configure their transports; Application does not reference it.
    - Implements tools, prompts, and resources, and wires them to application services.
 3. **Business logic layer**
    - `McpServer.Template.Application`: contains pure application services and ports.
@@ -29,7 +29,7 @@ This layering allows hosts and the MCP adapter to change independently of core b
 │  ┌─────────────────────┐      ┌─────────────────────┐      │
 │  │  Host.Stdio         │      │  Host.Http          │      │
 │  │  (Console)          │      │  (ASP.NET Core)     │      │
-│  │  stdio transport    │      │  HTTP/SSE transport │      │
+│  │  stdio transport    │      │  Streamable HTTP    │      │
 │  └──────────┬──────────┘      └──────────┬──────────┘      │
 └─────────────┼─────────────────────────────┼─────────────────┘
               │                             │
@@ -85,7 +85,7 @@ McpServer.Template/
 │   ├── McpServer.Template.Infrastructure     # Technical providers (ISystemClock, IAppInfoProvider)
 │   ├── McpServer.Template.Mcp                # MCP adapter (Tools, Prompts, Resources)
 │   ├── McpServer.Template.Host.Stdio         # Console host with stdio transport
-│   └── McpServer.Template.Host.Http          # ASP.NET Core host with HTTP/SSE transport
+│   └── McpServer.Template.Host.Http          # ASP.NET Core host with stateless Streamable HTTP
 ├── tests/
 │   ├── McpServer.Template.Application.Tests  # Service unit tests
 │   ├── McpServer.Template.Infrastructure.Tests # Infrastructure unit tests

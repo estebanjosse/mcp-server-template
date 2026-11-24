@@ -4,6 +4,10 @@ EasyMcp.McpServer.Template is a `dotnet new` template for quickly scaffolding cl
 
 This package is a **template**, not a runtime library: installing it adds a `mcp-server` template to your `dotnet new` list so you can generate full MCP server solutions (HTTP and/or stdio hosts, application layer, tests, and more).
 
+## Existing-project migration
+
+Updating the installed template does not update previously generated application source. The [MCP 2026-07-28 migration guide](migrations/mcp-2026-07-28.md) covers the optional SDK 1.3.0 to 2.4.0 transition, validation and rollback. See the [compatibility matrix](migrations/mcp-2026-07-28-compatibility.md) and [unreleased release notes](migrations/mcp-2026-07-28-release-notes.md) for tested paths and breaking changes.
+
 ## Installation
 
 ### From NuGet (recommended)
@@ -155,13 +159,13 @@ The repository uses two separate GitHub Actions workflows:
 
 ### CI Workflow (`.github/workflows/ci.yml`)
 
-Runs on every push to `main` and pull requests:
+Runs on pushes to `main`, pull requests targeting `main`, and published releases:
 
-1. **Test** - Restores, builds, and runs all tests
+1. **Test** - Restores and builds the solution, runs the standard tests on every CI run, and runs the template validation tests only on `refs/heads/main`.
 2. **Build Docker Image** - Builds the Docker image (no push on PRs)
-3. **Publish to GHCR** - Pushes Docker image to GitHub Container Registry (main branch only)
+3. **Publish to GHCR** - Pushes Docker images after the test and build jobs pass on `main` or on published version tags. This job does not run on pull requests. Merging into `main` triggers publication, including an update to `latest`.
 
-This workflow is **included in generated projects** from the template.
+The NuGet template does not include repository GitHub Actions workflows. Add your own CI to the generated application if needed.
 
 ### NuGet Publish Workflow (`.github/workflows/nuget-publish.yml`)
 
@@ -190,14 +194,16 @@ Complete these required steps before publishing a release. The NuGet policy matc
 
 ### Publishing a New Version
 
-1. Ensure all changes are committed and pushed to `main`
-2. Create a GitHub Release (this creates the tag and notes in one step):
+1. Confirm merge and image publication are authorized before putting changes on `main`.
+2. After separate release approval, confirm that CI succeeded on `main` for the exact commit you intend to tag and that the **Run template validation tests** step ran and succeeded. A successful pull request or release-tag CI run does not substitute for this check: those runs skip template validation, and NuGet Publish does not wait for CI.
+   Once verified, create and push the approved tag for that commit without force. Before publishing, read back the remote tag and verify that it resolves to that exact commit (use the peeled commit for an annotated tag). Stop if the tag is missing or points elsewhere; do not retarget an existing release tag.
+3. Publish using that verified tag. `--verify-tag` prevents the CLI from creating a missing tag; it does not check the tag's commit:
    ```bash
-    gh release create v1.2.0 \
-      --target main \
+    gh release create "$APPROVED_RELEASE_TAG" \
+      --verify-tag \
       --generate-notes
    ```
-3. The NuGet Publish workflow runs automatically on `release: published`, then packs and publishes
+4. The NuGet Publish workflow runs automatically on `release: published`, then packs and publishes.
 
 > Note: `McpServer.Template.csproj` uses a local placeholder version (`0.0.0-local`).
 > CI overrides it at pack time with the version extracted from the release tag.

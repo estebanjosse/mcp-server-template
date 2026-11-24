@@ -16,8 +16,13 @@ public sealed class EchoTool(IEchoService echoService, IMcpMetricsRecorder metri
         CancellationToken cancellationToken = default)
     {
         var request = new EchoRequest(message);
-        var response = await echoService.EchoAsync(request, cancellationToken);
-        metricsRecorder.RecordToolInvocation("echo");
-        return response;
+        try
+        {
+            return await echoService.EchoAsync(request, cancellationToken);
+        }
+        finally
+        {
+            metricsRecorder.RecordToolInvocation("echo");
+        }
     }
 }

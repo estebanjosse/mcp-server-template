@@ -43,6 +43,7 @@
       "type": "parameter",
       "datatype": "bool",
       "defaultValue": "false",
+      "replaces": "__MCP_EXPECT_SAMPLE_TOOLS__",
       "displayName": "Include Sample Tools",
       "description": "Include sample MCP tools (EchoTool, CalcDivideTool)"
     },

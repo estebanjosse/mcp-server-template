@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add MCP server with all modules
 builder.Services.AddMcpTemplateModules();
 builder.Services.AddMcpServer()
-    .WithHttpTransport();
+    .WithHttpTransport(options => options.SessionMode = HttpServerSessionMode.Stateless);
 
 // Add health check services
 builder.Services.AddHealthChecks();
@@ -62,7 +62,7 @@ if (metricsEnabled)
         branch.Use(async (context, next) =>
         {
             metricsRecorder.RecordRequest();
-            metricsRecorder.IncrementActiveSessions();
+            metricsRecorder.IncrementRequestsInFlight();
 
             try
             {
@@ -70,7 +70,7 @@ if (metricsEnabled)
             }
             finally
             {
-                metricsRecorder.DecrementActiveSessions();
+                metricsRecorder.DecrementRequestsInFlight();
             }
         });
     });
@@ -80,7 +80,7 @@ if (metricsEnabled)
     app.MapMetrics("/metrics", registry);
 }
 
-// Map MCP endpoint with HTTP/SSE transport
+// Map the stateless Streamable HTTP endpoint
 app.MapMcp("/mcp");
 
 // Map health check endpoint with JSON response

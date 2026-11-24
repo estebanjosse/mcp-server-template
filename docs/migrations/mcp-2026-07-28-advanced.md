@@ -1,0 +1,151 @@
+# Advanced migration notes: MCP 2026-07-28
+
+> **Unreleased template candidate.** This reference targets C# SDK 2.4.0; template 1.4.0 uses SDK 1.3.0. See the [compatibility matrix](mcp-2026-07-28-compatibility.md) for the locally exercised paths and limits.
+
+## Read this only when needed
+
+Start with the [simple migration guide](mcp-2026-07-28.md). Migration is optional. This reference covers customized servers and client migration. Existing applications are not updated in place by the template; applications that adopt the upgrade must migrate away from any dependency on persistent HTTP sessions.
+
+## Who this is for
+
+Use this guide if you generated a .NET 10 application from `EasyMcp.McpServer.Template` and still use SDK 1.3.0. The published template 1.4.0 embeds that SDK version. If you used a different release or customized your server, inventory your actual package graph and features first.[44]
+
+Three versions are independent: the template package, the SDK packages and the negotiated MCP protocol revision. Installing a newer `dotnet new` template affects future scaffolding; it does not edit an existing application's source. Do not regenerate over your application or replace your business services with a new scaffold.
+
+The proposed target is SDK 2.4.0 and protocol 2026-07-28, not an SDK preview or an unreleased protocol draft. Down-level compatibility is a separate test obligation, not proof that every old client is supported.[6][8]
+
+## 1. Checkpoint and inventory your application
+
+Create a migration branch and preserve an immutable known-good application/container and its configuration. Keep credentials outside Git. Record your current tests and actual MCP client versions before changes.
+
+Inventory:
+
+- Direct and central MCP package references, including custom Core/extension references.
+- Stateful HTTP assumptions: session IDs, per-client services, GET notification streams, DELETE cleanup and stream resumption.
+- Legacy `/sse` clients versus clients already using Streamable HTTP on `/mcp`.
+- Custom tools that return scalars/arrays with structured content, hand-built tool JSON, result/error parsers and raw HTTP fixtures.
+- Experimental Tasks, elicitation, sampling, roots, subscriptions and protocol logging, if you added them.
+- OAuth, authenticated session identity, reverse-proxy/CORS/header allowlists and long-running operations, if applicable.
+
+Run your existing restore/build/test workflow first. A pre-existing failure must not be mistaken for a migration regression.
+
+## 2. Align packages, not just one version string
+
+In the generated project's `Directory.Build.props`, use the following aligned baseline:
+
+```xml
+<ModelContextProtocolVersion>2.4.0</ModelContextProtocolVersion>
+<MicrosoftExtensionsVersion>10.0.14</MicrosoftExtensionsVersion>
+```
+
+Keep direct `ModelContextProtocol`, `.AspNetCore` and any `.Core` versions aligned. The published 2.4.0 packages pin MCP dependencies to matching versions and require Microsoft abstractions 10.0.14 and AI abstractions 10.11.0 for the .NET 10 assets. Reconcile other direct pins, central package management and lockfiles against the resolved graph; do not suppress downgrade errors or assume all test/deployment dependencies were updated by this snippet. .NET 10 remains supported.[35][37][39]
+
+```bash
+dotnet restore
+dotnet build --configuration Release --no-restore
+dotnet test --configuration Release --no-build
+```
+
+Inspect new diagnostics and package resolution in your application before continuing. If you cannot adopt SDK 2 immediately, assess applicable 1.x security releases separately; they do not provide protocol 2026-07-28.[5][8]
+
+## 3. Migrate HTTP to stateless operation
+
+Set `SessionMode = HttpServerSessionMode.Stateless` in the existing HTTP registration as shown in the [main migration guide](mcp-2026-07-28.md#3-update-http-configuration-if-you-use-http). Preserve your module and tool registration.[3][12]
+
+Modern requests use no persistent HTTP protocol session. Older initialize-handshake clients can make ordinary calls only if they work without one. If a client depends on session IDs, standalone GET/DELETE, legacy `/sse`, or stream resumption, update or replace it before deploying the upgrade. Move application state out of transport sessions into explicitly scoped application state with its own authorization where needed. Test using the actual client and proxy configuration. Hybrid and stateful compatibility modes are not supported migration paths.[12][19][31]
+
+### Stdio prerequisites for published template 1.4.0
+
+Source main now includes #66, but published template 1.4.0 does not. Before building the stdio host, preserve custom registrations and add the no-op recorder and stderr console configuration if absent:
+
+```csharp
+using McpServer.Template.Mcp.Instrumentation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+builder.Services.AddSingleton<IMcpMetricsRecorder, NoopMcpMetricsRecorder>();
+```
+
+Replace the template namespace with your generated application namespace. Inspect custom logging providers too: none may write diagnostics to stdout. These fix pre-existing defects rather than new SDK 2 behavior. The guide rehearsal must exercise exact sample DTOs/business errors and stdout purity; building alone is insufficient.
+
+## 4. Update client-facing assumptions
+
+- **Modern bootstrap:** use an updated client SDK or correctly implement discovery/per-request metadata. Replacing the string in an old `initialize` request with `2026-07-28` is not a migration. Keep dedicated legacy initialize tests.[1][8]
+- **HTTP plumbing:** allow the standard MCP version/method/name headers through proxies and configure browser CORS where needed. Modern POST responses can still stream SSE, but independent GET/DELETE sessions and `Last-Event-ID` resumption are not part of this revision.[1][12]
+- **Reconnect/retry:** plan for reissuing interrupted requests with new request IDs. Guard side effects against duplicate execution using application-level idempotency; do not assume a dropped connection means the operation did not happen.[1]
+- **Results:** check advertised schemas instead of assuming object-shaped structured output or a scalar `result` wrapper. The SDK preserves legacy wrapping on down-level connections, rather than sending modern scalar output to every old client.[49]
+- **Raw fixtures:** include `inputSchema` in custom tool definitions. Expect modern result discrimination/cache fields only where the negotiated revision requires them.[1][3][8]
+- **HTTP test fixtures:** use valid POST `Accept` and `Content-Type` values unless that is what you are testing. See the [guide's test step](mcp-2026-07-28.md#4-build-and-check-your-application) for the `406` versus invalid-version `400` control and how to replace session assumptions.
+- **Resources/cache:** the SDK supplies zero-TTL/private defaults for unset modern cache hints; positive TTLs are a separate optimization.[47]
+- **Cache policy:** validate dynamic status freshness and private/public scope. Do not cache user-specific results publicly; do not treat a cache hint as access control.[1]
+- **Errors:** modern missing resources map to Invalid Params. Adapt exact error assertions, and do not convert every HTTP 400 into a legacy-negotiation fallback.[1][18]
+- **Custom interactions:** use the supported MRTR flow for modern client input; notifications use the new subscription mechanism. Do not silently enable optional functionality in order to complete the package upgrade.[1][14]
+
+### Operational metric migration
+
+The updated template removes `mcp_sessions_active` and its session-labelled recorder API, and publishes `mcp_requests_in_flight` instead. Apply the reviewed recorder/interface/middleware diff when voluntarily updating a generated application; changing only a dashboard query does not change its instrumentation. Preserve `mcp_requests_total` and tool counters. Count `/mcp` HTTP requests admitted past the existing authentication guard, including discovery and SDK rejections, but not rejected credentials or monitoring routes. Each request releases its gauge increment on success, error or cancellation. Update dashboards/alerts to the new name and request-concurrency meaning; there is no backward-compatible session alias.
+
+## 5. Audit conditional SDK breaks in custom applications
+
+The shipped sample does not use all the following features. Check the ones you added:
+
+- **Tasks:** add the dedicated Tasks extension and redesign 1.x experimental Tasks use. The new API/wire contract is not compatible with the old experiment and requires the modern revision.[24]
+- **Authenticated legacy sessions:** custom ASP.NET authentication needs a nonempty NameIdentifier, `sub` or UPN claim on an authenticated identity. Ownership also binds the claim issuer/type. Missing identity or an owner mismatch can now return 403; map trusted claims rather than bypass validation. The shared API-key guard does not itself supply such a principal.[45]
+- **OAuth:** follow the current callback API, state/issuer validation, PKCE S256 metadata and token-cache rules. Do not disable validation to make an old authorization server pass. The SDK update does not turn the template's shared API key into standards-based OAuth, and its `secure` placeholder remains unimplemented.[3][4][5]
+- **Client code:** adapt explicit SSE exception handling and nullable `McpClient.ServerInfo`; review warning-as-error builds.[3][32]
+- **Deprecated APIs:** review `MCP9005` / `MCP9006` and other targeted diagnostics rather than blanket-suppressing them. Protocol Logging deprecation does not mean ordinary application logs should be removed: keep stdio logs off stdout.[1][3]
+- **Apps/Skills:** review extension-specific behavior only if used. Skills support in SDK 2.4 is experimental and is not required for core protocol migration.[4][25]
+
+## 6. Compare a fresh scaffold safely
+
+After an upgraded template release is actually available, install that exact approved template version in an isolated template environment and generate a comparison application in a different directory with matching host/test/sample options. Before then, use a locally packed candidate only for qualification.
+
+Review differences selectively: shared dependency props, host bootstrap/registration, adapter APIs, protocol tests and documentation. Preserve your namespaces, custom tools, services, authorization, secrets and operational configuration. Do not copy new sample code over your application or run a destructive generation command in its directory.
+
+## 7. Acceptance before rollout
+
+- Restore/build/test your application and compare diagnostics with the baseline.
+- Verify discovery and actual tool calls, prompt reads and resource reads over each transport you ship.
+- Verify modern 2026-07-28 and each down-level revision/client you intend to retain, including the chosen session mode. Do not accept a silent downgrade as modern success.
+- Test authentication, proxy/header forwarding, timeouts, cancellation, interrupted operations and graceful stdio exit.
+- Inspect cache/result/error contracts and ensure stdout is protocol-only for stdio.
+- Test a packed fresh scaffold and rehearse this guide on an application generated from template 1.4.0, with representative customization.
+- Record exact package versions, application commit, client versions and results, including unrun scenarios.
+
+The [compatibility matrix](mcp-2026-07-28-compatibility.md) distinguishes tested paths from untested ones. Neither a passing source build nor one loopback proxy test qualifies a production deployment.
+
+## 8. Rollback
+
+Keep the previous application/deployment artifact and configuration; do not rely on editing one package version to undo all application changes. Revert the migration commits coherently and redeploy the previously qualified artifact only under your normal deployment approval. A modern-only client/extension may need its own compatibility rollback. Do not restore stale secrets or re-enable unsafe metadata fallbacks. If SDK 1.3.0 remains in production, independently assess the later 1.x security fixes rather than treating rollback as a security recommendation.[5][28][33]
+
+## What comes later
+
+New examples for caching/schema support, MRTR elicitation, `subscriptions/listen`, Tasks and Apps need separate scoped work. Experimental Skills must remain clearly labeled. This guide does not authorize or promise those features, and the minimal scaffold must remain useful without them.
+
+## Sources
+
+[1] https://modelcontextprotocol.io/specification/2026-07-28/changelog — protocol-changelog
+[3] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v2.0.0 — sdk-release-2.0
+[4] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v2.4.0 — sdk-release-2.4
+[5] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v1.4.2 — sdk-release-1.4.2
+[6] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/latest — sdk-release-latest
+[8] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/versioning.md — sdk-versioning
+[12] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/concepts/stateless/stateless.md — docs/concepts/stateless/stateless.md
+[14] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/concepts/mrtr/mrtr.md — docs/concepts/mrtr/mrtr.md
+[18] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/Common/McpProtocolVersions.cs — src/Common/McpProtocolVersions.cs
+[19] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/ModelContextProtocol.AspNetCore/HttpServerTransportOptions.cs — src/ModelContextProtocol.AspNetCore/HttpServerTransportOptions.cs
+[24] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/concepts/tasks/tasks.md — docs/concepts/tasks/tasks.md
+[25] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/docs/concepts/skills/skills.md — docs/concepts/skills/skills.md
+[28] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v1.4.0 — sdk-release-1.4.0
+[31] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v2.2.0 — sdk-release-2.2.0
+[32] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v2.3.0 — sdk-release-2.3.0
+[33] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/releases/tags/v2.3.1 — sdk-release-2.3.1
+[35] https://api.nuget.org/v3-flatcontainer/modelcontextprotocol/2.4.0/modelcontextprotocol.2.4.0.nupkg — modelcontextprotocol 2.4.0 published package metadata
+[37] https://api.nuget.org/v3-flatcontainer/modelcontextprotocol.core/2.4.0/modelcontextprotocol.core.2.4.0.nupkg — modelcontextprotocol.core 2.4.0 published package metadata
+[39] https://api.nuget.org/v3-flatcontainer/modelcontextprotocol.aspnetcore/2.4.0/modelcontextprotocol.aspnetcore.2.4.0.nupkg — modelcontextprotocol.aspnetcore 2.4.0 published package metadata
+[44] https://api.nuget.org/v3-flatcontainer/easymcp.mcpserver.template/1.4.0/easymcp.mcpserver.template.1.4.0.nupkg — Published template 1.4.0 contents
+[45] https://api.github.com/repos/modelcontextprotocol/csharp-sdk/commits/bfbd8936c0575c3cce875fbe6adb7d305a0dec87 — auth-session-security-commit
+[46] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v1.3.0/src/ModelContextProtocol.AspNetCore/HttpServerTransportOptions.cs — http-options-1.3
+[47] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/ModelContextProtocol.Core/Server/McpServerImpl.cs — server-shaping-2.4
+[49] https://raw.githubusercontent.com/modelcontextprotocol/csharp-sdk/v2.4.0/src/ModelContextProtocol.Core/Server/AIFunctionMcpServerTool.cs — structured-tools-2.4

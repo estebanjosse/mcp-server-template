@@ -9,50 +9,68 @@ public abstract class StdioHostTestBase : IAsyncLifetime
 {
     private protected StdioSession Host { get; private set; } = null!;
 
+    protected abstract string ProtocolVersion { get; }
+
     public async Task InitializeAsync()
     {
         Host = new StdioSession(GetType().Name);
-        await Host.InitializeAsync();
+        if (ProtocolVersion != StdioSession.ModernVersion) await Host.InitializeAsync(ProtocolVersion);
     }
+
+    private protected Task<JsonElement> CallAsync(string method, object? parameters = null)
+        => Host.RequestCapabilityAsync(ProtocolVersion, method, parameters);
 
     public Task DisposeAsync() => Host.DisposeAsync().AsTask();
 }
 
-public sealed class StdioHostTests : StdioHostTestBase
+public abstract class StdioHostTests : StdioHostTestBase
 {
-
     [Fact]
-    public void Initialize_NegotiatesRequestedProtocolAndServerIdentity()
+    public async Task ResourceRead_WhenUriIsUnknown_ReturnsRevisionSpecificError()
     {
-        Host.Initialization.GetProperty("protocolVersion").GetString().Should().Be("2025-11-25");
-        var server = Host.Initialization.GetProperty("serverInfo");
-        server.GetProperty("name").GetString().Should().NotBeNullOrWhiteSpace();
-        server.GetProperty("version").GetString().Should().NotBeNullOrWhiteSpace();
-        var capabilities = Host.Initialization.GetProperty("capabilities");
-        capabilities.GetProperty("prompts").ValueKind.Should().Be(JsonValueKind.Object);
-        capabilities.GetProperty("resources").ValueKind.Should().Be(JsonValueKind.Object);
+        const string uri = "resource://missing-fixture";
+        var error = await Host.RequestCapabilityErrorAsync(ProtocolVersion, "resources/read", new { uri });
+        error.GetProperty("code").GetInt32().Should().Be(ProtocolVersion == StdioSession.ModernVersion ? -32602 : -32002);
+        error.GetProperty("message").GetString().Should().Be($"Unknown resource URI: '{uri}'");
+        error.TryGetProperty("data", out _).Should().BeFalse();
     }
 
     [Fact]
-    public async Task InitializedNotification_AllowsSubsequentPing()
-        => (await Host.RequestAsync("ping")).ValueKind.Should().Be(JsonValueKind.Object);
-
-    [Fact]
-    public async Task ToolsDiscovery_RespectsOptionalCapability()
+    public async Task Negotiation_ReportsExactRevisionAndAdvertisedCapabilities()
     {
-        if (Host.Initialization.GetProperty("capabilities").TryGetProperty("tools", out var capability))
+        var handshake = ProtocolVersion == StdioSession.ModernVersion ? await CallAsync("server/discover") : Host.Initialization;
+        if (ProtocolVersion == StdioSession.ModernVersion)
+            handshake.GetProperty("supportedVersions").EnumerateArray().Select(v => v.GetString()).Should().Contain(ProtocolVersion);
+        else
         {
-            capability.ValueKind.Should().Be(JsonValueKind.Object);
-            var tools = (await Host.RequestAsync("tools/list")).GetProperty("tools").EnumerateArray().ToArray();
-            tools.Select(t => t.GetProperty("name").GetString()).Should().OnlyHaveUniqueItems();
+            handshake.GetProperty("protocolVersion").GetString().Should().Be(ProtocolVersion);
+            (await Host.RequestAsync("ping")).EnumerateObject().Should().BeEmpty();
         }
-        // No tools capability is valid for a template generated without sample tools.
+
+        var server = ProtocolVersion == StdioSession.ModernVersion
+            ? handshake.GetProperty("_meta").GetProperty("io.modelcontextprotocol/serverInfo")
+            : handshake.GetProperty("serverInfo");
+        server.GetProperty("name").GetString().Should().NotBeNullOrWhiteSpace();
+        server.GetProperty("version").GetString().Should().NotBeNullOrWhiteSpace();
+        var capabilities = handshake.GetProperty("capabilities");
+        capabilities.GetProperty("prompts").ValueKind.Should().Be(JsonValueKind.Object);
+        capabilities.GetProperty("resources").ValueKind.Should().Be(JsonValueKind.Object);
+
+        // dotnet new substitutes the flag; the repository itself includes samples.
+        var samplesExpected = !string.Equals("__MCP_EXPECT_SAMPLE_TOOLS__", "false", StringComparison.OrdinalIgnoreCase);
+        capabilities.TryGetProperty("tools", out var tools).Should().Be(samplesExpected);
+        if (samplesExpected)
+        {
+            tools.ValueKind.Should().Be(JsonValueKind.Object);
+            var list = (await CallAsync("tools/list")).GetProperty("tools").EnumerateArray();
+            list.Select(t => t.GetProperty("name").GetString()).Should().BeEquivalentTo("echo", "calc_divide");
+        }
     }
 
     [Fact]
     public async Task PromptsList_ExposesGreetingWithOptionalLanguage()
     {
-        var prompts = (await Host.RequestAsync("prompts/list")).GetProperty("prompts").EnumerateArray().ToArray();
+        var prompts = (await CallAsync("prompts/list")).GetProperty("prompts").EnumerateArray().ToArray();
         prompts.Select(p => p.GetProperty("name").GetString()).Should().OnlyHaveUniqueItems();
         var greeting = prompts.Single(p => p.GetProperty("name").GetString() == "greeting");
         var language = greeting.GetProperty("arguments").EnumerateArray().Single(a => a.GetProperty("name").GetString() == "language");
@@ -62,7 +80,7 @@ public sealed class StdioHostTests : StdioHostTestBase
     [Fact]
     public async Task GreetingPrompt_ReturnsExactFrenchMessage()
     {
-        var result = await Host.RequestAsync("prompts/get", new { name = "greeting", arguments = new { language = "fr" } });
+        var result = await CallAsync("prompts/get", new { name = "greeting", arguments = new { language = "fr" } });
         var message = result.GetProperty("messages").EnumerateArray().Should().ContainSingle().Subject;
         message.GetProperty("role").GetString().Should().Be("user");
         message.GetProperty("content").GetProperty("type").GetString().Should().Be("text");
@@ -73,7 +91,7 @@ public sealed class StdioHostTests : StdioHostTestBase
     [Fact]
     public async Task ResourcesList_ExposesUniqueWelcomeAndStatusWithMimeTypes()
     {
-        var resources = (await Host.RequestAsync("resources/list")).GetProperty("resources").EnumerateArray().ToArray();
+        var resources = (await CallAsync("resources/list")).GetProperty("resources").EnumerateArray().ToArray();
         resources.Select(r => r.GetProperty("uri").GetString()).Should().OnlyHaveUniqueItems();
         resources.Single(r => r.GetProperty("uri").GetString() == "resource://welcome").GetProperty("mimeType").GetString().Should().Be("text/plain");
         resources.Single(r => r.GetProperty("uri").GetString() == "resource://status").GetProperty("mimeType").GetString().Should().Be("application/json");
@@ -83,7 +101,7 @@ public sealed class StdioHostTests : StdioHostTestBase
     public async Task WelcomeResource_ReturnsExactTemplateContent()
     {
         var text = await ReadResourceAsync("resource://welcome", "text/plain");
-        text.Replace("\r\n", "\n").Should().Be($"""
+        text.ReplaceLineEndings("\n").Should().Be($"""
             Welcome to McpServer.Template!
 
             This is a demonstration of a clean, scalable Model Context Protocol (MCP) server{" "}
@@ -105,7 +123,7 @@ public sealed class StdioHostTests : StdioHostTestBase
             Available Resources:
             - resource://welcome: This welcome message
             - resource://status: Dynamic server status information
-            """);
+            """.ReplaceLineEndings("\n"));
     }
 
     [Fact]
@@ -124,12 +142,15 @@ public sealed class StdioHostTests : StdioHostTestBase
 
     [Fact]
     public async Task StdinEof_ExitsZeroAndCompletesBothStreamDrains()
-        => await Host.StopAsync();
+    {
+        await CallAsync("prompts/list");
+        await Host.StopAsync();
+    }
 
     [Fact]
     public async Task Stdout_ContainsOnlyCompleteMcpFramesIncludingShutdown()
     {
-        await Host.RequestAsync("prompts/list");
+        await CallAsync("prompts/list");
         await Host.StopAsync();
         Host.AssertPureStdout();
         Host.Stderr.Should().NotBeNullOrWhiteSpace("the real host must retain its normal console diagnostics on stderr");
@@ -137,10 +158,35 @@ public sealed class StdioHostTests : StdioHostTestBase
 
     private async Task<string> ReadResourceAsync(string uri, string mimeType)
     {
-        var result = await Host.RequestAsync("resources/read", new { uri });
+        var result = await CallAsync("resources/read", new { uri });
+        if (ProtocolVersion == StdioSession.ModernVersion)
+        {
+            result.GetProperty("ttlMs").GetInt32().Should().Be(0);
+            result.GetProperty("cacheScope").GetString().Should().Be("private");
+        }
+        else
+        {
+            result.TryGetProperty("ttlMs", out _).Should().BeFalse();
+            result.TryGetProperty("cacheScope", out _).Should().BeFalse();
+        }
         var content = result.GetProperty("contents").EnumerateArray().Should().ContainSingle().Subject;
         content.GetProperty("uri").GetString().Should().Be(uri);
         content.GetProperty("mimeType").GetString().Should().Be(mimeType);
         return content.GetProperty("text").GetString()!;
     }
+}
+
+public sealed class ModernStdioHostTests : StdioHostTests
+{
+    protected override string ProtocolVersion => StdioSession.ModernVersion;
+}
+
+public sealed class NovemberStdioHostTests : StdioHostTests
+{
+    protected override string ProtocolVersion => "2025-11-25";
+}
+
+public sealed class JuneStdioHostTests : StdioHostTests
+{
+    protected override string ProtocolVersion => "2025-06-18";
 }

@@ -1,26 +1,11 @@
 # Third-Party Notices
 
-This repository depends on third-party components. This file captures attribution and redistribution guidance for key dependencies used by the template.
+The template's own source is licensed under MIT (see `LICENSE`). The NuGet template package ships scaffold source and documentation, not third-party runtime assemblies. Generated applications restore their dependencies separately.
 
-## Model Context Protocol .NET SDK packages
+## Model Context Protocol C# SDK 2.4.0
 
-- Package: `ModelContextProtocol`
-- Package: `ModelContextProtocol.AspNetCore`
-- Upstream repository: <https://github.com/modelcontextprotocol/csharp-sdk>
+The scaffold references `ModelContextProtocol` and, for HTTP, `ModelContextProtocol.AspNetCore`. Both resolve `ModelContextProtocol.Core` transitively. NuGet metadata declares Apache-2.0 for [ModelContextProtocol](https://www.nuget.org/packages/ModelContextProtocol/2.4.0), [ModelContextProtocol.AspNetCore](https://www.nuget.org/packages/ModelContextProtocol.AspNetCore/2.4.0) and [ModelContextProtocol.Core](https://www.nuget.org/packages/ModelContextProtocol.Core/2.4.0). The [upstream license at v2.4.0](https://github.com/modelcontextprotocol/csharp-sdk/blob/v2.4.0/LICENSE) also documents historical contributions that remain under MIT and separate terms for upstream documentation.
 
-License context for upstream MCP .NET SDK:
+## Redistributing generated applications
 
-- Current upstream license for new contributions is Apache License 2.0.
-- Upstream project history includes portions previously contributed under MIT terms.
-
-For authoritative terms, review upstream license artifacts in the SDK repository at release time (for example `LICENSE` and any published third-party notice metadata).
-
-## Redistribution expectations
-
-When distributing binaries, containers, or archives that include MCP SDK packages:
-
-1. Include your project license text.
-2. Preserve third-party license/notice attributions for bundled dependencies.
-3. If upstream starts publishing a dedicated `NOTICE` requirement, include and propagate it in your distributable artifacts.
-
-This file is informational and should be reviewed during release preparation.
+This notice is not a complete dependency inventory for a published application. Inspect the resolved dependency graph for the hosts you ship, including transitives, and preserve the applicable license texts, copyright notices and any required attribution when distributing binaries, containers or archives. Check the actual distribution; carrying this scaffold notice alone does not verify its contents.

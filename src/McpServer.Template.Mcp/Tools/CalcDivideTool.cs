@@ -21,13 +21,15 @@ public sealed class CalcDivideTool(ICalculatorService calculatorService, IMcpMet
         
         try
         {
-            var result = await calculatorService.DivideAsync(request, cancellationToken);
-            metricsRecorder.RecordToolInvocation("calc_divide");
-            return result;
+            return await calculatorService.DivideAsync(request, cancellationToken);
         }
         catch (InvalidOperationException ex)
         {
             throw new McpException(ex.Message);
+        }
+        finally
+        {
+            metricsRecorder.RecordToolInvocation("calc_divide");
         }
     }
 }

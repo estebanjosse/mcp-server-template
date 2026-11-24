@@ -5,8 +5,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="ProcessProbe/**/*.cs" />
-    <AssemblyMetadata Include="ProcessProbeProject" Value="$(MSBuildProjectDirectory)/ProcessProbe/ProcessProbe.csproj" />
+    <ProjectReference Include="ProcessProbe/ProcessProbe.csproj" />
+
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
+    <PackageReference Include="ModelContextProtocol.Core" Version="$(ModelContextProtocolVersion)" />
     <PackageReference Include="xunit" Version="$(XunitVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(XunitRunnerVersion)" PrivateAssets="all" />
     <AssemblyMetadata Include="TemplateRepository" Value="$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../..'))" />

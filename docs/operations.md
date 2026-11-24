@@ -71,7 +71,13 @@ When enabled, the `/metrics` endpoint exposes Prometheus-formatted metrics such 
 - `mcp_requests_total`
 - `mcp_tool_invocations_total`
 - `mcp_tool_invocations_by_tool_total` (labelled by `tool`)
-- `mcp_sessions_active`
+- `mcp_requests_in_flight`: concurrent HTTP `/mcp` requests admitted by the authentication guard, not sessions.
+
+**Breaking rename:** update dashboards and alerts from `mcp_sessions_active` to
+`mcp_requests_in_flight`. There is no alias. Discovery and SDK rejections count;
+rejected credentials and monitoring requests do not.
+Tool invocation counters count completed handlers, including those that return
+business errors. Requests rejected before a tool handler runs are not invocations.
 
 Review [src/McpServer.Template.Host.Http/appsettings.json](../src/McpServer.Template.Host.Http/appsettings.json) for configuration examples.
 
@@ -296,7 +302,7 @@ When redistributing binaries or container images generated from this template, i
 
 For MCP SDK dependencies specifically:
 
-- See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for current transition context (Apache-2.0 for new upstream contributions and historical MIT portions).
+- See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) for the pinned SDK attribution and guidance for checking the artifacts you redistribute.
 - If upstream introduces or updates a dedicated `NOTICE` requirement, propagate that notice into your binary/container distribution artifacts.
 
 Operational recommendation:
